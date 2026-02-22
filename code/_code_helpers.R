@@ -57,6 +57,11 @@ safe_paths <- function() {
   project_root <- absolutize(p$project_root, root, base = root)
   list(
     project_root = project_root,
+    data_dir = absolutize(
+      p$data_dir,
+      file.path(project_root, "data", "private"),
+      base = project_root
+    ),
     output_private_dir = absolutize(
       p$output_private_dir,
       file.path(project_root, "data", "private", "outputs"),
@@ -182,15 +187,15 @@ candidate_paths <- function(name) {
   nm <- gsub("^\\./", "", name)
   unique(c(
     file.path(paths$project_root, nm),
-    file.path(paths$output_private_dir, nm),
     file.path(paths$wrangled_dir, nm),
     file.path(paths$figures_dir, nm),
+    file.path(paths$output_private_dir, nm),
     file.path(paths$output_public_dir, nm),
     file.path(paths$reports_dir, nm),
-    file.path(paths$output_public_dir, basename(nm)),
-    file.path(paths$output_private_dir, basename(nm)),
     file.path(paths$wrangled_dir, basename(nm)),
     file.path(paths$figures_dir, basename(nm)),
+    file.path(paths$output_private_dir, basename(nm)),
+    file.path(paths$output_public_dir, basename(nm)),
     file.path(paths$output_private_dir, "wrangled", basename(nm)),
     file.path(paths$output_private_dir, "figures", basename(nm)),
     file.path(paths$project_root, "reports", "public", basename(nm)),
@@ -198,17 +203,60 @@ candidate_paths <- function(name) {
   ))
 }
 
+starts_with_path <- function(path, prefix) {
+  p <- normalizePath(path, winslash = "/", mustWork = FALSE)
+  pr <- normalizePath(prefix, winslash = "/", mustWork = FALSE)
+  startsWith(p, pr)
+}
+
+default_expected_path <- function(name) {
+  nm <- gsub("^\\./", "", name)
+  base <- basename(nm)
+  ext <- tolower(sub(".*\\.", "", base))
+  has_dir <- grepl("/", nm, fixed = TRUE)
+  if (has_dir) {
+    return(normalizePath(file.path(paths$project_root, nm), winslash = "/", mustWork = FALSE))
+  }
+
+  if (ext %in% c("rds")) {
+    return(normalizePath(file.path(paths$wrangled_dir, base), winslash = "/", mustWork = FALSE))
+  }
+  if (ext %in% c("png", "pdf")) {
+    return(normalizePath(file.path(paths$figures_dir, base), winslash = "/", mustWork = FALSE))
+  }
+  if (ext %in% c("html")) {
+    return(normalizePath(file.path(paths$output_public_dir, base), winslash = "/", mustWork = FALSE))
+  }
+  if (ext %in% c("md", "tex", "bib")) {
+    return(normalizePath(file.path(paths$reports_dir, base), winslash = "/", mustWork = FALSE))
+  }
+  normalizePath(file.path(paths$output_private_dir, base), winslash = "/", mustWork = FALSE)
+}
+
+is_private_expected <- function(path) {
+  starts_with_path(path, paths$data_dir) || starts_with_path(path, paths$output_private_dir)
+}
+
 resolve_output <- function(name) {
   cands <- candidate_paths(name)
   idx <- which(file.exists(cands))
   if (length(idx) == 0) {
-    return(list(found = FALSE, path = NA_character_, size_kb = NA_character_, modified = NA_character_))
+    expected <- default_expected_path(name)
+    path_label <- if (exists("safe_label_path")) safe_label_path(expected, paths) else expected
+    return(list(
+      found = FALSE,
+      status = ifelse(is_private_expected(expected), "not published", "no"),
+      path = path_label,
+      size_kb = NA_character_,
+      modified = NA_character_
+    ))
   }
   fp <- cands[idx[1]]
   info <- file.info(fp)
   path_label <- if (exists("safe_label_path")) safe_label_path(fp, paths) else fp
   list(
     found = TRUE,
+    status = "yes",
     path = path_label,
     size_kb = sprintf("%.1f", as.numeric(info$size) / 1024),
     modified = format(info$mtime, "%Y-%m-%d %H:%M:%S")
@@ -244,13 +292,20 @@ render_outputs_table <- function(script_rel) {
   }
   outputs <- sort(unique(outputs))
   resolved <- lapply(outputs, resolve_output)
+  if (any(vapply(resolved, function(x) identical(x$status, "not published"), logical(1)))) {
+    cat(
+      "Public site note: some artifacts are generated into private output directories ",
+      "and are intentionally not published in GitHub Pages.\n\n",
+      sep = ""
+    )
+  }
   cat("| Declared output | Exists | Resolved path | Size (KB) | Last modified |\n")
   cat("|---|---:|---|---:|---|\n")
   for (i in seq_along(outputs)) {
     r <- resolved[[i]]
     cat(
       "| `", outputs[[i]], "` | ",
-      ifelse(r$found, "yes", "no"), " | ",
+      r$status, " | ",
       ifelse(is.na(r$path), "-", paste0("`", r$path, "`")), " | ",
       ifelse(is.na(r$size_kb), "-", r$size_kb), " | ",
       ifelse(is.na(r$modified), "-", r$modified), " |\n",

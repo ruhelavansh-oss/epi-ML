@@ -86,18 +86,18 @@ assert_required_files <- function(paths = get_paths(), keys = c("raw_pumf_file")
 safe_label_path <- function(path, paths = get_paths()) {
   labels <- stats::setNames(
     c(
-      "PROJECT_ROOT",
       "PRIVATE_DATA_DIR",
       "PRIVATE_OUTPUT_DIR",
       "PUBLIC_REPORTS_DIR",
-      "REPORTS_SOURCE_DIR"
+      "REPORTS_SOURCE_DIR",
+      "PROJECT_ROOT"
     ),
     c(
-      paths$project_root,
       paths$data_dir,
       paths$output_private_dir,
       paths$output_public_dir,
-      paths$reports_dir
+      paths$reports_dir,
+      paths$project_root
     )
   )
   out <- normalizePath(path, winslash = "/", mustWork = FALSE)
