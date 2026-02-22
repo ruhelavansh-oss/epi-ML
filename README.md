@@ -33,10 +33,10 @@ surveillance/
 scripts/         # orchestration, rendering, and checks
 reports/
   source/        # manuscript/report source files
-  public/        # local rendered report artifacts (gitignored)
+  public/        # rendered report artifacts (gitignored)
 data/
-  private/       # local-only raw and private outputs (gitignored)
-  public/        # publishable aggregate artifacts tracked in git
+  private/       # local initial outputs (gitignored)
+  public/        # publishable aggregate artifacts (tracked)
 ```
 
 ## Website and Publication
