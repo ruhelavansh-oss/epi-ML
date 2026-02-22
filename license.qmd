@@ -1,0 +1,9 @@
+---
+title: "License"
+---
+
+This project is licensed under the Apache License, Version 2.0.
+
+For full terms and conditions, see `LICENSE` in the repository root.
+
+- License URL: <http://www.apache.org/licenses/LICENSE-2.0>

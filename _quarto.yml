@@ -2,6 +2,16 @@ project:
   type: website
   output-dir: _site
   title: "Epidemiological Machine Learning"
+  post-render:
+    - tools/algolia-add-custom-attribute.ts
+  resources:
+    - "/images/Posit-Logos-2024_horiz-full-color.svg"
+    - "/images/Posit-Logos-2024_horiz-full-color-white-text.svg"
+    - "/_plausible.html"
+    - "/_redirects"
+    - "/netlify.toml"
+    - "/robots.txt"
+    - "/algolia-site-verification.html"
   render:
     - "*.qmd"
     - "!R_libs/**"
@@ -9,6 +19,8 @@ project:
     - "!data/**"
     - "!reports/source/**"
     - "!reports/public/**"
+
+highlight-style: a11y
 author:
   - name: Vansh Singh Ruhela
     orcid: 0009-0004-1750-3592
@@ -17,19 +29,51 @@ author:
     affiliation: University of Toronto SGS
 website:
   title: "EML"
+  image: "quarto-dark-bg.jpeg"
+  favicon: "favicon.png"
   site-url: https://ruhelavansh-oss.github.io/epi-ML/
   page-footer:
-    left: "Copyright 2026, Vansh Singh Ruhela"
+    left: |
+      Proudly supported by
+      [![](/images/Posit-Logos-2024_horiz-full-color.svg){fig-alt="Posit" width=65px .light-content}](https://posit.co) [![](/images/Posit-Logos-2024_horiz-full-color-white-text.svg){fig-alt="Posit" width=65px .dark-content}](https://posit.co)
+    center:
+      - text: "About"
+        href: about.qmd
+      - text: "FAQ"
+        href: faq.qmd
+      - text: "License"
+        href: license.qmd
+      - text: "Trademark"
+        href: trademark.qmd
     right:
       - icon: github
         href: https://github.com/ruhelavansh-oss/epi-ML
+        aria-label: EML GitHub
+      - icon: rss
+        href: https://github.com/ruhelavansh-oss/epi-ML/commits/main.atom
+        aria-label: EML Updates RSS
+      - icon: globe2
+        href: https://ruhelavansh-oss.github.io/epi-ML/
+        aria-label: EML Site
   repo-url: https://github.com/ruhelavansh-oss/epi-ML
-  repo-actions: [source, issue]
+  issue-url: https://github.com/ruhelavansh-oss/epi-ML/issues/new/choose
+  repo-actions: [edit, issue]
   page-navigation: true
-  reader-mode: true
+  bread-crumbs: true
+  open-graph: true
+  twitter-card: true
+  search:
+    show-item-context: true
+    type: overlay
+    algolia:
+      index-name: epi_ml
+      application-id: F5VCFZLAF3
+      search-only-api-key: 6ebd97492d9446ac46804b1e9be413c0
+      analytics-events: true
+      show-logo: true
 
   sidebar:
-    style: "docked"
+    style: "floating"
     collapse-level: 2
     contents:
       - section: "Project Info"
@@ -93,6 +137,11 @@ website:
               - href: code/ebac-integrations.qmd
                 text: "Integrations"
   navbar:
+    background: light
+    logo: quarto.png
+    logo-alt: "EML logo."
+    title: false
+    collapse-below: lg
     left:
       - href: index.qmd
         text: Home
@@ -121,24 +170,38 @@ website:
         href: https://github.com/ruhelavansh-oss/epi-ML
 format:
   html:
-    toc: true # Table of contents for each page
-    code-fold: true # Allow code to be folded
-    code-summary: "Show code" # Text for the code folding summary
-    anchor-sections: true # Enable clickable links for sections
-    smooth-scroll: true # Smooth scrolling for navigation
-    theme:
-      dark:
-        - darkly
-        - brand
-      light:
-        - cosmo
-        - brand
+    respect-user-color-scheme: true
+    toc: true
     css: styles.css
-    page-layout: full
-    fig-responsive: true
-    title-block-banner: false
+    theme:
+      light: [cosmo, theme.scss]
+      dark: [cosmo, theme-dark.scss]
+    code-copy: true
+    code-overflow: wrap
+    include-in-header:
+      - text: |
+          <script src="https://cdn.jsdelivr.net/gh/posit-dev/supported-by-posit/js/badge.min.js"
+            data-light-bg="#E8EDF2"
+            data-light-text="#404041"
+            data-light-lt="#ee6331"
+            data-light-gt="#447099"
+            data-dark-bg="#333333"
+            data-dark-lt="#ffffff"
+            data-dark-gt="#ffffff"></script>
+    include-after-body: js.html
+    grid:
+      sidebar-width: 250px
+      body-width: 900px
+      margin-width: 300px
+
+filters:
+  - filters/tools-tabset.lua
+  - filters/color-box.lua
+  - at: post-quarto
+    path: filters/include-dark.lua
+
+freeze: true
 execute:
-  freeze: false
   echo: false
   warning: false
   message: false

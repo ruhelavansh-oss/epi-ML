@@ -1,0 +1,19 @@
+---
+title: "FAQ"
+---
+
+## What is EML?
+
+EML is an epidemiological machine learning project focused on reproducible observational modeling workflows for substance-use surveillance.
+
+## What is published in this site?
+
+The site publishes project summaries, module pages, script-level metadata, and public artifacts intended for transparent reporting.
+
+## Does the site publish restricted data?
+
+No. Private and restricted datasets are excluded from publication workflows.
+
+## How are results reproduced?
+
+Reproducibility details, runtime configuration, and module execution steps are documented in the Reproducibility section.

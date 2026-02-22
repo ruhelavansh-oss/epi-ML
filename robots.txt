@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+
+# Algolia-Crawler-Verif: F97200E8B6311625
+
+Sitemap: https://ruhelavansh-oss.github.io/epi-ML/sitemap.xml
