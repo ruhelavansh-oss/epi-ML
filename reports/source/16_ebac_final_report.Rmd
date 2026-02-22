@@ -1,0 +1,384 @@
+---
+title: "Final eBAC Integrated Analysis Report"
+subtitle: "CPADS 2021-2022: Weighted, Selection-Adjusted, Causal, DML, and SMOTE Sensitivity"
+author: "Vansh Singh Ruhela"
+date: "`r format(Sys.Date(), '%Y-%m-%d')`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(tidyverse)
+
+find_root <- function(start = getwd()) {
+  cur <- normalizePath(start, winslash = "/", mustWork = FALSE)
+  for (i in seq_len(8)) {
+    if (file.exists(file.path(cur, "analysis", "lib", "config_paths.R"))) return(cur)
+    parent <- dirname(cur)
+    if (identical(parent, cur)) break
+    cur <- parent
+  }
+  stop("Project root not found from working directory")
+}
+
+root_dir <- find_root()
+source(file.path(root_dir, "analysis", "lib", "config_paths.R"))
+paths <- get_paths()
+
+out_dir <- paths$output_private_dir
+report_dir <- paths$output_public_dir
+cleaned_path <- file.path(paths$cleaned_dir, "cpads_pumf_wrangled.rds")
+
+required_final <- c(
+  "ebac_final_variable_audit.csv",
+  "ebac_final_user_guide_variable_map.csv",
+  "ebac_final_domain_samples.csv",
+  "ebac_final_audit_checks.csv",
+  "ebac_final_weighted_descriptives.csv",
+  "ebac_final_weighted_or.csv",
+  "ebac_final_weighted_linear.csv",
+  "ebac_final_interaction_tests.csv",
+  "ebac_final_ipw_diagnostics.csv",
+  "ebac_final_ipw_or.csv",
+  "ebac_final_ipw_linear.csv",
+  "ebac_final_ipw_comparison.csv",
+  "ebac_final_causal_effects.csv",
+  "ebac_final_cate.csv",
+  "ebac_final_dml_status.csv",
+  "ebac_final_dml_results.csv",
+  "ebac_final_smote_status.csv",
+  "ebac_final_smote_or.csv",
+  "ebac_final_smote_compare.csv",
+  "ebac_final_crosswalk_previous.csv",
+  "ebac_final_key_summary.csv"
+)
+
+stopifnot(file.exists(cleaned_path))
+missing_final <- required_final[!file.exists(file.path(out_dir, required_final))]
+if (length(missing_final) > 0) {
+  stop("Missing final outputs: ", paste(missing_final, collapse = ", "))
+}
+
+pumf <- readRDS(cleaned_path)
+va <- readr::read_csv(file.path(out_dir, "ebac_final_variable_audit.csv"), show_col_types = FALSE)
+var_map <- readr::read_csv(file.path(out_dir, "ebac_final_user_guide_variable_map.csv"), show_col_types = FALSE)
+ds <- readr::read_csv(file.path(out_dir, "ebac_final_domain_samples.csv"), show_col_types = FALSE)
+qa <- readr::read_csv(file.path(out_dir, "ebac_final_audit_checks.csv"), show_col_types = FALSE)
+wd <- readr::read_csv(file.path(out_dir, "ebac_final_weighted_descriptives.csv"), show_col_types = FALSE)
+wor <- readr::read_csv(file.path(out_dir, "ebac_final_weighted_or.csv"), show_col_types = FALSE)
+wlin <- readr::read_csv(file.path(out_dir, "ebac_final_weighted_linear.csv"), show_col_types = FALSE)
+intt <- readr::read_csv(file.path(out_dir, "ebac_final_interaction_tests.csv"), show_col_types = FALSE)
+ip_diag <- readr::read_csv(file.path(out_dir, "ebac_final_ipw_diagnostics.csv"), show_col_types = FALSE)
+ip_or <- readr::read_csv(file.path(out_dir, "ebac_final_ipw_or.csv"), show_col_types = FALSE)
+ip_lin <- readr::read_csv(file.path(out_dir, "ebac_final_ipw_linear.csv"), show_col_types = FALSE)
+ip_cmp <- readr::read_csv(file.path(out_dir, "ebac_final_ipw_comparison.csv"), show_col_types = FALSE)
+ce <- readr::read_csv(file.path(out_dir, "ebac_final_causal_effects.csv"), show_col_types = FALSE)
+cate <- readr::read_csv(file.path(out_dir, "ebac_final_cate.csv"), show_col_types = FALSE)
+dml_status <- readr::read_csv(file.path(out_dir, "ebac_final_dml_status.csv"), show_col_types = FALSE)
+dml <- readr::read_csv(file.path(out_dir, "ebac_final_dml_results.csv"), show_col_types = FALSE)
+sm_status <- readr::read_csv(file.path(out_dir, "ebac_final_smote_status.csv"), show_col_types = FALSE)
+sm_or <- readr::read_csv(file.path(out_dir, "ebac_final_smote_or.csv"), show_col_types = FALSE)
+sm_cmp <- readr::read_csv(file.path(out_dir, "ebac_final_smote_compare.csv"), show_col_types = FALSE)
+cross <- readr::read_csv(file.path(out_dir, "ebac_final_crosswalk_previous.csv"), show_col_types = FALSE)
+ks <- readr::read_csv(file.path(out_dir, "ebac_final_key_summary.csv"), show_col_types = FALSE)
+
+fmt_pct <- function(x, digits = 1) paste0(formatC(100 * x, format = "f", digits = digits), "%")
+fmt_num <- function(x, digits = 3) formatC(x, format = "f", digits = digits)
+```
+
+# 1. Executive Summary
+
+This report is the **final integrated eBAC analysis audit** after reviewing and revising prior eBAC code and reports:
+
+- `PROJECT_ROOT/07_ebac.R`
+- `PROJECT_ROOT/07_ebac_ipw.R`
+- `PROJECT_ROOT/07_ebac_gender_smote_sensitivity.R`
+- `PROJECT_ROOT/07_ebac_integrations.R`
+
+Main final conclusions:
+
+1. eBAC is validly analyzable from CPADS PUMF because `ebac_tot` and `ebac_legal` are already measured variables in the wrangled dataset.
+2. Anthropometric source variables (`demq3`, `demq4`) are absent, so de novo Widmark recomputation is not possible; this is a data-availability limitation, not a fatal analysis error.
+3. Primary survey-weighted association is strong and stable:
+   - `OR(cannabis -> ebac_legal) = 3.317` (95% CI: 3.082, 3.569)
+4. Selection adjustment for observed eBAC (IPW) changes the estimate minimally:
+   - adjusted OR = `3.330` (95% CI: 3.093, 3.585)
+5. Causal-scale weighted contrasts (assumption-dependent) are consistent and substantial:
+   - ATE = `0.258`, ATT = `0.256`, ATC = `0.260`
+6. DML random-forest sensitivity agrees in direction/magnitude (unweighted sensitivity):
+   - ATE_DML_RF = `0.247`, ATTE_DML_RF = `0.242`
+7. SMOTE was run correctly with `smotefamily`; it is retained as predictive robustness only, not inferential replacement.
+
+# 2. Data, Sampling, and Variable Reality
+
+## 2.1 CPADS sampling context and analysis weights
+
+CPADS is a complex observational survey. There is **no treatment randomization** in this analysis.
+
+- Survey weight used: `wtpumf`
+- Primary inferential models: survey-weighted (`svyglm`)
+- Causal estimands: modeled from observed data under explicit assumptions (not randomized experiment)
+
+## 2.2 Variable audit
+
+```{r variable-audit}
+va
+```
+
+Interpretation:
+
+- `ebac_tot` and `ebac_legal` exist and are used directly.
+- `demq3` and `demq4` do not exist in the PUMF used here.
+- The official CPADS user-guide variable for ethnicity is `dvdemq6`, and it exists in the wrangled data.
+- The prior `NONE` value reflected only a literal variable-name scan for `race_*`, not absence of ethnicity information.
+
+```{r user-guide-map}
+var_map
+```
+
+## 2.3 Domain/sample accounting
+
+```{r domain-samples}
+ds
+```
+
+Interpretation:
+
+- Total wrangled cohort: 40,931.
+- Past-12-month alcohol users: 32,369.
+- eBAC observed among alcohol users: 22,329.
+- eBAC missing among alcohol users: 10,040.
+
+So primary eBAC outcome models are estimated in an observed eBAC domain, then transported toward the eligible-drinker domain using IPW.
+
+# 3. What Was Revised and Why
+
+Compared with earlier eBAC scripts/reports:
+
+1. Final script consolidates weighted, interaction, IPW, causal, DML, and SMOTE steps in one workflow.
+2. DML summary extraction was corrected to handle current `DoubleML` output class robustly.
+3. Crosswalk logic was corrected to handle prior output schema differences (`metric` vs `estimand`).
+4. SMOTE extraction was corrected so cannabis terms are actually captured; full SMOTE OR table is now saved.
+5. Crosswalk confirms final weighted/IPW cannabis ORs are consistent with earlier eBAC runs.
+
+# 4. Background and Estimands (Exact)
+
+## 4.1 Treatment, outcomes, and covariates
+
+- Treatment/exposure (`T`): `cannabis_any_use` (binary)
+- Outcomes (`Y`):
+  - Binary: `ebac_legal` (legal-threshold indicator)
+  - Continuous: `ebac_tot` (estimated BAC level)
+- Core adjustment covariates:
+  - `gender`, `age_group`, `province_region`, `mental_health`, `physical_health`
+
+## 4.2 Randomization, matching, and sampling
+
+- Randomization: **none** (observational data)
+- Matching: **none** in final script (propensity weighting used instead)
+- Sampling/weights:
+  - survey weighting for descriptive and regression inference
+  - additional observation weights for selection adjustment (IPW)
+
+## 4.3 Statistical blocks
+
+1. Survey-weighted descriptive estimates by subgroup.
+2. Survey-weighted regression (logistic for `ebac_legal`, linear for `ebac_tot`).
+3. Interaction tests: cannabis × gender and cannabis × age-group.
+4. IPW to adjust for selective eBAC observation among alcohol-eligible respondents.
+5. Weighted causal contrasts (ATE/ATT/ATC) with bootstrap uncertainty.
+6. CATE by gender and age-group as subgroup IPW contrasts.
+7. DML IRM with random forests (`ranger`) as sensitivity.
+8. SMOTE (`smotefamily`) as predictive sensitivity only.
+
+# 5. QA and Reliability Checks
+
+```{r qa-checks}
+qa
+```
+
+Interpretation:
+
+- Range and threshold checks pass.
+- Positive-weight check passes.
+- Missingness burden check fails (`ebac_missingness_rate_total = 0.4545`), which is an expected risk signal and central limitation.
+
+# 6. Initial Results
+
+## 6.1 Key summary values
+
+```{r key-summary}
+ks
+```
+
+## 6.2 Weighted prevalence/means (overall)
+
+```{r overall-weighted}
+wd %>% filter(group_var == "Overall")
+```
+
+Interpretation:
+
+- Weighted prevalence of `ebac_legal = 1` in observed eBAC domain: `r fmt_pct(as.numeric(ks$value[ks$key == "weighted_ebac_legal_prevalence_observed_domain"]))`.
+- Weighted mean `ebac_tot`: `r fmt_num(as.numeric(ks$value[ks$key == "weighted_ebac_tot_mean_observed_domain"]))` g/dL.
+
+## 6.3 Weighted subgroup patterns (gender, age, cannabis)
+
+```{r subgroup-patterns}
+wd %>%
+  filter(group_var %in% c("gender", "age_group", "cannabis_any_use"),
+         metric %in% c("ebac_legal_prevalence", "ebac_tot_mean")) %>%
+  arrange(metric, group_var, group_level)
+```
+
+## 6.4 Weighted association models
+
+```{r weighted-model-cannabis}
+wor %>% filter(model == "weighted_main", term == "cannabis_any_use")
+wlin %>% filter(model == "weighted_linear_main", term == "cannabis_any_use")
+```
+
+Interpretation:
+
+- Cannabis is associated with ~3.32x higher odds of crossing the legal-threshold eBAC indicator after weighted adjustment.
+- Cannabis is associated with ~+0.058 g/dL higher mean `ebac_tot` after weighted adjustment.
+
+## 6.5 Effect-modification tests
+
+```{r interaction-tests}
+intt
+```
+
+Interpretation:
+
+- Cannabis × gender interaction is not statistically strong in this model (`p = 0.170`).
+- Cannabis × age-group interaction is statistically present (`p < 0.001`).
+
+## 6.6 Selection-adjusted (IPW) comparison
+
+```{r ipw-diagnostics}
+ip_diag
+```
+
+```{r ipw-comparison}
+ip_cmp
+```
+
+Interpretation:
+
+- Observation weights are moderate (no extreme instability).
+- Weighted main and IPW-adjusted cannabis effects are nearly identical, suggesting limited impact of modeled observation selection on this specific contrast.
+
+## 6.7 Causal contrasts (assumption-dependent)
+
+```{r causal-effects}
+ce
+```
+
+Interpretation (conditional on no unmeasured confounding, positivity, and model adequacy):
+
+- ATE = 0.258 means an estimated **+25.8 percentage-point absolute increase** in probability of `ebac_legal = 1` under cannabis exposure vs non-exposure in the modeled population.
+- ATT and ATC are close to ATE, indicating similar effect scale across treated/control reweighting targets.
+
+## 6.8 CATE (subgroup contrasts)
+
+```{r cate-results}
+cate
+```
+
+Interpretation:
+
+- CATE point estimates vary by gender and age group.
+- The largest subgroup point estimate in this run is for ages 16-19 (~0.282), but subgroup inference remains less stable than overall ATE and should be treated cautiously.
+
+## 6.9 DML random-forest sensitivity
+
+```{r dml-results}
+dml_status
+dml
+```
+
+Interpretation:
+
+- DML estimates (ATE_DML_RF ~0.247, ATTE_DML_RF ~0.242) align with IPW causal contrast magnitudes.
+- DML block is unweighted sensitivity and does not replace design-based weighted primary inference.
+
+## 6.10 SMOTE sensitivity
+
+```{r smote-status}
+sm_status
+```
+
+```{r smote-cannabis}
+sm_cmp
+```
+
+Interpretation:
+
+- Class imbalance reduced from ~2.07 to ~1.03.
+- Cannabis effect direction/magnitude remains strong before/after SMOTE.
+- This is predictive robustness only; synthetic oversampling does not create causal identification or design-based representativeness.
+
+## 6.11 Crosswalk versus previous eBAC scripts
+
+```{r crosswalk}
+cross
+```
+
+Interpretation:
+
+- Final integrated weighted and IPW ORs reproduce earlier values essentially exactly for the cannabis-`ebac_legal` effect.
+- This supports methodological continuity while adding deeper diagnostics and sensitivity layers.
+
+# 7. Direct Interpretation Guide (What the Numbers Mean)
+
+## 7.1 In this final eBAC analysis
+
+1. `weighted prevalence = 0.6499` means about 65.0% of the weighted observed-eBAC domain exceeded the legal threshold indicator.
+2. `OR = 3.3166` means adjusted **odds** (not probability) of `ebac_legal = 1` are about 3.3x higher for cannabis-exposed vs unexposed.
+3. `ATE = 0.2578` means an estimated absolute probability difference of +25.8 percentage points under model assumptions.
+
+## 7.2 Same interpretation rule for your earlier examples
+
+If you report elsewhere:
+
+- Heavy drinking prevalence = 45.8% (95% CI 45.2% to 46.5%): estimated population proportion with uncertainty interval.
+- Cannabis OR = 5.71 (95% CI 5.38 to 6.07): multiplicative odds ratio on the model’s odds scale.
+- ATE(IPW) = 0.394 (95% CI 0.383 to 0.404): absolute risk difference of +39.4 percentage points under causal identification assumptions.
+
+# 8. Limitations and Validity Threats
+
+1. Missing eBAC is substantial (45.45% overall), including within alcohol-eligible respondents.
+2. No treatment randomization; all causal language is conditional on assumptions.
+3. CPADS provides ethnicity via `dvdemq6`; however, no literal `race_*` variable naming exists, so cross-study race harmonization still requires careful metadata handling.
+4. DML and SMOTE blocks are sensitivity analyses and are not survey-design-corrected primary estimators.
+5. CATE subgroup estimates are less stable and can be sensitive to overlap and model choice.
+6. The prior `non-integer #successes in a binomial glm` issue was corrected by using `quasibinomial()` for weighted propensity fits in the causal block; current end-to-end runs are warning-clean.
+
+# 9. Why eBAC Analysis Is Still Legitimate Without Height/Weight
+
+Because this PUMF includes **derived eBAC endpoints** directly (`ebac_tot`, `ebac_legal`).
+
+- You cannot recompute eBAC mechanistically without `demq3`/`demq4`.
+- You can validly analyze the provided eBAC variables as outcomes, with transparent disclosure that upstream derivation occurred before public release.
+
+# 10. Reproducibility
+
+Final script run command:
+
+```bash
+Rscript PROJECT_ROOT/07_ebac_integrations.R
+```
+
+Report render command:
+
+```bash
+Rscript -e "rmarkdown::render('PROJECT_ROOT/reports/source/16_ebac_final_report.Rmd', output_dir='PROJECT_ROOT/reports/public')"
+```
+
+This final report is anchored to generated files under `PROJECT_ROOT/data/private/outputs/ebac_final_*.csv`.

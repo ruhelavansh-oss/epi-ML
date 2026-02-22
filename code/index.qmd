@@ -1,0 +1,32 @@
+---
+title: "Code Index"
+---
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+source("_code_helpers.R")
+```
+
+## Overview
+
+This section documents the executable EML modules with:
+
+1. Script metadata and run command.
+2. Detected declared outputs and whether they currently exist.
+3. Script source (collapsible).
+
+To recompute modules before rendering these pages:
+
+```bash
+Rscript scripts/run_modules.R
+```
+
+## Module Pages
+
+```{r}
+#| echo: false
+#| results: asis
+render_code_index()
+```

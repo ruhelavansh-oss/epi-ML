@@ -1,0 +1,34 @@
+---
+title: "Module: eBAC Selection Adjustment (IPW)"
+---
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+source("_code_helpers.R")
+```
+
+## Script Metadata
+
+```{r}
+#| echo: false
+#| results: asis
+render_script_metadata("surveillance/ebac/07_ebac_ipw.R")
+```
+
+## Declared Outputs and Current Status
+
+```{r}
+#| echo: false
+#| results: asis
+render_outputs_table("surveillance/ebac/07_ebac_ipw.R")
+```
+
+## Source Code
+
+```{r}
+#| echo: false
+#| results: asis
+render_script_code("surveillance/ebac/07_ebac_ipw.R")
+```

@@ -1,0 +1,49 @@
+---
+title: "Background"
+---
+
+## Design
+
+The study uses retrospective observational survey microdata from CPADS 2021-2022. There is no randomized treatment assignment; therefore, causal interpretations are conditional on identification assumptions and should be interpreted as model-based counterfactual contrasts.
+
+## Target Variables
+
+- **Exposure/Treatment proxy**: `cannabis_any_use` (past-year cannabis use indicator).
+- **Primary outcome**: `heavy_drinking_30d` (past-30-day heavy drinking indicator).
+- **eBAC outcomes**: `ebac_tot` (continuous) and `ebac_legal` (binary threshold indicator), using measured variables available in the wrangled analytic dataset.
+- **Adjustment covariates**: age group, gender, region, self-rated mental health, and self-rated physical health.
+
+## Estimation Framework
+
+### Survey-Weighted Inference
+
+Primary burden estimates are design-based and weighted where specified, including prevalence and confidence intervals.
+
+### Regression and Association Layers
+
+- Logistic regression for adjusted odds-ratio estimation.
+- Regression model comparison and Wald testing for nested-term evaluation.
+- SMOTE-based sensitivity models treated as robustness diagnostics, not as replacements for primary weighted estimates.
+
+### Causal Estimators
+
+- Naive risk-difference contrasts.
+- G-computation (model-based standardization).
+- Inverse probability weighting (IPW), with trimming rules as implemented in scripts.
+- Augmented IPW (AIPW) with stabilized fallback logic where package-level calls are not available.
+- Matching/subclassification contrasts and subgroup heterogeneity summaries.
+
+### Semiparametric Learning
+
+DoubleML random-forest models provide additional robustness checks for treatment-effect targets in the eBAC track.
+
+## Assumptions and Interpretation Boundary
+
+Causal language is conditional on:
+
+1. Consistency of potential outcomes.
+2. Conditional exchangeability after measured adjustment.
+3. Positivity/overlap in the observed covariate support.
+4. Adequate specification of nuisance and outcome models.
+
+All associational and causal outputs are interpreted within these explicit boundaries.

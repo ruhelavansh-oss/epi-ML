@@ -1,0 +1,38 @@
+---
+title: "Home"
+subtitle: "Epidemiological Semiparametric Machine Learning (EML)"
+date: last-modified
+---
+
+## Introduction
+
+This project presents a retrospective epidemiologic study of alcohol and cannabis use among postsecondary students using the CPADS 2021-2022 public-use microdata. The objective is to estimate population burden, associational structure, and causal-effect targets under explicit assumptions.
+
+## Project Scope
+
+The scientific workflow combines:
+
+1. Design-based survey inference for prevalence and uncertainty.
+2. Regression and model-comparison layers for adjusted association estimates.
+3. Causal estimators (g-computation, IPW, AIPW, and matching-based contrasts).
+4. eBAC-specific evaluation using measured eBAC variables provided in the wrangled workflow.
+5. Semiparametric machine learning sensitivity evaluation (DoubleML random-forest learners).
+
+## Core Estimands
+
+- Weighted heavy-drinking prevalence in the target population.
+- Logistic odds ratios for cannabis-exposure association with heavy drinking.
+- Risk-difference causal targets: ATE, ATT, ATC, and subgroup contrasts (CATE-style summaries).
+- eBAC-domain outcomes (`ebac_tot`, `ebac_legal`) under observed-domain and weighted models.
+
+## Privacy and Publication Model
+
+- Public repository content is restricted to code, sanitized narrative outputs, and website assets.
+- Raw microdata and row-level private outputs are excluded from version control.
+- Runtime pathing is environment-configured to avoid machine-specific hardcoded locations.
+
+::: {.callout-note}
+## Scientific Authorship
+
+This project site documents the principal investigator's research workflow, methods, and interpretation framework for epidemiological review and reproducibility.
+:::

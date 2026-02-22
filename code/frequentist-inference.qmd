@@ -1,0 +1,34 @@
+---
+title: "Module: Frequentist Inference"
+---
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+source("_code_helpers.R")
+```
+
+## Script Metadata
+
+```{r}
+#| echo: false
+#| results: asis
+render_script_metadata("surveillance/investigation/05_frequentist.R")
+```
+
+## Declared Outputs and Current Status
+
+```{r}
+#| echo: false
+#| results: asis
+render_outputs_table("surveillance/investigation/05_frequentist.R")
+```
+
+## Source Code
+
+```{r}
+#| echo: false
+#| results: asis
+render_script_code("surveillance/investigation/05_frequentist.R")
+```

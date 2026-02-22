@@ -1,0 +1,26 @@
+Package: emlsite
+Type: Project
+Title: EML Quarto Website and Reproducibility Utilities
+Version: 0.1.0
+Authors@R: person(
+  "Vansh Singh", "Ruhela",
+  email = "vansh.ruhela@mail.utoronto.ca",
+  role = c("aut", "cre"),
+  comment = c(ORCID = "0009-0004-1750-3592")
+)
+Description: Quarto website source and deployment utilities for the
+  Epidemiological Semiparametric Machine Learning (EML) project.
+  Includes security/path scans, manifest generation, and deployment helpers.
+License: Apache License (>= 2)
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Depends:
+    R (>= 4.3.0)
+Imports:
+    knitr,
+    rmarkdown,
+    rsconnect,
+    yaml
+Suggests:
+    renv

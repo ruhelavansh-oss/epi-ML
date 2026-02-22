@@ -1,0 +1,31 @@
+/* Remove explicit font-family to let Cosmo/Darkly themes control typography */
+body {
+    line-height: 1.6;
+}
+
+h1, h2, h3, h4 {
+    font-weight: bold;
+}
+
+code {
+    font-size: 0.9em;
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+
+.scientific-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+/* Ensure tables adapt to dark mode using Bootstrap variables */
+.scientific-table th, .scientific-table td {
+    border: 1px solid var(--bs-border-color);
+    padding: 8px;
+    text-align: left;
+}
+
+.scientific-table th {
+    background-color: var(--bs-tertiary-bg);
+}

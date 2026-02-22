@@ -1,0 +1,145 @@
+project:
+  type: website
+  output-dir: _site
+  title: "Epidemiological Machine Learning"
+  render:
+    - "*.qmd"
+    - "!R_libs/**"
+    - "!surveillance/**"
+    - "!data/**"
+    - "!reports/source/**"
+    - "!reports/public/**"
+author:
+  - name: Vansh Singh Ruhela
+    orcid: 0009-0004-1750-3592
+    url: https://github.com/ruhelavansh-oss
+    email: vansh.ruhela@mail.utoronto.ca
+    affiliation: University of Toronto SGS
+website:
+  title: "EML"
+  site-url: https://ruhelavansh-oss.github.io/epi-ML/
+  page-footer:
+    left: "Copyright 2026, Vansh Singh Ruhela"
+    right:
+      - icon: github
+        href: https://github.com/ruhelavansh-oss/epi-ML
+  repo-url: https://github.com/ruhelavansh-oss/epi-ML
+  repo-actions: [source, issue]
+  page-navigation: true
+  reader-mode: true
+
+  sidebar:
+    style: "docked"
+    collapse-level: 2
+    contents:
+      - section: "Project Info"
+        contents:
+          - href: index.qmd
+            text: "Home"
+          - href: background.qmd
+            text: "Background"
+          - href: reproducibility.qmd
+            text: "Reproducibility"
+          - href: initial-results.qmd
+            text: "Initial Results"
+      - section: "Modules"
+        contents:
+          - href: code/index.qmd
+            text: "Code Index"
+          - section: "Preliminaries"
+            contents:
+              - href: code/data-wrangling.qmd
+                text: "Data Wrangling"
+              - href: code/descriptive-statistics.qmd
+                text: "Descriptive Statistics"
+              - href: code/distribution-tests.qmd
+                text: "Distribution Tests"
+              - href: code/frequentist-inference.qmd
+                text: "Frequentist Inference"
+              - href: code/bayesian-inference.qmd
+                text: "Bayesian Inference"
+              - href: code/power-design.qmd
+                text: "Power Design"
+              - href: code/logistic-models.qmd
+                text: "Logistic Models"
+              - href: code/model-comparison.qmd
+                text: "Model Comparison"
+              - href: code/regression-models.qmd
+                text: "Regression Models"
+              - href: code/propensity-scores.qmd
+                text: "Propensity Scores"
+              - href: code/causal-estimators.qmd
+                text: "Causal Estimators"
+              - href: code/treatment-effects.qmd
+                text: "Treatment Effects"
+              - href: code/dag-specification.qmd
+                text: "DAG Specification"
+              - href: code/meta-synthesis.qmd
+                text: "Meta Synthesis"
+              - href: code/figures.qmd
+                text: "Figures"
+              - href: code/tables.qmd
+                text: "Tables"
+              - href: code/final-report.qmd
+                text: "Summary Report"
+          - section: "eBAC"
+            contents:
+              - href: code/ebac-core.qmd
+                text: "Core"
+              - href: code/ebac-selection-adjustment-ipw.qmd
+                text: "IPW"
+              - href: code/ebac-gender-smote-sensitivity.qmd
+                text: "SMOTE"
+              - href: code/ebac-integrations.qmd
+                text: "Integrations"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - text: Modules
+        menu:
+          - text: Code Index
+            href: code/index.qmd
+          - text: Preliminaries
+            href: code/data-wrangling.qmd
+          - text: eBAC
+            href: code/ebac-core.qmd
+          - text: Summary Report
+            href: code/final-report.qmd
+      - text: About
+        menu:
+          - text: Background
+            href: background.qmd
+          - text: Reproducibility
+            href: reproducibility.qmd
+          - text: Initial Results
+            href: initial-results.qmd
+          - text: Author
+            href: about.qmd
+    right:
+      - icon: github
+        href: https://github.com/ruhelavansh-oss/epi-ML
+format:
+  html:
+    toc: true # Table of contents for each page
+    code-fold: true # Allow code to be folded
+    code-summary: "Show code" # Text for the code folding summary
+    anchor-sections: true # Enable clickable links for sections
+    smooth-scroll: true # Smooth scrolling for navigation
+    theme:
+      dark:
+        - darkly
+        - brand
+      light:
+        - cosmo
+        - brand
+    css: styles.css
+    page-layout: full
+    fig-responsive: true
+    title-block-banner: false
+execute:
+  freeze: false
+  echo: false
+  warning: false
+  message: false
+editor: source

@@ -1,0 +1,35 @@
+---
+title: "Initial Results"
+---
+
+## Reading the Main Outputs
+
+- **Weighted prevalence** represents design-based population burden in the CPADS target population.
+- **Logistic odds ratios** represent adjusted multiplicative associations on the odds scale.
+- **IPW ATE** represents a model-based marginal risk-difference contrast under causal assumptions.
+
+## Interpretation of Example Estimates
+
+### Heavy Drinking Prevalence (Weighted): 45.8% (95% CI: 45.2% to 46.5%)
+
+Interpretation: approximately 46 out of 100 students in the weighted target population are estimated to meet the heavy-drinking criterion in the prior 30 days.
+
+### Cannabis Effect (Logistic OR): 5.71 (95% CI: 5.38 to 6.07)
+
+Interpretation: after model adjustment, the odds of heavy drinking are estimated to be 5.71 times higher among those exposed to cannabis versus those unexposed.
+
+### ATE (IPW): 0.394 (95% CI: 0.383 to 0.404)
+
+Interpretation: under the potential-outcomes assumptions, the modeled average absolute risk difference in heavy drinking between exposed and unexposed regimes is 0.394 (39.4 percentage points).
+
+## eBAC Interpretation Meaning
+
+- `ebac_tot` quantifies continuous estimated blood alcohol concentration available in the measured eBAC domain.
+- `ebac_legal` indicates whether observed eBAC exceeds the legal-limit threshold.
+- eBAC treatment-effect estimates are domain-specific and should not be generalized beyond the observed eBAC analytic subset without additional assumptions.
+
+## Reliability and Robustness
+
+- Confidence intervals quantify statistical precision.
+- Agreement across naive, adjusted, IPW, and AIPW estimates supports directional robustness.
+- SMOTE and DoubleML outputs are interpreted as sensitivity diagnostics for model stability, not as primary survey-design estimands.

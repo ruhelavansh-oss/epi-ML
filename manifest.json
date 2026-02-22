@@ -1,0 +1,221 @@
+{
+  "version": 1,
+  "locale": "C",
+  "platform": "4.5.2",
+  "metadata": {
+    "appmode": "quarto-static",
+    "primary_rmd": "_quarto.yml",
+    "primary_html": null,
+    "content_category": "site",
+    "has_parameters": false
+  },
+  "quarto": {
+    "version": "1.8.26",
+    "engines": ["markdown"]
+  },
+  "packages": null,
+  "files": {
+    "_quarto.yml": {
+      "checksum": "b3a36db48191f494fefd2622d48fc1d9"
+    },
+    "03_data_wrangling.R": {
+      "checksum": "3ca9542a19f6a7b6ef0c31d61b520a09"
+    },
+    "04_descriptive_stats.R": {
+      "checksum": "2f5fc8003f97ff569cb0abad052c80f7"
+    },
+    "04_distributions.R": {
+      "checksum": "16b057ebb2e3a52cd4811033a36b6d26"
+    },
+    "05_bayesian.R": {
+      "checksum": "904c7bd6afa4d83164172115a26eeeb0"
+    },
+    "05_frequentist.R": {
+      "checksum": "efd75b7f3fef7f9b27ef169066acdbe2"
+    },
+    "05_power_design.R": {
+      "checksum": "277aa0deb239c860bd3cd40d7a7d97bf"
+    },
+    "06_logistic.R": {
+      "checksum": "a420be83a8584e8fb8c75bf2e0b98262"
+    },
+    "06_model_comparison.R": {
+      "checksum": "6a8c798393c6deaa557e085d364e41e4"
+    },
+    "06_regression.R": {
+      "checksum": "3d4e52740ca7cd2527fd277e950ba8e5"
+    },
+    "07_causal_estimators.R": {
+      "checksum": "a054dfcfc7eed27a5a1f6c5af73cf270"
+    },
+    "07_dag.R": {
+      "checksum": "d53d99b972e7957a32269908364f8e0f"
+    },
+    "07_ebac_integrations.R": {
+      "checksum": "aa85088b9ab6b78ddf4172be16c4d2cb"
+    },
+    "07_ebac_gender_smote_sensitivity.R": {
+      "checksum": "a730dc72c19862787281a4b9d10e34cb"
+    },
+    "07_ebac_ipw.R": {
+      "checksum": "fc221a70c8407cdb44fd1a9d6fcdcd22"
+    },
+    "07_ebac.R": {
+      "checksum": "5c87f168d0853d197b4d72407879e06d"
+    },
+    "07_meta_synthesis.R": {
+      "checksum": "12e6da27e5af9ba7a667e3a2626c138c"
+    },
+    "07_propensity.R": {
+      "checksum": "e982b64041865f3e60d3d8caa28588d6"
+    },
+    "07_treatment_effects.R": {
+      "checksum": "2dfdfbb137ddcb6661fd4071a0429539"
+    },
+    "08_figures.R": {
+      "checksum": "3b19bbd0b69df5ab181dfc2bc00167a9"
+    },
+    "08_tables.R": {
+      "checksum": "273cc776d078cbbb9d75553f83e5706f"
+    },
+    "09_report.R": {
+      "checksum": "18c5e391e54017d63806df74be88b499"
+    },
+    "about.qmd": {
+      "checksum": "f73abb1b0b2a3d07ea149a01f8dfe42c"
+    },
+    "surveillance/ebac/07_ebac_integrations.R": {
+      "checksum": "2981d95604e28c963159feef8325bbb8"
+    },
+    "surveillance/ebac/07_ebac_gender_smote_sensitivity.R": {
+      "checksum": "32ef09dfe8c2259f87a892d5d7bbe507"
+    },
+    "surveillance/ebac/07_ebac_ipw.R": {
+      "checksum": "5ac2db37636880cdb0c57faabc529d17"
+    },
+    "surveillance/ebac/07_ebac.R": {
+      "checksum": "d5bb5dc89d463d7adda48fb8a3864235"
+    },
+    "surveillance/lib/config_paths.R": {
+      "checksum": "bd913bd5bf979a1d6ba23dd39b6aeb40"
+    },
+    "surveillance/investigation/03_data_wrangling.R": {
+      "checksum": "e83ed38c0c8f8d06d5cbecdd7dbef331"
+    },
+    "surveillance/investigation/04_descriptive_stats.R": {
+      "checksum": "4b0e42ffbc7e900b16a5889375885031"
+    },
+    "surveillance/investigation/04_distributions.R": {
+      "checksum": "c27056c4440434d2b56f04dcef407ead"
+    },
+    "surveillance/investigation/05_bayesian.R": {
+      "checksum": "3beafb3578fd2d2a53556cba6fab0e3b"
+    },
+    "surveillance/investigation/05_frequentist.R": {
+      "checksum": "4e3118517f42fccc0552f3abe1722fb8"
+    },
+    "surveillance/investigation/05_power_design.R": {
+      "checksum": "683996a2ee8140bf41ef0959711abf93"
+    },
+    "surveillance/investigation/06_logistic.R": {
+      "checksum": "f231f0e4ba9066918a1b11543270f1e3"
+    },
+    "surveillance/investigation/06_model_comparison.R": {
+      "checksum": "7af21fdec94fa624f7e1bdd9702a32a4"
+    },
+    "surveillance/investigation/06_regression.R": {
+      "checksum": "ff0f85681ecb89d751b16b21fc0f0b63"
+    },
+    "surveillance/investigation/07_causal_estimators.R": {
+      "checksum": "722b8c56f000b86caf03bb1a0b11c12f"
+    },
+    "surveillance/investigation/07_dag.R": {
+      "checksum": "6c6d22bf84f0e395b3c65b180a9238f0"
+    },
+    "surveillance/investigation/07_meta_synthesis.R": {
+      "checksum": "8f78b592625fc750d788ee7d862f7301"
+    },
+    "surveillance/investigation/07_propensity.R": {
+      "checksum": "e43d66e7f64199b3da9d00d8bf8a6cf1"
+    },
+    "surveillance/investigation/07_treatment_effects.R": {
+      "checksum": "3a9d033c9c4f2c4660224c2c0f27d73d"
+    },
+    "surveillance/investigation/08_figures.R": {
+      "checksum": "0b80b70e45009fb33fa159db4056944f"
+    },
+    "surveillance/investigation/08_tables.R": {
+      "checksum": "b224a516ebdce88c72ab943034f1e747"
+    },
+    "surveillance/investigation/09_report.R": {
+      "checksum": "dd2f8cc1dc45d88cd38f6a4916fe8321"
+    },
+    "config/runtime.yml": {
+      "checksum": "f5250561bafb26c8c0b1bc65e1a5eabe"
+    },
+    "DESCRIPTION": {
+      "checksum": "652af397996a2dff52c2b043626fca6f"
+    },
+    "index.qmd": {
+      "checksum": "bdf2511411606bd67102a210418f60af"
+    },
+    "LICENSE": {
+      "checksum": "86d3f3a95c324c9479bd8986968f4327"
+    },
+    "manifest.json": {
+      "checksum": "0135db294d839503adf30df4805e1e69"
+    },
+    "background.qmd": {
+      "checksum": "368c7a337825e0af961d4ed10bd4f9d3"
+    },
+    "NOTICE": {
+      "checksum": "cedfdc54c305b7dab97c8c83f82eb4e5"
+    },
+    "PUBLISH_CONNECT_CLOUD.md": {
+      "checksum": "28506ab22aa9b66c0704e86968bad462"
+    },
+    "README.md": {
+      "checksum": "39c906657da2d85d412f364d733fc8bb"
+    },
+    "reproducibility.qmd": {
+      "checksum": "cfb2321a128d5768c3d18b96629afb94"
+    },
+    "initial-results.qmd": {
+      "checksum": "9ed0d7845fbbc7d8a9992f4188e76f26"
+    },
+    "scripts/check_connect_publish_readiness.R": {
+      "checksum": "988d678bb25295b84e10627fd2a7b73e"
+    },
+    "scripts/deploy_connect_cloud.R": {
+      "checksum": "5e878b77bc8a658a98baab3a7ad11444"
+    },
+    "scripts/generate_manifest.R": {
+      "checksum": "7cb6acdbf5b070a636a40800348780b3"
+    },
+    "scripts/install_deps.R": {
+      "checksum": "a01cbccc80a994f4572c53b113a2f07b"
+    },
+    "scripts/install_git_hooks.sh": {
+      "checksum": "f3bc75f16cc7b077666551379978177c"
+    },
+    "scripts/render_site.R": {
+      "checksum": "1d8737a571bb266fc116aa85c035857f"
+    },
+    "scripts/run_modules.R": {
+      "checksum": "8e8fecf1801af45b356d52fdee49b8f8"
+    },
+    "scripts/security_scan.R": {
+      "checksum": "6cc54bf5a39769d4e11a9583e12b144b"
+    },
+    "scripts/unlock_data_local.sh": {
+      "checksum": "19b903070679ea1a28d983d839b432b4"
+    },
+    "SECURITY.md": {
+      "checksum": "6ace4a26e4d47dda7207dc0ca052c841"
+    },
+    "styles.css": {
+      "checksum": "20b02c1a3ee61f90b26cab5752c9ad10"
+    }
+  },
+  "users": null
+}

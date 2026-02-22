@@ -1,0 +1,38 @@
+---
+title: "Reproducibility"
+---
+
+## Runtime Configuration
+
+The workflow resolves all paths through environment-driven configuration:
+
+- `CPADS_PROJECT_ROOT`
+- `CPADS_DATA_DIR`
+- `CPADS_RAW_PUMF_FILE`
+- `CPADS_OUTPUT_PRIVATE_DIR`
+- `CPADS_OUTPUT_PUBLIC_DIR`
+- `CPADS_REPORTS_DIR`
+- `CPADS_SECRET_KEY`
+
+Project defaults are defined in `config/runtime.yml` and can be overridden locally via `.Renviron` or `.env`.
+
+## Execution Commands
+
+```bash
+Rscript scripts/run_modules.R
+Rscript scripts/render_site.R
+Rscript scripts/security_scan.R
+Rscript scripts/check_connect_publish_readiness.R
+```
+
+## Publication Boundaries
+
+- Public website content is QMD-based and curated for disclosure safety.
+- Private microdata and row-level outputs are excluded from repository tracking.
+- Security scanning runs locally and in CI before deployment.
+
+## Deployment Targets
+
+- Primary: GitHub Pages (Actions-based static deploy).
+- Fallback: Posit Connect Cloud (manifest-based publish from repository).
+- GitHub Pages URL: <https://ruhelavansh-oss.github.io/epi-ML/>

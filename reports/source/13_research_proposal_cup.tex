@@ -1,0 +1,256 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Cambridge University Press journal codes:
+% aas, jps, nws, pla, ram, ehs, nlp
+%
+% NOTE:
+% This draft uses journal=ehs as a valid placeholder.
+% Change the journal code above if you target a different CUP journal.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\PassOptionsToPackage{
+  colorlinks=true,
+  pdfborder={0 0 0},
+  citecolor=blue,
+  linkcolor=blue,
+  urlcolor=blue
+}{hyperref}
+
+\documentclass[
+  journal=ehs,
+  manuscript=article,
+  year=2026,
+  volume=21
+]{cup-journal}
+
+\usepackage{amsmath}
+\usepackage[nopatch]{microtype}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{orcidlink}
+\usepackage{threeparttable}
+\usepackage{tabularx}
+\usepackage{ragged2e}
+
+\title{Epidemiological Semiparametric Machine Learning:\\Retrospective Alcohol and Drug Use Cohort Study}
+
+\author{Vansh Singh Ruhela \orcidlink{0009-0004-1750-3592}}
+\affiliation{Collaborative Specialization in Addiction Studies, Dalla Lana School of Public Health, University of Toronto, Toronto, ON, Canada}
+\email[Vansh Singh Ruhela]{vansh.ruhela@mail.utoronto.ca}
+\alsoaffiliation{School of Graduate Studies, University of Toronto, Toronto, ON, Canada}
+\alsoaffiliation{Developer Program, Google LLC, Mountain View, CA, USA}
+
+\addbibresource{13_research_proposal_cup.bib}
+
+\keywords{epidemiology, causal inference, semiparametric machine learning, CPADS, cannabis use, heavy drinking}
+
+\begin{document}
+
+\begin{abstract}
+\noindent\textbf{Background:}
+Alcohol and cannabis co-use in postsecondary populations is a major public health concern in Canada. The Canadian Postsecondary Education Alcohol and Drug Use Survey (CPADS) 2021--2022 Public Use Microdata File (PUMF) provides a large observational sample suitable for prevalence, association, and causal-effect estimation under explicit assumptions \cite{HealthCanada_CPADSsummary,HealthCanada_CPADS_2021_2022_PUMF_data}.
+
+\medskip
+\noindent\textbf{Objective:}
+To estimate and interpret the relationship between past-year cannabis use and past-30-day heavy drinking, with transparent handling of sampling weights, confounding adjustment, and causal identification assumptions.
+
+\medskip
+\noindent\textbf{Study Design:}
+Secondary analysis of respondent-level CPADS records (wrangled \(N=40{,}931\)). The main analyses include survey-weighted prevalence and logistic regression, propensity-score weighting, matching/subclassification, and sensitivity analyses.
+
+\medskip
+\noindent\textbf{Preliminary Signal From Current Workflow:}
+Weighted heavy-drinking prevalence was \(45.8\%\) (95\% CI \(45.2\%\) to \(46.5\%\)); adjusted survey-logistic odds ratio for cannabis exposure was \(5.71\) (95\% CI \(5.38\) to \(6.07\)); and IPW ATE was \(0.394\) (95\% CI \(0.384\) to \(0.405\)).
+
+\medskip
+\noindent\textbf{Knowledge Translation:}
+The project is designed for reproducible dissemination through a code-first workflow (R/Quarto/\LaTeX{} + Git), with links to official open-data access rather than redistributing CPADS microdata.
+\end{abstract}
+
+\clearpage
+\tableofcontents
+\clearpage
+
+\section{Research Proposal}
+
+\subsection{Background and Rationale}
+This proposal analyzes the CPADS 2021--2022 PUMF as a retrospective observational cohort-style dataset for substance-use epidemiology \cite{HealthCanada_CPADS_2021_2022_PUMF_data,HealthCanada2025_CPADS_technical_notes}. The clinical framing follows official nosologies: DSM-5-TR for Alcohol Use Disorder (AUD) and Cannabis Use Disorder (CUD) \cite{apa2022_dsm5tr}, and ICD-11 Mortality and Morbidity Statistics domains for disorders due to alcohol (6C40) and cannabis (6C41) \cite{who2026_icd11_mms}.
+
+The proposal treats CPADS variables as \emph{population-level behavioral indicators} aligned to diagnostic domains. CPADS is not a clinical diagnostic interview instrument and is therefore used for epidemiologic inference, not individual diagnosis.
+
+\subsection{Objective and Research Questions}
+\textbf{Primary objective:} estimate the direction and magnitude of association between cannabis exposure and heavy drinking, then estimate causal risk differences under explicit assumptions.
+
+\textbf{Research questions:}
+\begin{enumerate}
+  \item What is the survey-weighted prevalence of heavy drinking in the CPADS target population?
+  \item What is the adjusted association between cannabis exposure and heavy drinking on the odds scale?
+  \item Under identification assumptions, what are ATE/ATT/ATC estimates on the risk-difference scale?
+  \item How sensitive are findings to modeling choices (e.g., weighting, matching, oversampling)?
+\end{enumerate}
+
+\subsection{Data Source, Sampling, and Analysis Population}
+\textbf{Data source:} CPADS 2021--2022 PUMF and technical documentation \cite{HealthCanada_CPADS_2021_2022_PUMF_data,HealthCanada_CPADS_2021_2022_PUMF_user_guide,HealthCanada2025_CPADS_technical_notes}.
+
+\textbf{Sampling and weights:}
+\begin{itemize}
+  \item Sampling is determined by the original CPADS survey design, not by this analysis.
+  \item The analysis uses the provided survey weight variable \texttt{wtpumf} in weighted phases.
+  \item Survey design object in code: \texttt{svydesign(ids=\textasciitilde 1, weights=\textasciitilde wtpumf, data=...)} \cite{LumleyGaoSchneider2025_survey,srvyr}.
+\end{itemize}
+
+\textbf{Observed analysis counts from the current workflow:}
+\begin{itemize}
+  \item Cleaned dataset: \(N=40{,}931\).
+  \item Non-missing heavy drinking outcome: \(n=31{,}719\).
+  \item Survey-logistic complete cases: \(n=30{,}989\).
+  \item Causal complete cases (includes physical health): \(n=30{,}890\).
+\end{itemize}
+
+\subsection{Variable Construction and Data Operations}
+The data-wrangling script applies deterministic recoding rules:
+\begin{itemize}
+  \item Special codes \(97,98,99,997,998,999\) are recoded to \texttt{NA} for non-preserved columns.
+  \item \texttt{gender} from \texttt{dvdemq01}: Woman / Man / Transgender-Non-binary.
+  \item \texttt{age\_group} from \texttt{age\_groups}: 16--19, 20--22, 23--25, 26+.
+  \item \texttt{province\_region} from \texttt{region}: Atlantic, Quebec, Ontario, Western.
+  \item \texttt{cannabis\_any\_use} from \texttt{can05}: 1=yes, 0=no.
+  \item \texttt{heavy\_drinking\_30d}: uses \texttt{alc12\_30d\_prev\_total} first; falls back to \texttt{alc12\_30d\_prev}.
+\end{itemize}
+
+\subsection{Exposure, Outcome, Randomization Status, and Matching}
+\textbf{Treatment (exposure):} \(T_i=\texttt{cannabis\_any\_use}_i\), binary (past-year cannabis use).
+
+\textbf{Outcome:} \(Y_i=\texttt{heavy\_drinking\_30d}_i\), binary (heavy drinking in past 30 days).
+
+\textbf{Randomization:} there is no experimental randomization or treatment assignment. This is an observational design.
+
+\textbf{How randomization is approximated analytically:}
+\begin{itemize}
+  \item propensity score modeling (\(\Pr[T=1\mid X]\));
+  \item inverse probability weighting (IPW);
+  \item nearest-neighbor matching (1:1, ATT-focused, logistic distance);
+  \item subclassification matching (10 subclasses, ATE-focused).
+\end{itemize}
+
+\subsection{Statistical Analysis Plan}
+\subsubsection{Survey-weighted descriptive inference}
+Heavy-drinking prevalence is estimated with survey-weighted means and 95\% confidence intervals:
+\[
+\hat{p}=\widehat{E}_w[Y].
+\]
+Group-specific prevalence is estimated by weighted subgroup means.
+
+\subsubsection{Survey-weighted logistic model}
+Primary association model:
+\[
+\log\!\left(\frac{\Pr(Y_i=1\mid T_i,X_i)}{1-\Pr(Y_i=1\mid T_i,X_i)}\right)
+=\beta_0+\beta_1 T_i+\beta_2^\top X_i,
+\]
+fit with \texttt{svyglm(..., family=quasibinomial())}. The adjusted association is reported as
+\[
+\text{OR}=\exp(\beta_1).
+\]
+
+\subsubsection{Causal estimands and propensity weighting}
+Potential-outcomes estimands:
+\[
+\text{ATE}=E[Y(1)-Y(0)],\quad
+\text{ATT}=E[Y(1)-Y(0)\mid T=1],\quad
+\text{ATC}=E[Y(1)-Y(0)\mid T=0].
+\]
+Propensity score:
+\[
+e(X_i)=\Pr(T_i=1\mid X_i).
+\]
+ATE IPW:
+\[
+w_i^{ATE}=\frac{T_i}{e(X_i)}+\frac{1-T_i}{1-e(X_i)}.
+\]
+Current scripts use trimming to stabilize extreme weights:
+\begin{itemize}
+  \item one IPW workflow trims final weights at the 1st/99th percentiles;
+  \item treatment-effect workflow clips propensity scores to \([0.01,0.99]\) before weighting.
+\end{itemize}
+Bootstrap uncertainty is computed with \(500\) resamples in IPW and g-computation phases.
+
+\subsubsection{Additional estimators and sensitivity analyses}
+\begin{itemize}
+  \item G-computation and AIPW (package-based when available, manual fallback otherwise) \cite{aipw}.
+  \item Matching/subclassification with \texttt{MatchIt} and balance diagnostics with \texttt{cobalt}/\texttt{WeightIt} \cite{MatchIt,cobalt,WeightIt2026}.
+  \item SMOTE/oversampling sensitivity model is fit as an auxiliary analysis (non-survey-weighted) \cite{Chawla2002SMOTE}.
+  \item Optional semiparametric DML extensions are planned for robustness checks \cite{Bach2025DMLinR}.
+\end{itemize}
+
+\subsection{Interpretation of Key Existing Initial Results}
+\begin{table}[htbp]
+\centering
+\caption{Interpretation of key current estimates from the existing workflow outputs}
+\label{tab:key_estimate_interpretation}
+\begin{threeparttable}
+\begin{tabularx}{\textwidth}{@{}l l X@{}}
+\toprule
+Estimate & Value & Interpretation \\
+\midrule
+Heavy drinking prevalence (weighted) &
+\(45.8\%\) (95\% CI \(45.2\%\) to \(46.5\%\)) &
+After applying CPADS survey weights, the estimated population prevalence is about 46 heavy-drinking students per 100. This is a population prevalence estimate, not a causal effect. \\
+Cannabis effect (survey-logistic OR) &
+\(\text{OR}=5.71\) (95\% CI \(5.38\) to \(6.07\)) &
+Holding modeled covariates fixed, the odds of heavy drinking are estimated to be 5.71 times higher for cannabis users than non-users. This is an adjusted \emph{associational} odds ratio, not a risk ratio and not automatically causal. \\
+ATE (IPW) &
+\(0.394\) (95\% CI \(0.384\) to \(0.405\)) &
+On the risk-difference scale, the model estimates a 39.4 percentage-point higher heavy-drinking probability under cannabis exposure versus no exposure, averaged over the analysis population, \emph{if} causal assumptions hold. \\
+\bottomrule
+\end{tabularx}
+\end{threeparttable}
+\end{table}
+
+\subsection{Causal Assumptions and Scope of Inference}
+Causal interpretation is conditional on:
+\begin{enumerate}
+  \item consistency (observed outcome equals potential outcome under observed exposure),
+  \item conditional exchangeability given measured covariates,
+  \item positivity/overlap (nonzero treatment probability for relevant covariate strata),
+  \item correct specification or robustness of nuisance models.
+\end{enumerate}
+
+Accordingly, the OR is interpreted as adjusted association, while ATE/ATT/ATC are interpreted as causal targets only under the above assumptions. Residual confounding remains a key threat in any observational design.
+
+\subsection{Known Methodological Caveats to Address in the Final Study}
+\begin{itemize}
+  \item Weighted and unweighted estimands are mixed across workflow phases and must be labeled explicitly.
+  \item CATE outputs in the current script are subgroup contrasts and are marked as unadjusted.
+  \item Linear probability approximations are used in some matched-data standard-error calculations.
+  \item SMOTE sensitivity models do not preserve the original survey design weighting.
+\end{itemize}
+
+\subsection{Knowledge Translation and Reproducibility}
+\textbf{Reproducibility products:}
+\begin{itemize}
+  \item executable R scripts for each analysis phase;
+  \item Quarto/R Markdown and \LaTeX{} manuscript sources;
+  \item version-controlled outputs and provenance tables;
+  \item session metadata (software versions and computational environment).
+\end{itemize}
+
+\textbf{Data access policy:}
+CPADS microdata are available under the Government of Canada open-data framework; this project distributes code and reproducibility instructions, not duplicate raw microdata files \cite{HealthCanada_CPADS_2021_2022_PUMF_data}.
+
+\paragraph{Funding Statement}
+No external industry funding supported this CPADS proposal analysis.
+
+\paragraph{Competing Interests}
+Any external funding unrelated to this CPADS project is disclosed separately and did not influence the present design, analysis, interpretation, or reporting.
+
+\paragraph{Ethical Standards}
+This is a secondary analysis of de-identified open microdata. No direct participant contact or intervention occurred.
+
+\paragraph{Data Availability Statement}
+CPADS 2021--2022 PUMF and documentation are publicly available from the Government of Canada open-data portal \cite{HealthCanada_CPADS_2021_2022_PUMF_data}.
+
+\paragraph{Author Contributions}
+Conceptualization, methodology, software, formal analysis, writing, and revision: VSR.
+
+\printbibliography
+
+\end{document}

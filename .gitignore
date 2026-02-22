@@ -1,0 +1,48 @@
+# OS/editor noise
+.DS_Store
+*.swp
+*.swo
+*.tmp
+*.bak
+
+# Secrets and local env
+.env
+.env.*
+!.env.example
+.Renviron
+.Rhistory
+.RData
+
+# Private data and outputs
+/data/private/**
+!/data/private/.gitkeep
+/data/public/**
+!/data/public/.gitkeep
+/output/**
+/outputs/**
+/logs/**
+!/logs/.gitkeep
+
+# Build artifacts
+_site/
+.quarto/
+_freeze/
+*.log
+
+# Local libraries/caches
+Rlibs/
+renv/library/
+renv/staging/
+.Rproj.user/
+
+# Keep public report and source directories tracked
+!reports/
+!reports/source/
+!reports/public/
+/reports/public/**
+!/reports/public/.gitkeep
+/reports/.DS_Store
+
+**/*.quarto_ipynb
+
+/.quarto/
