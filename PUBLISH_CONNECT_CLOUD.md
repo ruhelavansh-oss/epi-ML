@@ -62,12 +62,8 @@ RSCONNECT_ACCOUNT=<your-account> Rscript scripts/deploy_connect_cloud.R
 4. Confirm GitHub Pages fallback remains available:
    - <https://ruhelavansh-oss.github.io/epi-ML/>
 
-## Optional GitHub Pages Custom Domain
+## GitHub Pages URL
 
-After DNS ownership and records are configured, add a `CNAME` file at repository root with:
+Use the default repository site URL:
 
-```text
-epi-ml.io
-```
-
-Until then, use the default GitHub Pages URL.
+- <https://ruhelavansh-oss.github.io/epi-ML/>
