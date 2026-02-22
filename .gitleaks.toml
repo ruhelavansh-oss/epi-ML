@@ -1,0 +1,10 @@
+title = "EML Gitleaks Config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allow Algolia public search key declaration in Quarto config"
+regexes = [
+  '''search-only-api-key:\s*[A-Za-z0-9]+'''
+]
