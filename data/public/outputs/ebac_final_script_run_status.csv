@@ -1,0 +1,5 @@
+script,log_file,completed_marker_found,warning_line_count
+PROJECT_ROOT/07_ebac.R,/tmp/07_ebac_fullcheck.log,True,0
+PROJECT_ROOT/07_ebac_ipw.R,/tmp/07_ebac_ipw_fullcheck.log,True,0
+PROJECT_ROOT/07_ebac_gender_smote_sensitivity.R,/tmp/07_ebac_gender_smote_sensitivity_fullcheck.log,True,0
+PROJECT_ROOT/07_ebac_final_master.R,/tmp/07_ebac_final_master_fullcheck.log,True,0

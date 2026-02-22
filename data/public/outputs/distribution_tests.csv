@@ -1,0 +1,10 @@
+variable,distribution,test,statistic,p_value,conclusion,n
+wtpumf,Normal,Shapiro-Wilk,0.9419035699598846,1.642046092273897e-40,Reject normality,40931
+wtpumf,Normal,KS (params estimated),0.09323369991042052,3.547179300695052e-38,Reject normality,40931
+wtpumf,Log-Normal,Shapiro-Wilk on log(X),0.9161540041088698,2.7208699875850417e-46,Reject log-normality,40931
+alc03,Normal,Shapiro-Wilk,0.40207331923590073,4.596062671682611e-84,Reject normality,40826
+alc03,Normal,KS (params estimated),0.516531456486085,0,Reject normality,40826
+alc03,Log-Normal,Shapiro-Wilk on log(X),0.39920072612713087,3.5988832247167433e-84,Reject log-normality,40826
+alc06,Normal,Shapiro-Wilk,0.9182923456577072,7.159214615732513e-46,Reject normality,32273
+alc06,Normal,KS (params estimated),0.1352639020621246,6.935981757546337e-80,Reject normality,32273
+alc06,Log-Normal,Shapiro-Wilk on log(X),0.8885393566482253,4.7102827540643504e-51,Reject log-normality,32273

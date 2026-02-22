@@ -1,0 +1,15 @@
+model,term,OR_smote,OR_lower95,OR_upper95,p_value
+skipped_near_balanced,(Intercept),0.4971,0.4681,0.5278,0
+skipped_near_balanced,age_group.L,0.7422,0.7044,0.7821,0
+skipped_near_balanced,age_group.Q,0.7849,0.7457,0.8261,0
+skipped_near_balanced,age_group.C,1.0719,1.0191,1.1275,0.007075
+skipped_near_balanced,genderMan,0.9192,0.872,0.969,0.001758
+skipped_near_balanced,genderTransgender/Non-binary,0.4631,0.3971,0.5402,0
+skipped_near_balanced,province_regionQuebec,0.9297,0.8676,0.9963,0.038875
+skipped_near_balanced,province_regionOntario,0.7104,0.6647,0.7592,0
+skipped_near_balanced,province_regionWestern,0.6705,0.6216,0.7232,0
+skipped_near_balanced,mental_health.L,1.3968,1.2862,1.5168,0
+skipped_near_balanced,mental_health.Q,0.92,0.8568,0.9878,0.02162
+skipped_near_balanced,mental_health.C,1.1595,1.0919,1.2313,1e-6
+skipped_near_balanced,mental_health^4,0.9891,0.9419,1.0388,0.662172
+skipped_near_balanced,cannabis_any_use,5.478,5.2077,5.7624,0

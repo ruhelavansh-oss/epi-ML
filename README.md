@@ -36,6 +36,7 @@ reports/
   public/        # local rendered report artifacts (gitignored)
 data/
   private/       # local-only raw and private outputs (gitignored)
+  public/        # publishable aggregate artifacts tracked in git
 ```
 
 ## Website and Publication
@@ -57,11 +58,15 @@ Repository URL: [https://github.com/ruhelavansh-oss/epi-ML](https://github.com/r
 Rscript scripts/run_modules.R
 ```
 
+This workflow also publishes aggregate artifacts to `data/public/outputs`.
+
 3. Render site and reports:
 
 ```bash
 Rscript scripts/render_site.R
 ```
+
+This command refreshes public aggregate artifacts before rendering.
 
 4. Run publish readiness checks:
 

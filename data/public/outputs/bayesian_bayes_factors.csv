@@ -1,0 +1,5 @@
+test_name,comparison,bf10,interpretation
+heavy_x_gender,Heavy30d ~ Gender,1893430.6161792746,Extreme evidence for H1
+heavy_x_age,Heavy30d ~ Age Group,12441637104189928e88,Extreme evidence for H1
+heavy_x_region,Heavy30d ~ Region,7426704605986989e29,Extreme evidence for H1
+heavy_x_mh,Heavy30d ~ Mental Health,11852491610406524e92,Extreme evidence for H1

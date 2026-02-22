@@ -1,0 +1,30 @@
+test_name,comparison,statistic,df,p_value,method,p_bonferroni,p_fdr_bh,sig_nominal,sig_bonf,sig_fdr
+gender_overall,Heavy drinking prevalence differs by gender,9.675396760622885,2,6.299649954555332e-5,Wald F-test (svyglm),0.0018268984868210463,7.94303689922194e-5,*,*,*
+gender_Woman_vs_Man,Gender : Woman vs Man,-3.10652470954693,30708,0.001894729934943298,svyttest,0.05494716811335564,0.002113352619744448,*,,*
+gender_Woman_vs_Transgender/Non-binary,Gender : Woman vs Transgender/Non-binary,-3.5454231390071023,20181,3.928703524032677e-4,svyttest,0.011393240219694765,4.557296087877905e-4,*,*,*
+gender_Man_vs_Transgender/Non-binary,Gender : Man vs Transgender/Non-binary,-2.456138312374488,12223,0.014057719029749366,svyttest,0.40767385186273164,0.014057719029749366,*,,*
+age_group_overall,Heavy drinking prevalence differs by age group,101.4674713557905,3,2.2807446688877173e-65,Wald F-test (svyglm),6.61415953977438e-64,1.653539884943595e-64,*,*,*
+age_group_16-19_vs_20-22,Age group : 16-19 vs 20-22,8.574322410558363,19259,1.0709980767993335e-17,svyttest,3.1058944227180673e-16,2.0705962818120447e-17,*,*,*
+age_group_16-19_vs_23-25,Age group : 16-19 vs 23-25,2.7259017676577106,13642,0.006420792130925981,svyttest,0.18620297179685344,0.006650106135601909,*,,*
+age_group_16-19_vs_26+,Age group : 16-19 vs 26+,-8.64323700223052,14828,6.016478717440994e-18,svyttest,1.744778828057888e-16,1.2462705914699202e-17,*,*,*
+age_group_20-22_vs_23-25,Age group : 20-22 vs 23-25,-4.749768047775896,16887,2.0532378375734833e-6,svyttest,5.954389728963101e-5,2.8354236804586196e-6,*,*,*
+age_group_20-22_vs_26+,Age group : 20-22 vs 26+,-17.689199887355386,18073,1.9543967241071567e-69,svyttest,5.667750499910755e-68,1.8892501666369182e-68,*,*,*
+age_group_23-25_vs_26+,Age group : 23-25 vs 26+,-10.544652829469536,12456,6.911903157578008e-26,svyttest,2.004451915697622e-24,1.8222290142705654e-25,*,*,*
+province_region_overall,Heavy drinking prevalence differs by province/region,74.01423019141218,3,1.0657111493721425e-47,Wald F-test (svyglm),3.0905623331792133e-46,5.150937221965355e-47,*,*,*
+province_region_Atlantic_vs_Quebec,Province/Region : Atlantic vs Quebec,-6.9866879567884075,16363,2.9229642642535736e-12,svyttest,8.476596366335364e-11,4.9862331566678606e-12,*,*,*
+province_region_Atlantic_vs_Ontario,Province/Region : Atlantic vs Ontario,-12.179125693428942,17667,5.495751848084677e-34,svyttest,1.5937680359445563e-32,1.7708533732717293e-33,*,*,*
+province_region_Atlantic_vs_Western,Province/Region : Atlantic vs Western,-13.304142664630405,14025,3.833999316925875e-40,svyttest,1.1118598019085038e-38,1.588371145583577e-39,*,*,*
+province_region_Quebec_vs_Ontario,Province/Region : Quebec vs Ontario,-4.75780297020993,17690,1.972566262125379e-6,svyttest,5.7204421601635984e-5,2.8354236804586196e-6,*,*,*
+province_region_Quebec_vs_Western,Province/Region : Quebec vs Western,-6.880145480024979,14048,6.232214286113843e-12,svyttest,1.8073421429730145e-10,1.0040789683183414e-11,*,*,*
+province_region_Ontario_vs_Western,Province/Region : Ontario vs Western,-2.864245212055431,15352,0.004185710304313164,svyttest,0.12138559882508175,0.0044957629194474725,*,,*
+mental_health_overall,Heavy drinking prevalence differs by mental health,86.68866660806472,4,2.2496180107751362e-73,Wald F-test (svyglm),6.523892231247895e-72,3.2619461156239476e-72,*,*,*
+mental_health_Excellent_vs_Very Good,Mental health : Excellent vs Very Good,9.571708225394463,7920,1.375619290259412e-21,svyttest,3.989295941752295e-20,3.068689185963304e-21,*,*,*
+mental_health_Excellent_vs_Good,Mental health : Excellent vs Good,13.046364955450924,12390,1.1976756235608832e-38,svyttest,3.4732593083265612e-37,4.3415741354082015e-38,*,*,*
+mental_health_Excellent_vs_Fair,Mental health : Excellent vs Fair,15.513857625602537,11087,1.0240699675350351e-53,svyttest,2.969802905851602e-52,5.939605811703203e-53,*,*,*
+mental_health_Excellent_vs_Poor,Mental health : Excellent vs Poor,18.596075178932427,6561,2.8968241106127635e-75,svyttest,8.400789920777014e-74,8.400789920777014e-74,*,*,*
+mental_health_Very Good_vs_Good,Mental health : Very Good vs Good,3.707670041409056,15966,2.0988272716794624e-4,svyttest,0.006086599087870441,2.53608295327935e-4,*,*,*
+mental_health_Very Good_vs_Fair,Mental health : Very Good vs Fair,7.136066084375797,14663,1.005437656778179e-12,svyttest,2.915769204656719e-11,1.8223557529104494e-12,*,*,*
+mental_health_Very Good_vs_Poor,Mental health : Very Good vs Poor,11.743946181815547,10137,1.2157893920796275e-31,svyttest,3.52578923703092e-30,3.5257892370309197e-31,*,*,*
+mental_health_Good_vs_Fair,Mental health : Good vs Fair,4.084079788623064,19133,4.443185708583091e-5,svyttest,0.0012885238554890964,5.8569266158595293e-5,*,*,*
+mental_health_Good_vs_Poor,Mental health : Good vs Poor,9.606493809838383,14607,8.70593474963081e-22,svyttest,2.524721077392935e-20,2.103934231160779e-21,*,*,*
+mental_health_Fair_vs_Poor,Mental health : Fair vs Poor,6.177042250546664,13304,6.721673445266964e-10,svyttest,1.9492852991274195e-8,1.0259396311196945e-9,*,*,*

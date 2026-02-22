@@ -42,4 +42,14 @@ for (entry in module_scripts) {
     stop("Execution failed at ", script, " (exit code ", code, ")")
   }
 }
+
+publish_script <- file.path(paths$project_root, "scripts", "publish_public_artifacts.R")
+if (file.exists(publish_script)) {
+  cat("Publishing public artifacts...\n")
+  pub_code <- system2(rscript_bin, publish_script)
+  if (!identical(pub_code, 0L)) {
+    warning("Public artifact publish step failed (exit code ", pub_code, ").")
+  }
+}
+
 cat("All modules completed successfully.\n")

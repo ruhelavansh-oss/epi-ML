@@ -1,0 +1,2 @@
+package_available,run_completed,method,warning_count,class_ratio_before,class_ratio_after,note
+TRUE,TRUE,smotefamily,0,2.06594791374965,1.032973956874825,SMOTE completed with smotefamily on one-hot design matrix; cannabis terms extracted by pattern match.

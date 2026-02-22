@@ -54,6 +54,7 @@ get_paths <- function() {
   list(
     project_root = project_root,
     data_dir = normalizePath(data_dir, winslash = "/", mustWork = FALSE),
+    public_data_dir = normalizePath(file.path(project_root, "data", "public"), winslash = "/", mustWork = FALSE),
     raw_pumf_file = normalizePath(raw_pumf_file, winslash = "/", mustWork = FALSE),
     output_private_dir = normalizePath(output_private_dir, winslash = "/", mustWork = FALSE),
     output_public_dir = normalizePath(output_public_dir, winslash = "/", mustWork = FALSE),
@@ -69,6 +70,7 @@ init_paths <- function(paths = get_paths(), dirs = c("output_private_dir", "wran
   for (d in dirs) {
     dir.create(paths[[d]], recursive = TRUE, showWarnings = FALSE)
   }
+  dir.create(file.path(paths$public_data_dir, "outputs"), recursive = TRUE, showWarnings = FALSE)
   invisible(paths)
 }
 
@@ -87,6 +89,7 @@ safe_label_path <- function(path, paths = get_paths()) {
   labels <- stats::setNames(
     c(
       "PRIVATE_DATA_DIR",
+      "PUBLIC_DATA_DIR",
       "PRIVATE_OUTPUT_DIR",
       "PUBLIC_REPORTS_DIR",
       "REPORTS_SOURCE_DIR",
@@ -94,6 +97,7 @@ safe_label_path <- function(path, paths = get_paths()) {
     ),
     c(
       paths$data_dir,
+      paths$public_data_dir,
       paths$output_private_dir,
       paths$output_public_dir,
       paths$reports_dir,

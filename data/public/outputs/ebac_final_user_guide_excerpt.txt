@@ -1,0 +1,15 @@
+              dvdemq02             (R) What term best describes your          (1) Heterosexual 
+                                   sexual orientation?                        (2) Other 
+                                                                              (98) I prefer not to answer 
+                                   Domain: All respondents                    (99) I don't know 
+              dvdemq6              (R) What ethnicity are you?                (1) Black 
+                                                                              (2) East/Southeast Asian 
+                                   Domain: All respondents                    (3) Indigenous (First Nations, Metis, Inuk/Inuit 
+                                                                              descent) 
+                                                                              (4) Latino (Latin American, Hispanic descent) 
+                                                                              (5) Middle Eastern 
+                                                                              (6) South Asian 
+                                                                              (7) White 
+                                                                              (8) Other/Multiple 
+                                                                              (98) I prefer not to answer 
+                                                                              (99) I don't know 

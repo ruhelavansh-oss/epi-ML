@@ -57,6 +57,11 @@ safe_paths <- function() {
   project_root <- absolutize(p$project_root, root, base = root)
   list(
     project_root = project_root,
+    public_data_dir = absolutize(
+      p$public_data_dir,
+      file.path(project_root, "data", "public"),
+      base = project_root
+    ),
     data_dir = absolutize(
       p$data_dir,
       file.path(project_root, "data", "private"),
@@ -179,6 +184,8 @@ extract_declared_outputs <- function(lines) {
   raw <- regmatches(lines, m)
   vals <- unique(gsub("^['\\\"]|['\\\"]$", "", unlist(raw)))
   vals <- vals[!grepl("\\.(R|r|Rmd|rmd|qmd)$", vals)]
+  # Internal row-level artifacts (RDS) are intentionally excluded from public module tables.
+  vals <- vals[!grepl("\\.rds$", tolower(vals))]
   vals <- vals[!grepl("^https?://", vals)]
   vals
 }
@@ -187,19 +194,18 @@ candidate_paths <- function(name) {
   nm <- gsub("^\\./", "", name)
   unique(c(
     file.path(paths$project_root, nm),
-    file.path(paths$wrangled_dir, nm),
-    file.path(paths$figures_dir, nm),
-    file.path(paths$output_private_dir, nm),
+    file.path(paths$public_data_dir, "outputs", nm),
+    file.path(paths$public_data_dir, "outputs", "figures", nm),
+    file.path(paths$public_data_dir, "outputs", "wrangled", nm),
+    file.path(paths$public_data_dir, "outputs", basename(nm)),
+    file.path(paths$public_data_dir, "outputs", "figures", basename(nm)),
+    file.path(paths$public_data_dir, "outputs", "wrangled", basename(nm)),
     file.path(paths$output_public_dir, nm),
-    file.path(paths$reports_dir, nm),
-    file.path(paths$wrangled_dir, basename(nm)),
-    file.path(paths$figures_dir, basename(nm)),
-    file.path(paths$output_private_dir, basename(nm)),
     file.path(paths$output_public_dir, basename(nm)),
-    file.path(paths$output_private_dir, "wrangled", basename(nm)),
-    file.path(paths$output_private_dir, "figures", basename(nm)),
+    file.path(paths$reports_dir, nm),
     file.path(paths$project_root, "reports", "public", basename(nm)),
-    file.path(paths$project_root, "reports", "source", basename(nm))
+    file.path(paths$project_root, "reports", "source", basename(nm)),
+    file.path(paths$reports_dir, basename(nm))
   ))
 }
 
@@ -215,26 +221,16 @@ default_expected_path <- function(name) {
   ext <- tolower(sub(".*\\.", "", base))
   has_dir <- grepl("/", nm, fixed = TRUE)
   if (has_dir) {
-    return(normalizePath(file.path(paths$project_root, nm), winslash = "/", mustWork = FALSE))
+    return(normalizePath(file.path(paths$public_data_dir, "outputs", nm), winslash = "/", mustWork = FALSE))
   }
 
-  if (ext %in% c("rds")) {
-    return(normalizePath(file.path(paths$wrangled_dir, base), winslash = "/", mustWork = FALSE))
-  }
   if (ext %in% c("png", "pdf")) {
-    return(normalizePath(file.path(paths$figures_dir, base), winslash = "/", mustWork = FALSE))
+    return(normalizePath(file.path(paths$public_data_dir, "outputs", "figures", base), winslash = "/", mustWork = FALSE))
   }
-  if (ext %in% c("html")) {
+  if (ext %in% c("html", "md", "tex", "bib")) {
     return(normalizePath(file.path(paths$output_public_dir, base), winslash = "/", mustWork = FALSE))
   }
-  if (ext %in% c("md", "tex", "bib")) {
-    return(normalizePath(file.path(paths$reports_dir, base), winslash = "/", mustWork = FALSE))
-  }
-  normalizePath(file.path(paths$output_private_dir, base), winslash = "/", mustWork = FALSE)
-}
-
-is_private_expected <- function(path) {
-  starts_with_path(path, paths$data_dir) || starts_with_path(path, paths$output_private_dir)
+  normalizePath(file.path(paths$public_data_dir, "outputs", base), winslash = "/", mustWork = FALSE)
 }
 
 resolve_output <- function(name) {
@@ -245,7 +241,7 @@ resolve_output <- function(name) {
     path_label <- if (exists("safe_label_path")) safe_label_path(expected, paths) else expected
     return(list(
       found = FALSE,
-      status = ifelse(is_private_expected(expected), "not published", "no"),
+      status = "no",
       path = path_label,
       size_kb = NA_character_,
       modified = NA_character_
@@ -292,13 +288,6 @@ render_outputs_table <- function(script_rel) {
   }
   outputs <- sort(unique(outputs))
   resolved <- lapply(outputs, resolve_output)
-  if (any(vapply(resolved, function(x) identical(x$status, "not published"), logical(1)))) {
-    cat(
-      "Public site note: some artifacts are generated into private output directories ",
-      "and are intentionally not published in GitHub Pages.\n\n",
-      sep = ""
-    )
-  }
   cat("| Declared output | Exists | Resolved path | Size (KB) | Last modified |\n")
   cat("|---|---:|---|---:|---|\n")
   for (i in seq_along(outputs)) {

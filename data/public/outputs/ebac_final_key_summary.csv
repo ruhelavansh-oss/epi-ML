@@ -1,0 +1,14 @@
+key,value
+weighted_ebac_legal_prevalence_observed_domain,0.649916083640693
+weighted_ebac_tot_mean_observed_domain,0.143141839150662
+weighted_main_or_cannabis_ebac_legal,3.31658885243636
+selection_adjusted_or_cannabis_ebac_legal,3.33017242236168
+causal_ate_ipw,0.257760455452553
+causal_att_ipw,0.256008185058167
+causal_atc_ipw,0.259575665759896
+dml_ate_rf,0.246839535833315
+dml_atte_rf,0.242465975828647
+smote_class_ratio_before,2.06594791374965
+smote_class_ratio_after,1.03297395687483
+ethnicity_variable_resolution,official_ethnicity_var=dvdemq6
+race_named_vars_found,official_ethnicity_var=dvdemq6; race_name_scan=NONE

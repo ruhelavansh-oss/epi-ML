@@ -1,0 +1,10 @@
+check_name,value,pass,note
+anthropometric_vars_present,demq3=FALSE; demq4=FALSE,TRUE,Expected in public PUMF: unavailable; do not recompute eBAC from Widmark inputs.
+ebac_tot_range_plausible,"[0.000, 0.500]",TRUE,Expected eBAC totals in plausible human range; out-of-range values indicate data coding issues.
+ebac_legal_consistency_with_threshold_strict,agreement=0.98733; mismatches=283; exact_0.08_n=664,TRUE,Strict check may disagree at exactly 0.08 due to rounding/precision boundary.
+ebac_legal_consistency_with_threshold_off_boundary,agreement=1.00000; n=21665,TRUE,Primary correctness check excluding exact 0.08 boundary values.
+ebac_legal_vs_alc13_lrdg_concordance,agreement=0.98249; mismatches=391,TRUE,Concordance check only; these indicators can differ by internal derivation rules.
+ebac_tot_missingness_rate,0.4545,FALSE,"If high, eBAC analyses are a selected-domain analysis, not full-cohort inference."
+structural_missingness_check_alcohol_past12m,P(miss|alc12m=0)=1.0000; P(miss|alc12m=1)=0.3102,TRUE,Expected skip-pattern behavior: almost all non-drinkers should have missing eBAC.
+cannabis_overlap_in_ebac_domain,treated=0.546; control=0.454,TRUE,Both exposure groups should be represented in eBAC-observed domain for stable comparisons.
+survey_weights_positive,TRUE,TRUE,Non-positive weights invalidate standard weighted estimation.

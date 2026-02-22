@@ -1,0 +1,3 @@
+model,deviance,df_residual,AIC_approx,n_parameters
+Null (intercept-only),43177.03001412405,31293,43177.03001412405,1
+Adjusted (4 predictors),42125.07544381311,31281,42157.13573864989,13

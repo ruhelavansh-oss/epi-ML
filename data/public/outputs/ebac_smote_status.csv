@@ -1,0 +1,2 @@
+smote_package,package_available,run_completed,method,warning_count,note,class_ratio_before,class_ratio_after
+smotefamily,TRUE,TRUE,smotefamily,0,SMOTE sensitivity run with smotefamily::SMOTE on one-hot design matrix. Interpret as predictive robustness only; not survey-weighted inference.,2.06594791374965,1.032973956874825

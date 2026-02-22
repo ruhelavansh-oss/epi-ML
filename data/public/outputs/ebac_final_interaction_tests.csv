@@ -1,0 +1,3 @@
+test,F_stat,df_num,df_den,p_value
+cannabis_any_use:gender,1.7718631283304365,2,21877,0.1700403296223405
+cannabis_any_use:age_group,7.3591702727796475,3,21876,6.317391029626964e-5

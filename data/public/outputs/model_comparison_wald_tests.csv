@@ -1,0 +1,7 @@
+predictor,F_statistic,df_num,df_denom,p_value,significant
+age_group,39.9091,3,30872,9.900205516737654e-26,Yes
+gender,28.2552,2,30872,5.496937269119912e-13,Yes
+province_region,59.7091,3,30872,1.7582654908968987e-38,Yes
+mental_health,19.5268,4,30872,4.594317119109803e-16,Yes
+cannabis_any_use,3163.3846,1,30872,0,Yes
+physical_health,10.9905,4,30872,6.626955517129641e-9,Yes

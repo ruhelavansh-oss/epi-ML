@@ -1,0 +1,2 @@
+method,package_available,imbalance_ratio,run_completed,warning_count,note
+skipped_near_balanced,TRUE,1.0809159280150415,TRUE,0,Outcome is near-balanced (<1.25 ratio); SMOTE skipped by design.

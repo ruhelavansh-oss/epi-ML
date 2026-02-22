@@ -18,6 +18,9 @@
 !/data/private/.gitkeep
 /data/public/**
 !/data/public/.gitkeep
+!/data/public/outputs/
+!/data/public/outputs/**
+!/data/public/outputs_manifest.csv
 /output/**
 /outputs/**
 /logs/**

@@ -1,0 +1,10 @@
+item,value
+n_total_cleaned,40931
+ebac_tot_exists,TRUE
+ebac_legal_exists,TRUE
+demq3_exists,FALSE
+demq4_exists,FALSE
+sexual_orientation_dvdemq02_exists,TRUE
+ethnicity_dvdemq6_exists,TRUE
+user_guide_ethnicity_var,dvdemq6
+named_race_vars_by_name_scan,NONE

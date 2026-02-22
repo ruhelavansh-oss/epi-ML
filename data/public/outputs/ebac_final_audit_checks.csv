@@ -1,0 +1,6 @@
+check_name,value,pass
+ebac_tot_range_plausible,"[0.000, 0.500]",TRUE
+ebac_legal_threshold_off_boundary,1.00000,TRUE
+ebac_missingness_rate_total,0.4545,FALSE
+ebac_missingness_given_alc12m0,1.0000,TRUE
+weights_positive,TRUE,TRUE
