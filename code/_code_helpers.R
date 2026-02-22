@@ -274,6 +274,17 @@ render_script_metadata <- function(script_rel) {
   cat("- **Run command:** `", cmd, "`\n", sep = "")
 }
 
+escape_html <- function(x) {
+  x <- gsub("&", "&amp;", x, fixed = TRUE)
+  x <- gsub("<", "&lt;", x, fixed = TRUE)
+  x <- gsub(">", "&gt;", x, fixed = TRUE)
+  x
+}
+
+soft_wrap_tokens <- function(x) {
+  gsub("([/_.-])", "\\1&#8203;", x, perl = TRUE)
+}
+
 render_outputs_table <- function(script_rel) {
   abs <- script_path(script_rel)
   if (!file.exists(abs)) {
@@ -288,19 +299,34 @@ render_outputs_table <- function(script_rel) {
   }
   outputs <- sort(unique(outputs))
   resolved <- lapply(outputs, resolve_output)
-  cat("| Declared output | Exists | Resolved path | Size (KB) | Last modified |\n")
-  cat("|---|---:|---|---:|---|\n")
+
+  cat("<div class=\"module-output-table-wrap\">\n")
+  cat("<table class=\"table table-sm table-striped module-output-table\">\n")
+  cat("<thead><tr>")
+  cat("<th>Declared output</th><th>Exists</th><th>Resolved path</th><th>Size (KB)</th><th>Last modified</th>")
+  cat("</tr></thead>\n<tbody>\n")
+
   for (i in seq_along(outputs)) {
     r <- resolved[[i]]
-    cat(
-      "| `", outputs[[i]], "` | ",
-      r$status, " | ",
-      ifelse(is.na(r$path), "-", paste0("`", r$path, "`")), " | ",
-      ifelse(is.na(r$size_kb), "-", r$size_kb), " | ",
-      ifelse(is.na(r$modified), "-", r$modified), " |\n",
-      sep = ""
-    )
+    declared <- paste0("<code>", soft_wrap_tokens(escape_html(outputs[[i]])), "</code>")
+    resolved_path <- if (is.na(r$path)) {
+      "-"
+    } else {
+      paste0("<code class=\"path-code\">", soft_wrap_tokens(escape_html(r$path)), "</code>")
+    }
+    size_kb <- ifelse(is.na(r$size_kb), "-", escape_html(r$size_kb))
+    modified <- ifelse(is.na(r$modified), "-", escape_html(r$modified))
+    exists <- escape_html(r$status)
+
+    cat("<tr>")
+    cat("<td>", declared, "</td>", sep = "")
+    cat("<td>", exists, "</td>", sep = "")
+    cat("<td>", resolved_path, "</td>", sep = "")
+    cat("<td>", size_kb, "</td>", sep = "")
+    cat("<td>", modified, "</td>", sep = "")
+    cat("</tr>\n")
   }
+  cat("</tbody></table>\n</div>\n")
 }
 
 render_script_code <- function(script_rel) {

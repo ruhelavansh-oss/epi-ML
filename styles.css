@@ -354,3 +354,86 @@ span.color-box {
   margin-right: 0.2em; /* Space between box and text */
   border: 1px solid #000; /* Border color */
 }
+
+/* EML layout stabilization and table readability */
+html,
+body {
+  overflow-x: clip;
+}
+
+body {
+  font-size: 0.96rem;
+}
+
+.page-columns,
+.quarto-container,
+main.content {
+  min-width: 0;
+}
+
+.module-output-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.module-output-table {
+  width: 100%;
+  table-layout: fixed;
+  margin-bottom: 1rem;
+}
+
+.module-output-table th,
+.module-output-table td {
+  vertical-align: top;
+  font-size: 0.92rem;
+}
+
+.module-output-table th:nth-child(1),
+.module-output-table td:nth-child(1) {
+  width: 20%;
+}
+
+.module-output-table th:nth-child(2),
+.module-output-table td:nth-child(2) {
+  width: 8%;
+}
+
+.module-output-table th:nth-child(3),
+.module-output-table td:nth-child(3) {
+  width: 42%;
+}
+
+.module-output-table th:nth-child(4),
+.module-output-table td:nth-child(4) {
+  width: 10%;
+}
+
+.module-output-table th:nth-child(5),
+.module-output-table td:nth-child(5) {
+  width: 20%;
+}
+
+.module-output-table code,
+.module-output-table .path-code {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  font-size: 0.83rem;
+}
+
+.footnotes {
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.footnotes p {
+  margin-bottom: 0.35rem;
+}
+
+@media (max-width: 991.98px) {
+  .column-margin,
+  .quarto-margin-sidebar,
+  #quarto-margin-sidebar {
+    display: none !important;
+  }
+}
