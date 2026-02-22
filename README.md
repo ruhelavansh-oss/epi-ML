@@ -81,6 +81,12 @@ For full analysis-module dependencies (not only render/deploy):
 Rscript scripts/install_deps.R --full
 ```
 
+For Posit Connect publish dependencies (includes `rsconnect`):
+
+```bash
+Rscript scripts/install_deps.R --connect
+```
+
 Optional Posit Connect deploy helper:
 
 ```bash

@@ -2,13 +2,15 @@
 
 args <- commandArgs(trailingOnly = TRUE)
 install_full <- "--full" %in% args
+install_connect <- "--connect" %in% args
 
 core_required <- c(
   "yaml",
-  "rsconnect",
   "knitr",
   "rmarkdown"
 )
+
+connect_required <- c("rsconnect")
 
 analysis_required <- c(
   "tidyverse",
@@ -37,7 +39,11 @@ analysis_required <- c(
 # Optional package referenced in code paths with internal fallbacks.
 optional_pkgs <- c("sl3")
 
-required <- unique(c(core_required, if (install_full) analysis_required))
+required <- unique(c(
+  core_required,
+  if (install_full) analysis_required,
+  if (install_connect) connect_required
+))
 missing <- required[!vapply(required, requireNamespace, logical(1), quietly = TRUE)]
 
 if (length(missing) > 0) {
@@ -54,6 +60,9 @@ if (length(still_missing) > 0) {
 missing_optional <- optional_pkgs[!vapply(optional_pkgs, requireNamespace, logical(1), quietly = TRUE)]
 
 mode <- if (install_full) "full pipeline" else "core (render/deploy)"
+if (install_connect) {
+  mode <- paste(mode, "+ connect")
+}
 cat("Dependency bootstrap complete for ", mode, " mode.\n", sep = "")
 cat("Installed/available required packages (n=", length(required), ").\n", sep = "")
 if (length(missing_optional) > 0) {

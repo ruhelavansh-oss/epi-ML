@@ -19,7 +19,7 @@ This guide covers publishing the Quarto website in this repository to Posit Conn
 ## Pre-Publish Validation
 
 ```bash
-Rscript scripts/install_deps.R
+Rscript scripts/install_deps.R --connect
 Rscript scripts/security_scan.R
 Rscript scripts/generate_manifest.R
 Rscript scripts/check_connect_publish_readiness.R
