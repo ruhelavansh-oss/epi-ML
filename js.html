@@ -25,10 +25,10 @@ document.addEventListener("click", async (event) => {
   const original = btn.textContent;
   try {
     await navigator.clipboard.writeText(value);
-    btn.textContent = "Copied";
+    btn.textContent = "DONE";
     setTimeout(() => { btn.textContent = original; }, 1200);
   } catch (e) {
-    btn.textContent = "Copy failed";
+    btn.textContent = "FAILED";
     setTimeout(() => { btn.textContent = original; }, 1200);
   }
 });
