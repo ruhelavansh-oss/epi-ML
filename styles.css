@@ -362,7 +362,7 @@ body {
 }
 
 body {
-  font-size: 0.96rem;
+  font-size: 0.92rem;
 }
 
 .page-columns,
@@ -374,55 +374,104 @@ main.content {
 .module-output-table-wrap {
   width: 100%;
   overflow-x: auto;
-}
-
-.module-output-table {
-  width: 100%;
-  table-layout: fixed;
   margin-bottom: 1rem;
 }
 
-.module-output-table th,
-.module-output-table td {
+.module-metadata-table-wrap table,
+.module-output-table-wrap table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  line-height: 1.3;
+}
+
+.module-metadata-table-wrap th,
+.module-metadata-table-wrap td,
+.module-output-table-wrap th,
+.module-output-table-wrap td {
   vertical-align: top;
-  font-size: 0.92rem;
+  padding: 0.35rem 0.45rem;
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
-.module-output-table th:nth-child(1),
-.module-output-table td:nth-child(1) {
+.module-metadata-table-wrap th {
+  width: 22%;
+  white-space: nowrap;
+}
+
+.module-output-table-wrap th {
+  font-size: 0.78rem;
+  letter-spacing: 0.01em;
+  white-space: normal;
+}
+
+.module-output-table-wrap th:nth-child(1),
+.module-output-table-wrap td:nth-child(1) {
   width: 20%;
 }
 
-.module-output-table th:nth-child(2),
-.module-output-table td:nth-child(2) {
+.module-output-table-wrap th:nth-child(2),
+.module-output-table-wrap td:nth-child(2) {
   width: 8%;
+  text-align: center;
 }
 
-.module-output-table th:nth-child(3),
-.module-output-table td:nth-child(3) {
-  width: 42%;
+.module-output-table-wrap th:nth-child(3),
+.module-output-table-wrap td:nth-child(3) {
+  width: 40%;
 }
 
-.module-output-table th:nth-child(4),
-.module-output-table td:nth-child(4) {
-  width: 10%;
+.module-output-table-wrap th:nth-child(4),
+.module-output-table-wrap td:nth-child(4) {
+  width: 8%;
+  text-align: right;
 }
 
-.module-output-table th:nth-child(5),
-.module-output-table td:nth-child(5) {
-  width: 20%;
+.module-output-table-wrap th:nth-child(5),
+.module-output-table-wrap td:nth-child(5) {
+  width: 16%;
 }
 
-.module-output-table code,
-.module-output-table .path-code {
+.module-output-table-wrap th:nth-child(6),
+.module-output-table-wrap td:nth-child(6) {
+  width: 8%;
+  text-align: center;
+}
+
+.module-metadata-table-wrap code,
+.module-output-table-wrap code {
   white-space: normal;
   overflow-wrap: anywhere;
   word-break: break-word;
-  font-size: 0.83rem;
+  font-size: 0.76rem;
+}
+
+.copy-inline {
+  margin-top: 0.4rem;
+}
+
+.copy-path-btn {
+  border: 1px solid var(--bs-border-color, #c9ccd1);
+  background: transparent;
+  color: inherit;
+  font-size: 0.74rem;
+  line-height: 1.1;
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+
+.copy-path-btn:hover,
+.copy-path-btn:focus-visible {
+  border-color: var(--bs-primary, #447099);
+  outline: none;
 }
 
 .footnotes {
-  font-size: 0.84rem;
+  font-size: 0.78rem;
   line-height: 1.45;
 }
 
@@ -430,10 +479,73 @@ main.content {
   margin-bottom: 0.35rem;
 }
 
+/* TOC page actions: desktop shows both; mobile shows only "Report an issue". */
+.toc-actions ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  padding-left: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.toc-actions .toc-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.78rem;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+@media (max-width: 767.98px) {
+  .toc-actions ul,
+  .toc-actions.d-sm-block.d-md-none ul,
+  nav .toc-actions ul {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    gap: 0 !important;
+  }
+
+  .toc-actions ul li,
+  .toc-actions.d-sm-block.d-md-none ul li,
+  nav .toc-actions ul li {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 0 0.2rem 0 !important;
+  }
+
+  .toc-actions .toc-action {
+    display: inline-flex;
+    white-space: normal;
+  }
+
+  .page-columns {
+    column-gap: 0.5rem !important;
+    padding-left: 0.25rem !important;
+    padding-right: 0.25rem !important;
+  }
+
+  main.content,
+  #quarto-content {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+}
+
 @media (max-width: 991.98px) {
   .column-margin,
   .quarto-margin-sidebar,
   #quarto-margin-sidebar {
     display: none !important;
+  }
+
+  .module-output-table-wrap th:nth-child(5),
+  .module-output-table-wrap td:nth-child(5) {
+    width: 20%;
   }
 }

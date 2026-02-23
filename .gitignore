@@ -37,6 +37,7 @@ Rlibs/
 renv/library/
 renv/staging/
 .Rproj.user/
+instantsearch-app/
 
 # Keep public report and source directories tracked
 !reports/

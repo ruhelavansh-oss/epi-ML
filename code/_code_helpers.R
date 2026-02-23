@@ -243,6 +243,8 @@ resolve_output <- function(name) {
       found = FALSE,
       status = "no",
       path = path_label,
+      abs_path = expected,
+      repo_rel = NA_character_,
       size_kb = NA_character_,
       modified = NA_character_
     ))
@@ -250,10 +252,16 @@ resolve_output <- function(name) {
   fp <- cands[idx[1]]
   info <- file.info(fp)
   path_label <- if (exists("safe_label_path")) safe_label_path(fp, paths) else fp
+  repo_rel <- NA_character_
+  if (starts_with_path(fp, paths$project_root)) {
+    repo_rel <- sub(paste0("^", normalizePath(paths$project_root, winslash = "/", mustWork = FALSE), "/"), "", fp)
+  }
   list(
     found = TRUE,
     status = "yes",
     path = path_label,
+    abs_path = fp,
+    repo_rel = repo_rel,
     size_kb = sprintf("%.1f", as.numeric(info$size) / 1024),
     modified = format(info$mtime, "%Y-%m-%d %H:%M:%S")
   )
@@ -268,10 +276,33 @@ render_script_metadata <- function(script_rel) {
     paste("Rscript", script_rel)
   }
   n_lines <- if (exists_flag) length(readLines(abs, warn = FALSE, encoding = "UTF-8")) else 0L
-  cat("- **Script:** `", script_rel, "`\n", sep = "")
-  cat("- **Exists:** `", ifelse(exists_flag, "yes", "no"), "`\n", sep = "")
-  cat("- **Lines of code:** `", n_lines, "`\n", sep = "")
-  cat("- **Run command:** `", cmd, "`\n", sep = "")
+  script_alias <- basename(script_rel)
+  script_url <- paste0(
+    "https://github.com/ruhelavansh-oss/epi-ML/blob/main/",
+    script_rel
+  )
+
+  metadata <- data.frame(
+    Field = c("Script", "Exists", "Lines", "Run command"),
+    Value = c(
+      paste0("[", script_alias, "](", script_url, ")"),
+      ifelse(exists_flag, "yes", "no"),
+      as.character(n_lines),
+      paste0("`", cmd, "`")
+    ),
+    stringsAsFactors = FALSE
+  )
+
+  cat("<div class=\"module-metadata-table-wrap\">\n")
+  print(knitr::kable(metadata, format = "html", escape = FALSE, col.names = c("Field", "Value")))
+  if (exists_flag) {
+    safe_script <- if (exists("safe_label_path")) safe_label_path(abs, paths) else script_rel
+    cat("<div class=\"copy-inline\">",
+        "<button type=\"button\" class=\"copy-path-btn\" data-copy=\"", escape_html(safe_script),
+        "\">Copy script path</button>",
+        "</div>\n", sep = "")
+  }
+  cat("</div>\n")
 }
 
 escape_html <- function(x) {
@@ -299,34 +330,57 @@ render_outputs_table <- function(script_rel) {
   }
   outputs <- sort(unique(outputs))
   resolved <- lapply(outputs, resolve_output)
-
-  cat("<div class=\"module-output-table-wrap\">\n")
-  cat("<table class=\"table table-sm table-striped module-output-table\">\n")
-  cat("<thead><tr>")
-  cat("<th>Declared output</th><th>Exists</th><th>Resolved path</th><th>Size (KB)</th><th>Last modified</th>")
-  cat("</tr></thead>\n<tbody>\n")
-
-  for (i in seq_along(outputs)) {
-    r <- resolved[[i]]
-    declared <- paste0("<code>", soft_wrap_tokens(escape_html(outputs[[i]])), "</code>")
-    resolved_path <- if (is.na(r$path)) {
-      "-"
-    } else {
-      paste0("<code class=\"path-code\">", soft_wrap_tokens(escape_html(r$path)), "</code>")
-    }
-    size_kb <- ifelse(is.na(r$size_kb), "-", escape_html(r$size_kb))
-    modified <- ifelse(is.na(r$modified), "-", escape_html(r$modified))
-    exists <- escape_html(r$status)
-
-    cat("<tr>")
-    cat("<td>", declared, "</td>", sep = "")
-    cat("<td>", exists, "</td>", sep = "")
-    cat("<td>", resolved_path, "</td>", sep = "")
-    cat("<td>", size_kb, "</td>", sep = "")
-    cat("<td>", modified, "</td>", sep = "")
-    cat("</tr>\n")
+  tracked_files <- character()
+  if (nzchar(Sys.which("git")) && dir.exists(file.path(paths$project_root, ".git"))) {
+    tracked_files <- tryCatch(
+      system2("git", c("-C", paths$project_root, "ls-files"), stdout = TRUE, stderr = FALSE),
+      error = function(e) character()
+    )
   }
-  cat("</tbody></table>\n</div>\n")
+
+  table_rows <- lapply(seq_along(outputs), function(i) {
+    r <- resolved[[i]]
+    declared <- outputs[[i]]
+    declared_alias <- basename(declared)
+
+    repo_rel <- r$repo_rel %||% NA_character_
+    path_value <- "not published"
+    if (!is.na(repo_rel) && repo_rel %in% tracked_files) {
+      path_value <- paste0(
+        "[", declared_alias, "](",
+        "https://github.com/ruhelavansh-oss/epi-ML/blob/main/",
+        repo_rel,
+        ")"
+      )
+    } else if (!is.na(r$path)) {
+      path_value <- paste0("`", r$path, "`")
+    }
+
+    copy_btn <- if (!is.na(r$path)) {
+      paste0(
+        "<button type=\"button\" class=\"copy-path-btn\" data-copy=\"",
+        escape_html(r$path),
+        "\">Copy</button>"
+      )
+    } else {
+      "-"
+    }
+
+    data.frame(
+      Declared = paste0("`", declared_alias, "`"),
+      Exists = r$status,
+      Path = path_value,
+      KB = ifelse(is.na(r$size_kb), "-", r$size_kb),
+      Modified = ifelse(is.na(r$modified), "-", r$modified),
+      Copy = copy_btn,
+      stringsAsFactors = FALSE
+    )
+  })
+
+  tbl <- do.call(rbind, table_rows)
+  cat("<div class=\"module-output-table-wrap\">\n")
+  print(knitr::kable(tbl, format = "html", escape = FALSE, col.names = c("Declared", "Exists", "Path", "KB", "Modified", "Copy")))
+  cat("</div>\n")
 }
 
 render_script_code <- function(script_rel) {

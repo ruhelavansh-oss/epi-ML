@@ -14,6 +14,7 @@ This repository publishes a Quarto website and reproducible research workflow fo
 1. **Path and secret scanning**
    - `scripts/security_scan.R` runs locally and in CI.
    - CI also runs gitleaks on push and pull requests.
+   - `.gitleaks.toml` includes a narrow allowlist for the public Algolia `search-only-api-key` line in `_quarto.yml`; no admin/write keys are allowlisted.
 2. **Private path exclusion**
    - `data/private/**` and related local files are gitignored.
    - `manifest.json` generation excludes private and build-only paths.

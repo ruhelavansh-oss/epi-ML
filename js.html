@@ -16,4 +16,21 @@ document.querySelectorAll(".pymd span.co").forEach(el => {
    }
 });
 
+// Copy helper for module path buttons.
+document.addEventListener("click", async (event) => {
+  const btn = event.target.closest(".copy-path-btn");
+  if (!btn) return;
+  const value = btn.getAttribute("data-copy") || "";
+  if (!value) return;
+  const original = btn.textContent;
+  try {
+    await navigator.clipboard.writeText(value);
+    btn.textContent = "Copied";
+    setTimeout(() => { btn.textContent = original; }, 1200);
+  } catch (e) {
+    btn.textContent = "Copy failed";
+    setTimeout(() => { btn.textContent = original; }, 1200);
+  }
+});
+
 </script>

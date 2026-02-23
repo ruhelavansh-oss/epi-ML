@@ -201,7 +201,7 @@ filters:
   - at: post-quarto
     path: filters/include-dark.lua
 
-freeze: true
+freeze: false
 execute:
   echo: false
   warning: false
