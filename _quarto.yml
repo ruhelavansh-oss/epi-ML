@@ -1,7 +1,6 @@
 project:
   type: website
   output-dir: _site
-  title: "Epidemiological Machine Learning"
   post-render:
     - tools/algolia-add-custom-attribute.ts
   resources:
@@ -31,6 +30,8 @@ website:
   title: "EML"
   image: "quarto-dark-bg.jpeg"
   favicon: "favicon.png"
+  open-graph: true
+  twitter-card: true
   site-url: https://ruhelavansh-oss.github.io/epi-ML/
   page-footer:
     left: |
@@ -60,8 +61,6 @@ website:
   repo-actions: [edit, issue]
   page-navigation: true
   bread-crumbs: true
-  open-graph: true
-  twitter-card: true
   search:
     show-item-context: true
     type: overlay
@@ -73,69 +72,74 @@ website:
       show-logo: true
 
   sidebar:
-    style: "floating"
-    collapse-level: 2
-    contents:
-      - section: "Project Info"
-        contents:
-          - href: index.qmd
-            text: "Home"
-          - href: background.qmd
-            text: "Background"
-          - href: reproducibility.qmd
-            text: "Reproducibility"
-          - href: initial-results.qmd
-            text: "Initial Results"
-      - section: "Modules"
-        contents:
-          - href: code/index.qmd
-            text: "Code Index"
-          - section: "Preliminaries"
-            contents:
-              - href: code/data-wrangling.qmd
-                text: "Data Wrangling"
-              - href: code/descriptive-statistics.qmd
-                text: "Descriptive Statistics"
-              - href: code/distribution-tests.qmd
-                text: "Distribution Tests"
-              - href: code/frequentist-inference.qmd
-                text: "Frequentist Inference"
-              - href: code/bayesian-inference.qmd
-                text: "Bayesian Inference"
-              - href: code/power-design.qmd
-                text: "Power Design"
-              - href: code/logistic-models.qmd
-                text: "Logistic Models"
-              - href: code/model-comparison.qmd
-                text: "Model Comparison"
-              - href: code/regression-models.qmd
-                text: "Regression Models"
-              - href: code/propensity-scores.qmd
-                text: "Propensity Scores"
-              - href: code/causal-estimators.qmd
-                text: "Causal Estimators"
-              - href: code/treatment-effects.qmd
-                text: "Treatment Effects"
-              - href: code/dag-specification.qmd
-                text: "DAG Specification"
-              - href: code/meta-synthesis.qmd
-                text: "Meta Synthesis"
-              - href: code/figures.qmd
-                text: "Figures"
-              - href: code/tables.qmd
-                text: "Tables"
-              - href: code/final-report.qmd
-                text: "Summary Report"
-          - section: "eBAC"
-            contents:
-              - href: code/ebac-core.qmd
-                text: "Core"
-              - href: code/ebac-selection-adjustment-ipw.qmd
-                text: "IPW"
-              - href: code/ebac-gender-smote-sensitivity.qmd
-                text: "SMOTE"
-              - href: code/ebac-integrations.qmd
-                text: "Integrations"
+    - id: project-info
+      style: "floating"
+      collapse-level: 2
+      contents:
+        - section: "Project Info"
+          contents:
+            - href: index.qmd
+              text: "Home"
+            - href: background.qmd
+              text: "Background"
+            - href: reproducibility.qmd
+              text: "Reproducibility"
+            - href: initial-results.qmd
+              text: "Initial Results"
+    - id: modules
+      style: "floating"
+      collapse-level: 2
+      contents:
+        - section: "Modules"
+          contents:
+            - href: code/index.qmd
+              text: "Code Index"
+            - section: "Preliminaries"
+              contents:
+                - href: code/data-wrangling.qmd
+                  text: "Data Wrangling"
+                - href: code/descriptive-statistics.qmd
+                  text: "Descriptive Statistics"
+                - href: code/distribution-tests.qmd
+                  text: "Distribution Tests"
+                - href: code/frequentist-inference.qmd
+                  text: "Frequentist Inference"
+                - href: code/bayesian-inference.qmd
+                  text: "Bayesian Inference"
+                - href: code/power-design.qmd
+                  text: "Power Design"
+                - href: code/logistic-models.qmd
+                  text: "Logistic Models"
+                - href: code/model-comparison.qmd
+                  text: "Model Comparison"
+                - href: code/regression-models.qmd
+                  text: "Regression Models"
+                - href: code/propensity-scores.qmd
+                  text: "Propensity Scores"
+                - href: code/causal-estimators.qmd
+                  text: "Causal Estimators"
+                - href: code/treatment-effects.qmd
+                  text: "Treatment Effects"
+                - href: code/dag-specification.qmd
+                  text: "DAG Specification"
+                - href: code/meta-synthesis.qmd
+                  text: "Meta Synthesis"
+                - href: code/figures.qmd
+                  text: "Figures"
+                - href: code/tables.qmd
+                  text: "Tables"
+                - href: code/final-report.qmd
+                  text: "Summary Report"
+            - section: "eBAC"
+              contents:
+                - href: code/ebac-core.qmd
+                  text: "Core"
+                - href: code/ebac-selection-adjustment-ipw.qmd
+                  text: "IPW"
+                - href: code/ebac-gender-smote-sensitivity.qmd
+                  text: "SMOTE"
+                - href: code/ebac-integrations.qmd
+                  text: "Integrations"
   navbar:
     background: light
     logo: quarto.png
@@ -165,7 +169,7 @@ website:
             href: initial-results.qmd
           - text: Author
             href: about.qmd
-    right:
+    tools:
       - icon: github
         href: https://github.com/ruhelavansh-oss/epi-ML
 format:
@@ -190,10 +194,9 @@ format:
             data-dark-gt="#ffffff"></script>
     include-after-body: js.html
     grid:
-      sidebar-width: 300px
+      sidebar-width: 250px
       body-width: 900px
       margin-width: 300px
-      gutter-width: 1.5rem
 
 filters:
   - filters/tools-tabset.lua
@@ -201,7 +204,7 @@ filters:
   - at: post-quarto
     path: filters/include-dark.lua
 
-freeze: false
+freeze: true
 execute:
   echo: false
   warning: false

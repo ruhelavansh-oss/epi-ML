@@ -263,7 +263,7 @@ resolve_output <- function(name) {
     abs_path = fp,
     repo_rel = repo_rel,
     size_kb = sprintf("%.1f", as.numeric(info$size) / 1024),
-    modified = format(info$mtime, "%Y-%m-%d %H:%M:%S")
+    modified = format(info$mtime, "%Y-%m")
   )
 }
 
@@ -282,27 +282,31 @@ render_script_metadata <- function(script_rel) {
     script_rel
   )
 
+  cat_row <- which(script_catalog$script_rel == script_rel)
+  page_value <- "\u2014"
+  if (length(cat_row) > 0) {
+    page_href <- script_catalog$page_href[cat_row[1]]
+    page_html <- sub("\\.qmd$", ".html", page_href)
+    page_url <- paste0("https://ruhelavansh-oss.github.io/epi-ML/", page_html)
+    page_value <- paste0("[", script_catalog$label[cat_row[1]], "](", page_url, ")")
+  }
+
   metadata <- data.frame(
-    Field = c("Script", "Exists", "Lines", "Run command"),
+    Field = c("Script", "Page", "Exists", "Lines"),
     Value = c(
       paste0("[", script_alias, "](", script_url, ")"),
+      page_value,
       ifelse(exists_flag, "yes", "no"),
-      as.character(n_lines),
-      paste0("`", cmd, "`")
+      as.character(n_lines)
     ),
     stringsAsFactors = FALSE
   )
 
   cat("<div class=\"module-metadata-table-wrap\">\n")
   print(knitr::kable(metadata, format = "html", escape = FALSE, col.names = c("Field", "Value")))
-  if (exists_flag) {
-    safe_script <- if (exists("safe_label_path")) safe_label_path(abs, paths) else script_rel
-    cat("<div class=\"copy-inline\">",
-        "<button type=\"button\" class=\"copy-path-btn\" data-copy=\"", escape_html(safe_script),
-        "\">Path</button>",
-        "</div>\n", sep = "")
-  }
   cat("</div>\n")
+  cat("\n**Run command**\n\n")
+  cat("```bash\n", cmd, "\n```\n", sep = "")
 }
 
 escape_html <- function(x) {
@@ -314,18 +318,6 @@ escape_html <- function(x) {
 
 soft_wrap_tokens <- function(x) {
   gsub("([/_.-])", "\\1&#8203;", x, perl = TRUE)
-}
-
-index_label <- function(i) {
-  letters_vec <- LETTERS
-  n <- as.integer(i)
-  out <- ""
-  while (n > 0) {
-    n <- n - 1
-    out <- paste0(letters_vec[(n %% 26) + 1], out)
-    n <- n %/% 26
-  }
-  out
 }
 
 render_outputs_table <- function(script_rel) {
@@ -354,45 +346,62 @@ render_outputs_table <- function(script_rel) {
     r <- resolved[[i]]
     declared <- outputs[[i]]
     declared_alias <- basename(declared)
-    file_id <- index_label(i)
     ext <- toupper(tools::file_ext(declared_alias))
     if (!nzchar(ext)) ext <- "FILE"
 
     repo_rel <- r$repo_rel %||% NA_character_
-    path_value <- "not published"
+
+    site_value <- "\u2014"
     if (!is.na(repo_rel) && repo_rel %in% tracked_files) {
-      path_value <- paste0(
-        "[", ext, "](",
+      site_value <- paste0(
+        "<a href=\"",
+        "https://raw.githubusercontent.com/ruhelavansh-oss/epi-ML/main/",
+        repo_rel,
+        "\" title=\"",
+        ext,
+        " URL\">",
+        ext,
+        "</a>"
+      )
+    }
+
+    repo_value <- "\u2014"
+    if (!is.na(repo_rel) && repo_rel %in% tracked_files) {
+      repo_value <- paste0(
+        "<a href=\"",
         "https://github.com/ruhelavansh-oss/epi-ML/blob/main/",
         repo_rel,
-        ")"
+        "\" title=\"",
+        ext,
+        " URL\">URL</a>"
       )
     }
 
     copy_btn <- if (!is.na(r$path)) {
       paste0(
-        "<button type=\"button\" class=\"copy-path-btn\" data-copy=\"",
+        " <button type=\"button\" class=\"copy-path-btn\" data-copy=\"",
         escape_html(r$path),
-        "\">Path</button>"
+        "\" title=\"Copy path\"><i class=\"bi bi-clipboard\"></i></button>"
       )
     } else {
-      "NA"
+      ""
     }
 
     data.frame(
-      File = file_id,
-      `True?` = ifelse(identical(r$status, "yes"), "Y", "N"),
-      URL = path_value,
+      File = paste0(declared_alias, copy_btn),
+      True = ifelse(identical(r$status, "yes"), "Y", "N"),
+      Site = site_value,
+      Repo = repo_value,
       KB = ifelse(is.na(r$size_kb), "NA", r$size_kb),
       MoD = ifelse(is.na(r$modified), "NA", r$modified),
-      Path = copy_btn,
-      stringsAsFactors = FALSE
+      stringsAsFactors = FALSE,
+      check.names = FALSE
     )
   })
 
   tbl <- do.call(rbind, table_rows)
   cat("<div class=\"module-output-table-wrap\">\n")
-  print(knitr::kable(tbl, format = "html", escape = FALSE, col.names = c("File", "True?", "URL", "KB", "MoD", "path")))
+  print(knitr::kable(tbl, format = "html", escape = FALSE, col.names = c("File", "\u2713", "Site", "Repo", "KB", "MoD")))
   cat("</div>\n")
 }
 
@@ -450,7 +459,7 @@ render_code_index <- function() {
       path = paste0(
         "<button type=\"button\" class=\"copy-path-btn\" data-copy=\"",
         escape_html(copy_value),
-        "\">Path</button>"
+        "\" title=\"Copy path\"><i class=\"bi bi-clipboard\"></i></button>"
       ),
       stringsAsFactors = FALSE
     )
