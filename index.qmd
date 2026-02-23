@@ -25,10 +25,10 @@ The scientific workflow combines:
 - Risk-difference causal targets: ATE, ATT, ATC, and subgroup contrasts (CATE-style summaries).
 - eBAC-domain outcomes (`ebac_tot`, `ebac_legal`) under observed-domain and weighted models.
 
-## Privacy and Publication Model
+## Deployment Notes
 
 - Public repository content is restricted to code, sanitized narrative outputs, and website assets.
-- Raw microdata and row-level private outputs are excluded from version control.
+- PUMF and row-level local outputs are excluded from version control.
 - Runtime pathing is environment-configured to avoid machine-specific hardcoded locations.
 
 ::: {.callout-note}

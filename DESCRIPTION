@@ -7,7 +7,7 @@ Authors@R: person(
   email = "vansh.ruhela@mail.utoronto.ca",
   role = c("aut", "cre"),
   comment = c(ORCID = "0009-0004-1750-3592")
-)
+  )
 Description: Quarto website source and deployment utilities for the
   Epidemiological Semiparametric Machine Learning (EML) project.
   Includes security/path scans, manifest generation, and deployment helpers.

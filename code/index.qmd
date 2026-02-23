@@ -23,7 +23,7 @@ To recompute modules before rendering these pages:
 Rscript scripts/run_modules.R
 ```
 
-## Module Pages
+## Replication Pages
 
 ```{r}
 #| echo: false

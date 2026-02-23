@@ -79,7 +79,7 @@ safe_paths <- function() {
     ),
     reports_dir = absolutize(
       p$reports_dir,
-      file.path(project_root, "reports", "source"),
+      file.path(project_root, "reports", "drafts"),
       base = project_root
     ),
     wrangled_dir = absolutize(
@@ -204,7 +204,7 @@ candidate_paths <- function(name) {
     file.path(paths$output_public_dir, basename(nm)),
     file.path(paths$reports_dir, nm),
     file.path(paths$project_root, "reports", "public", basename(nm)),
-    file.path(paths$project_root, "reports", "source", basename(nm)),
+    file.path(paths$project_root, "reports", "drafts", basename(nm)),
     file.path(paths$reports_dir, basename(nm))
   ))
 }
@@ -270,7 +270,10 @@ resolve_output <- function(name) {
 render_script_metadata <- function(script_rel) {
   abs <- script_path(script_rel)
   exists_flag <- file.exists(abs)
-  cmd <- if (file.exists(file.path(paths$project_root, basename(script_rel)))) {
+  wrapper_rel <- file.path("scripts", "entrypoints", basename(script_rel))
+  cmd <- if (file.exists(file.path(paths$project_root, wrapper_rel))) {
+    paste("Rscript", wrapper_rel)
+  } else if (file.exists(file.path(paths$project_root, basename(script_rel)))) {
     paste("Rscript", basename(script_rel))
   } else {
     paste("Rscript", script_rel)
@@ -313,6 +316,13 @@ escape_html <- function(x) {
   x <- gsub("&", "&amp;", x, fixed = TRUE)
   x <- gsub("<", "&lt;", x, fixed = TRUE)
   x <- gsub(">", "&gt;", x, fixed = TRUE)
+  x
+}
+
+escape_html_attr <- function(x) {
+  x <- escape_html(x)
+  x <- gsub("\"", "&quot;", x, fixed = TRUE)
+  x <- gsub("'", "&#39;", x, fixed = TRUE)
   x
 }
 
@@ -379,20 +389,29 @@ render_outputs_table <- function(script_rel) {
 
     copy_btn <- if (!is.na(r$path)) {
       paste0(
-        " <button type=\"button\" class=\"copy-path-btn\" data-copy=\"",
-        escape_html(r$path),
+        "<button type=\"button\" class=\"copy-path-btn\" data-copy=\"",
+        escape_html_attr(r$path),
         "\" title=\"Copy path\"><i class=\"bi bi-clipboard\"></i></button>"
       )
     } else {
       ""
     }
+    file_label <- soft_wrap_tokens(escape_html(declared_alias))
+    file_value <- paste0(
+      "<div class=\"module-file-cell\">",
+      "<span class=\"module-file-name\">",
+      file_label,
+      "</span>",
+      copy_btn,
+      "</div>"
+    )
 
     data.frame(
-      File = paste0(declared_alias, copy_btn),
+      File = file_value,
       True = ifelse(identical(r$status, "yes"), "Y", "N"),
       Site = site_value,
-      Repo = repo_value,
       KB = ifelse(is.na(r$size_kb), "NA", r$size_kb),
+      Repo = repo_value,
       MoD = ifelse(is.na(r$modified), "NA", r$modified),
       stringsAsFactors = FALSE,
       check.names = FALSE
@@ -401,7 +420,13 @@ render_outputs_table <- function(script_rel) {
 
   tbl <- do.call(rbind, table_rows)
   cat("<div class=\"module-output-table-wrap\">\n")
-  print(knitr::kable(tbl, format = "html", escape = FALSE, col.names = c("File", "\u2713", "Site", "Repo", "KB", "MoD")))
+  print(knitr::kable(
+    tbl,
+    format = "html",
+    escape = FALSE,
+    align = c("l", "c", "c", "c", "c", "c"),
+    col.names = c("File Path", "\u2713", "Site", "KB", "Repo", "MoD")
+  ))
   cat("</div>\n")
 }
 
@@ -427,10 +452,10 @@ render_script_code <- function(script_rel) {
   }
   lines <- lines[keep]
 
-  cat("<details>\n")
-  cat("<summary>Show script</summary>\n\n")
+  cat("<details class=\"module-script-details\">\n")
+  cat("<summary class=\"module-script-summary\">Show script</summary>\n\n")
   code_text <- escape_html(paste(lines, collapse = "\n"))
-  cat("<pre><code class=\"language-r\">")
+  cat("<pre class=\"module-script-pre\"><code class=\"language-r module-script-code\">")
   cat(code_text)
   cat("</code></pre>\n\n")
   cat("</details>\n")
@@ -456,17 +481,40 @@ render_code_index <- function() {
     data.frame(
       Module = paste0("[", script_catalog$label[i], "](", page_rel, ")"),
       Source = paste0("[", script_label, "](", script_url, ")"),
-      path = paste0(
+      Path = paste0(
         "<button type=\"button\" class=\"copy-path-btn\" data-copy=\"",
-        escape_html(copy_value),
+        escape_html_attr(copy_value),
         "\" title=\"Copy path\"><i class=\"bi bi-clipboard\"></i></button>"
       ),
       stringsAsFactors = FALSE
     )
   })
 
+  manifest_rel <- "data/public/outputs_manifest.csv"
+  manifest_abs <- normalizePath(file.path(paths$project_root, manifest_rel), winslash = "/", mustWork = FALSE)
+  manifest_repo <- paste0("https://github.com/ruhelavansh-oss/epi-ML/blob/main/", manifest_rel)
+  manifest_raw <- paste0("https://raw.githubusercontent.com/ruhelavansh-oss/epi-ML/main/", manifest_rel)
+  manifest_copy <- if (exists("safe_label_path")) safe_label_path(manifest_abs, paths) else manifest_rel
+
+  rows[[length(rows) + 1]] <- data.frame(
+    Module = paste0("<a href=\"", manifest_repo, "\">Outputs Manifest</a>"),
+    Source = paste0("<a href=\"", manifest_raw, "\">outputs_manifest.csv</a>"),
+    Path = paste0(
+      "<button type=\"button\" class=\"copy-path-btn\" data-copy=\"",
+      escape_html_attr(manifest_copy),
+      "\" title=\"Copy path\"><i class=\"bi bi-clipboard\"></i></button>"
+    ),
+    stringsAsFactors = FALSE
+  )
+
   tbl <- do.call(rbind, rows)
   cat("<div class=\"module-index-table-wrap\">\n")
-  print(knitr::kable(tbl, format = "html", escape = FALSE, col.names = c("Module", "Source", "path")))
+  print(knitr::kable(
+    tbl,
+    format = "html",
+    escape = FALSE,
+    align = c("l", "l", "c"),
+    col.names = c("Module", "Source", "Path")
+  ))
   cat("</div>\n")
 }

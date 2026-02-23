@@ -10,7 +10,7 @@ title: "Initial Results"
 
 ## Interpretation of Example Estimates
 
-### Heavy Drinking Prevalence (Weighted): 45.8% (95% CI: 45.2% to 46.5%)
+### Heavy Drinking Prevalence (Weighted): 45.8% (95% CI: 45.2 to 46.5)
 
 Interpretation: approximately 46 out of 100 students in the weighted target population are estimated to meet the heavy-drinking criterion in the prior 30 days.
 

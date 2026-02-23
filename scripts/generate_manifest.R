@@ -27,7 +27,7 @@ collect_manifest_files <- function(project_root) {
 
 is_excluded <- function(rel_path) {
   grepl(
-    "^(data/private/|data/public/|_site/|logs/|Rlibs/|renv/library/|renv/staging/|reports/public/|reports/source/|\\.quarto/|\\.git/)",
+    "^(data/private/|data/public/|_site/|logs/|Rlibs/|renv/library/|renv/staging/|reports/public/|reports/drafts/|\\.quarto/|\\.git/)",
     rel_path
   )
 }

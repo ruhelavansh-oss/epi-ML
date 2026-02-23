@@ -4,5 +4,5 @@ CPADS_DATA_DIR=<PROJECT_ROOT>/data/private
 CPADS_RAW_PUMF_FILE=<PROJECT_ROOT>/data/private/CPADS_PUMF.csv
 CPADS_OUTPUT_PRIVATE_DIR=<PROJECT_ROOT>/data/private/outputs
 CPADS_OUTPUT_PUBLIC_DIR=<PROJECT_ROOT>/reports/public
-CPADS_REPORTS_DIR=<PROJECT_ROOT>/reports/source
+CPADS_REPORTS_DIR=<PROJECT_ROOT>/reports/drafts
 CPADS_SECRET_KEY=replace_with_local_secret_key

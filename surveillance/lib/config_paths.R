@@ -43,7 +43,7 @@ get_paths <- function() {
   raw_default <- cfg$raw_pumf_file %||% file.path(data_dir_default, "CPADS_PUMF.csv")
   out_private_default <- cfg$output_private_dir %||% file.path(project_root, "data", "private", "outputs")
   out_public_default <- cfg$output_public_dir %||% file.path(project_root, "reports", "public")
-  reports_default <- cfg$reports_dir %||% file.path(project_root, "reports", "source")
+  reports_default <- cfg$reports_dir %||% file.path(project_root, "reports", "drafts")
 
   data_dir <- Sys.getenv("CPADS_DATA_DIR", data_dir_default)
   raw_pumf_file <- Sys.getenv("CPADS_RAW_PUMF_FILE", raw_default)
@@ -92,7 +92,7 @@ safe_label_path <- function(path, paths = get_paths()) {
       "PUBLIC_DATA_DIR",
       "PRIVATE_OUTPUT_DIR",
       "PUBLIC_REPORTS_DIR",
-      "REPORTS_SOURCE_DIR",
+      "REPORTS_DRAFTS_DIR",
       "PROJECT_ROOT"
     ),
     c(

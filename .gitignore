@@ -39,9 +39,10 @@ renv/staging/
 .Rproj.user/
 instantsearch-app/
 
-# Keep public report and source directories tracked
+# Keep public report artifacts tracked; keep private report drafts ignored
 !reports/
-!reports/source/
+/reports/drafts/**
+!/reports/drafts/.gitkeep
 !reports/public/
 /reports/public/**
 !/reports/public/.gitkeep

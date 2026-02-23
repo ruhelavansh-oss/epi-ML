@@ -6,7 +6,6 @@ project:
   resources:
     - "/images/Posit-Logos-2024_horiz-full-color.svg"
     - "/images/Posit-Logos-2024_horiz-full-color-white-text.svg"
-    - "/_plausible.html"
     - "/_redirects"
     - "/netlify.toml"
     - "/robots.txt"
@@ -16,7 +15,7 @@ project:
     - "!R_libs/**"
     - "!surveillance/**"
     - "!data/**"
-    - "!reports/source/**"
+    - "!reports/drafts/**"
     - "!reports/public/**"
 
 highlight-style: a11y
@@ -94,7 +93,7 @@ website:
           contents:
             - href: code/index.qmd
               text: "Code Index"
-            - section: "Preliminaries"
+            - section: "Prelims"
               contents:
                 - href: code/data-wrangling.qmd
                   text: "Data Wrangling"
@@ -153,12 +152,10 @@ website:
         menu:
           - text: Code Index
             href: code/index.qmd
-          - text: Preliminaries
+          - text: Prelims
             href: code/data-wrangling.qmd
           - text: eBAC
             href: code/ebac-core.qmd
-          - text: Summary Report
-            href: code/final-report.qmd
       - text: About
         menu:
           - text: Background
@@ -204,7 +201,7 @@ filters:
   - at: post-quarto
     path: filters/include-dark.lua
 
-freeze: true
+freeze: false
 execute:
   echo: false
   warning: false
