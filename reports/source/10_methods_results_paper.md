@@ -5,6 +5,7 @@
 
 **Document type:** Full-length IMRaD manuscript (audit-grade methods trace)  
 **Date generated:** February 21, 2026  
+**Author:** Vansh Singh Ruhela
 **Project root:** `PROJECT_ROOT`  
 **Primary raw input:** `PROJECT_ROOT/data/private/CPADS_PUMF.csv`  
 **Primary wrangled inputs:** `PROJECT_ROOT/data/private/outputs/wrangled/cpads_pumf_wrangled.rds`, `PROJECT_ROOT/data/private/outputs/wrangled/cpads_pumf_survey.rds`  
