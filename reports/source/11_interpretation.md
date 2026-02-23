@@ -1,6 +1,6 @@
 ---
 Preliminaries: "Interpretation Guide for Current CPADS Initial Results"
-Author: VSR
+Investigator: Vansh S. Ruhela
 ---
 
 # Interpretation Guide for Current CPADS Initial Results
