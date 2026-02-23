@@ -27,7 +27,7 @@ The scientific workflow combines:
 
 ## Deployment Notes
 
-- Public repository content is restricted to code, sanitized narrative outputs, and website assets.
+- Public repository content is restricted to code, components illustration, and website assets.
 - PUMF and row-level local outputs are excluded from version control.
 - Runtime pathing is environment-configured to avoid machine-specific hardcoded locations.
 
