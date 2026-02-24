@@ -1,0 +1,28 @@
+Package: epiml
+Type: Package
+Title: Reproducibility Utilities for Epidemiological ML Workflows
+Version: 0.1.0
+Authors@R: c(
+  person(
+    given = "Vansh Singh",
+    family = "Ruhela",
+    email = "vansh.ruhela@mail.utoronto.ca",
+    role = c("aut", "cre"),
+    comment = c(ORCID = "0009-0004-1750-3592")
+  )
+ )
+Description: Utilities for reproducible epidemiological analysis pipelines.
+  Provides helpers to validate and audit public output manifests,
+  build output manifests from generated artifacts, and run
+  end-to-end workflow steps from scripted projects.
+License: Apache License (>= 2)
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Depends:
+  R (>= 4.2.0)
+Imports:
+  utils
+Suggests:
+  testthat (>= 3.0.0)
+Config/testthat/edition: 3
