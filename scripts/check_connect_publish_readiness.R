@@ -36,8 +36,19 @@ tracked <- if (nzchar(Sys.which("git"))) {
   tryCatch(system2("git", "ls-files", stdout = TRUE, stderr = FALSE), error = function(e) character())
 } else character()
 
-private_tracked <- length(grep("^data/private/", tracked)) == 0
-all_ok <- check("No private data tracked in git", private_tracked, "data/private/** should be ignored") && all_ok
+private_tracked_files <- grep("^data/private/", tracked, value = TRUE)
+allowed_private_tracked <- "data/private/.gitkeep"
+private_disallowed <- setdiff(private_tracked_files, allowed_private_tracked)
+private_tracked <- length(private_disallowed) == 0
+private_detail <- if (private_tracked) {
+  "data/private/** should be ignored (except data/private/.gitkeep)"
+} else {
+  paste0(
+    "tracked private path(s): ",
+    paste(utils::head(private_disallowed, 5), collapse = ", ")
+  )
+}
+all_ok <- check("No private data tracked in git", private_tracked, private_detail) && all_ok
 
 site_tracked <- any(grepl("^_site/", tracked))
 all_ok <- check("Built site not tracked", !site_tracked, "_site/ should be ignored") && all_ok

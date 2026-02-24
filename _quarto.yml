@@ -36,7 +36,7 @@ website:
     left: |
       Proudly supported by
       [![](/images/Posit-Logos-2024_horiz-full-color.svg){fig-alt="Posit" width=65px .light-content}](https://posit.co) [![](/images/Posit-Logos-2024_horiz-full-color-white-text.svg){fig-alt="Posit" width=65px .dark-content}](https://posit.co)
-      [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18750662.svg)](https://doi.org/10.5281/zenodo.18750662)
+      [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18752220.svg)](https://doi.org/10.5281/zenodo.18752220)
     center:
       - text: "About"
         href: about.qmd

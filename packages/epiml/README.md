@@ -77,7 +77,7 @@ BibTeX:
   author  = {Ruhela, Vansh Singh},
   year    = {2026},
   note    = {R package version 0.1.0},
-  doi     = {10.5281/zenodo.18750662},
+  doi     = {10.5281/zenodo.18752220},
   url     = {https://github.com/ruhelavansh-oss/epi-ML/tree/main/packages/epiml}
 }
 ```

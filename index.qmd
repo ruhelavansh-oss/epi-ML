@@ -8,7 +8,7 @@ date: last-modified
 
 This project presents a retrospective epidemiologic study of alcohol and cannabis use among postsecondary students using the CPADS 2021-2022 public-use microdata. The objective is to estimate population burden, associational structure, and causal-effect targets under explicit assumptions. The project ships with a reusable companion package, `epiml` (`packages/epiml`), for manifest validation, output auditing, pipeline execution, and synthetic-data development workflows.
 
-<a href="https://doi.org/10.5281/zenodo.18750662"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.18750662.svg" alt="DOI"></a>
+<a href="https://doi.org/10.5281/zenodo.18752220"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.18752220.svg" alt="DOI"></a>
 
 ## Project Scope
 
@@ -50,15 +50,15 @@ This project site documents the principal investigator's research workflow, meth
 `epi-ML` computational notebook:
 
 ```bibtex
-@misc{ruhela_2026_18750663,
+@misc{ruhela_2026_18752220,
   author       = {Ruhela, Vansh},
   title        = {Epidemiological Semiparametric Machine Learning},
   month        = feb,
   year         = 2026,
   publisher    = {Zenodo},
   version      = {1.0.1},
-  doi          = {10.5281/zenodo.18750663},
-  url          = {https://doi.org/10.5281/zenodo.18750663},
+  doi          = {10.5281/zenodo.18752220},
+  url          = {https://doi.org/10.5281/zenodo.18752220},
 }
 ```
 
@@ -70,7 +70,7 @@ This project site documents the principal investigator's research workflow, meth
   author  = {Ruhela, Vansh Singh},
   year    = {2026},
   note    = {R package version 0.1.0},
-  doi     = {10.5281/zenodo.18750662},
+  doi     = {10.5281/zenodo.18752220},
   url     = {https://github.com/ruhelavansh-oss/epi-ML/tree/main/packages/epiml}
 }
 ```

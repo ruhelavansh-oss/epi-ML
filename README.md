@@ -1,6 +1,6 @@
 # Epidemiological Semiparametric Machine Learning (EML)
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18750662.svg)](https://doi.org/10.5281/zenodo.18750662)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18752220.svg)](https://doi.org/10.5281/zenodo.18752220)
 
 This repository hosts the study and publication framework for a retrospective observational cohort of alcohol and cannabis use in the Canadian Postsecondary Education Alcohol and Drug Use Survey (CPADS 2021-2022 PUMF).
 
@@ -120,15 +120,15 @@ summarize_output_audit(audit)
 `epi-ML` computational notebook:
 
 ```bibtex
-@misc{ruhela_2026_18750663,
+@misc{ruhela_2026_18752220,
   author       = {Ruhela, Vansh},
   title        = {Epidemiological Semiparametric Machine Learning},
   month        = feb,
   year         = 2026,
   publisher    = {Zenodo},
   version      = {1.0.1},
-  doi          = {10.5281/zenodo.18750663},
-  url          = {https://doi.org/10.5281/zenodo.18750663},
+  doi          = {10.5281/zenodo.18752220},
+  url          = {https://doi.org/10.5281/zenodo.18752220},
 }
 ```
 
@@ -140,7 +140,7 @@ summarize_output_audit(audit)
   author  = {Ruhela, Vansh Singh},
   year    = {2026},
   note    = {R package version 0.1.0},
-  doi     = {10.5281/zenodo.18750662},
+  doi     = {10.5281/zenodo.18752220},
   url     = {https://github.com/ruhelavansh-oss/epi-ML/tree/main/packages/epiml}
 }
 ```
