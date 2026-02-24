@@ -1,8 +1,9 @@
 citHeader("To cite the epiml package, please use:")
+id <- "ruhela_epiml_2026"
 
 bibentry(
   bibtype = "Manual",
-  key = "ruhela_epiml_2026",
+  key = id,
   title = "epiml: Reproducibility Utilities for Epidemiological ML Workflows",
   author = person("Vansh Singh", "Ruhela"),
   year = "2026",
