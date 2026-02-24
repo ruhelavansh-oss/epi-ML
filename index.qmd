@@ -6,12 +6,13 @@ date: last-modified
 
 ## Introduction
 
-This project presents a retrospective epidemiologic study of alcohol and cannabis use among postsecondary students using the CPADS 2021-2022 public-use microdata. The objective is to estimate population burden, associational structure, and causal-effect targets under explicit assumptions.
+This project presents a retrospective epidemiologic study of alcohol and cannabis use among postsecondary students using the CPADS 2021-2022 public-use microdata. The objective is to estimate population burden, associational structure, and causal-effect targets under explicit assumptions. The project ships with a reusable companion package, `epiml` (`packages/epiml`), for manifest validation, output auditing, pipeline execution, and synthetic-data development workflows.
 
 <a href="https://doi.org/10.5281/zenodo.18750662"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.18750662.svg" alt="DOI"></a>
 
 ## Project Scope
 
+::: {.callout-tip}
 The scientific workflow combines:
 
 1. Design-based survey inference for prevalence and uncertainty.
@@ -19,22 +20,57 @@ The scientific workflow combines:
 3. Causal estimators (g-computation, IPW, AIPW, and matching-based contrasts).
 4. eBAC-specific evaluation using measured eBAC variables provided in the wrangled workflow.
 5. Semiparametric machine learning sensitivity evaluation (DoubleML random-forest learners).
+:::
 
 ## Core Estimands
 
+::: {.callout-warning}
 - Weighted heavy-drinking prevalence in the target population.
 - Logistic odds ratios for cannabis-exposure association with heavy drinking.
 - Risk-difference causal targets: ATE, ATT, ATC, and subgroup contrasts (CATE-style summaries).
 - eBAC-domain outcomes (`ebac_tot`, `ebac_legal`) under observed-domain and weighted models.
+:::
 
 ## Deployment Notes
 
+::: {.callout-caution}
 - Public repository content is restricted to code, components illustration, and website assets.
 - PUMF and row-level local outputs are excluded from version control.
 - Runtime pathing is environment-configured to avoid machine-specific hardcoded locations.
+:::
+
+## Citations
 
 ::: {.callout-note}
-## Scientific Authorship
+### Scientific Authorship
 
 This project site documents the principal investigator's research workflow, methods, and interpretation framework for epidemiological review and reproducibility.
 :::
+
+`epi-ML` computational notebook:
+
+```bibtex
+@misc{ruhela_2026_18750663,
+  author       = {Ruhela, Vansh},
+  title        = {Epidemiological Semiparametric Machine Learning},
+  month        = feb,
+  year         = 2026,
+  publisher    = {Zenodo},
+  version      = {1.0.1},
+  doi          = {10.5281/zenodo.18750663},
+  url          = {https://doi.org/10.5281/zenodo.18750663},
+}
+```
+
+`epiml` package component:
+
+```bibtex
+@Manual{ruhela_epiml_2026,
+  title   = {epiml: Reproducibility Utilities for Epidemiological ML Workflows},
+  author  = {Ruhela, Vansh Singh},
+  year    = {2026},
+  note    = {R package version 0.1.0},
+  doi     = {10.5281/zenodo.18750662},
+  url     = {https://github.com/ruhelavansh-oss/epi-ML/tree/main/packages/epiml}
+}
+```

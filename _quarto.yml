@@ -42,8 +42,8 @@ website:
         href: about.qmd
       - text: "FAQ"
         href: faq.qmd
-      - text: "License"
-        href: license.qmd
+      - text: "Apache-2.0"
+        href: https://github.com/ruhelavansh-oss/epi-ML/blob/main/LICENSE
       - text: "Trademark"
         href: trademark.qmd
     right:

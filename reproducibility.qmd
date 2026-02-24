@@ -25,6 +25,16 @@ Rscript scripts/security_scan.R
 Rscript scripts/check_connect_publish_readiness.R
 ```
 
+## Companion Package
+
+The repository includes a reusable package at `packages/epiml` for manifest validation, output auditing, configurable pipeline execution, and synthetic-data testing.
+
+```r
+install.packages("packages/epiml", repos = NULL, type = "source")
+library(epiml)
+citation("epiml")
+```
+
 ## Publication Boundaries
 
 - Public website content is QMD-based and curated for disclosure safety.

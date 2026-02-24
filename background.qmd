@@ -8,23 +8,24 @@ The study uses retrospective observational survey microdata from CPADS 2021-2022
 
 ## Target Variables
 
+::: {.callout-warning}
 - **Exposure/Treatment proxy**: `cannabis_any_use` (past-year cannabis use indicator).
 - **Primary outcome**: `heavy_drinking_30d` (past-30-day heavy drinking indicator).
 - **eBAC outcomes**: `ebac_tot` (continuous) and `ebac_legal` (binary threshold indicator), using measured variables available in the wrangled analytic dataset.
 - **Adjustment covariates**: age group, gender, region, self-rated mental health, and self-rated physical health.
+:::
 
 ## Estimation Framework
 
-### Survey-Weighted Inference
-
-Primary burden estimates are design-based and weighted where specified, including prevalence and confidence intervals.
-
+::: {.callout-tip}
 ### Regression and Association Layers
 
 - Logistic regression for adjusted odds-ratio estimation.
 - Regression model comparison and Wald testing for nested-term evaluation.
 - SMOTE-based sensitivity models treated as robustness diagnostics, not as replacements for primary weighted estimates.
+:::
 
+::: {.callout-note}
 ### Causal Estimators
 
 - Naive risk-difference contrasts.
@@ -32,18 +33,25 @@ Primary burden estimates are design-based and weighted where specified, includin
 - Inverse probability weighting (IPW), with trimming rules as implemented in scripts.
 - Augmented IPW (AIPW) with stabilized fallback logic where package-level calls are not available.
 - Matching/subclassification contrasts and subgroup heterogeneity summaries.
+:::
 
 ### Semiparametric Learning
 
-DoubleML random-forest models provide additional robustness checks for treatment-effect targets in the eBAC track.
+::: {.callout-warning}
+Primary burden estimates are design-based and weighted where specified, including prevalence and confidence intervals. DoubleML random-forest models provide additional robustness checks for treatment-effect targets in the eBAC track.
+:::
 
-## Assumptions and Interpretation Boundary
+## Assumptions
 
-Causal language is conditional on:
+::: {.callout-caution}
+### Interpretation Boundary
 
-1. Consistency of potential outcomes.
-2. Conditional exchangeability after measured adjustment.
-3. Positivity/overlap in the observed covariate support.
-4. Adequate specification of nuisance and outcome models.
+Causal language is conditional on the following identification requirements:
 
-All associational and causal outputs are interpreted within these explicit boundaries.
+1. **Consistency** of potential outcomes.
+2. **Conditional exchangeability** after measured adjustment.
+3. **Positivity/overlap** in the observed covariate support.
+4. **Adequate specification** of nuisance and outcome models.
+
+All associational and causal outputs should be interpreted within these explicit boundaries.
+:::

@@ -11,6 +11,8 @@ Authors@R: c(
     comment = c(ORCID = "0009-0004-1750-3592")
   )
  )
+Author: Vansh Singh Ruhela [aut, cre] (<https://orcid.org/0009-0004-1750-3592>)
+Maintainer: Vansh Singh Ruhela <vansh.ruhela@mail.utoronto.ca>
 Description: Utilities for reproducible epidemiological analysis pipelines.
   Provides helpers to validate and audit public output manifests,
   build output manifests from generated artifacts, and run
@@ -25,4 +27,6 @@ Imports:
   utils
 Suggests:
   testthat (>= 3.0.0)
+URL: https://github.com/ruhelavansh-oss/epi-ML/tree/main/packages/epiml
+BugReports: https://github.com/ruhelavansh-oss/epi-ML/issues
 Config/testthat/edition: 3

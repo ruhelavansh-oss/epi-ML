@@ -64,3 +64,20 @@ dat <- generate_synthetic_data(
   name_map = name_map
 )
 ```
+
+## Citation
+
+Use `citation("epiml")` after installation.
+
+BibTeX:
+
+```bibtex
+@Manual{ruhela_epiml_2026,
+  title   = {epiml: Reproducibility Utilities for Epidemiological ML Workflows},
+  author  = {Ruhela, Vansh Singh},
+  year    = {2026},
+  note    = {R package version 0.1.0},
+  doi     = {10.5281/zenodo.18750662},
+  url     = {https://github.com/ruhelavansh-oss/epi-ML/tree/main/packages/epiml}
+}
+```

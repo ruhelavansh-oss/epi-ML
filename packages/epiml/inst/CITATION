@@ -1,0 +1,12 @@
+citHeader("To cite the epiml package, please use:")
+
+bibentry(
+  bibtype = "Manual",
+  key = "ruhela_epiml_2026",
+  title = "epiml: Reproducibility Utilities for Epidemiological ML Workflows",
+  author = person("Vansh Singh", "Ruhela"),
+  year = "2026",
+  note = "R package version 0.1.0",
+  doi = "10.5281/zenodo.18750662",
+  url = "https://github.com/ruhelavansh-oss/epi-ML/tree/main/packages/epiml"
+)

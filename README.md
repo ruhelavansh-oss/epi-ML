@@ -4,6 +4,8 @@
 
 This repository hosts the study and publication framework for a retrospective observational cohort of alcohol and cannabis use in the Canadian Postsecondary Education Alcohol and Drug Use Survey (CPADS 2021-2022 PUMF).
 
+The repository also includes a reusable reproducibility package under `packages/epiml` for manifest auditing, workflow orchestration, and synthetic-data testing workflows.
+
 ## Research Focus
 
 The project estimates both associational and causal-effect targets for:
@@ -34,11 +36,13 @@ surveillance/
   ebac/          # eBAC-focused scripts
 scripts/         # orchestration, rendering, and checks
 reports/
-  source/        # manuscript/report source files
+  drafts/        # manuscript/report source files
   public/        # rendered report artifacts (gitignored)
 data/
   private/       # local initial outputs (gitignored)
   public/        # publishable aggregate artifacts (tracked)
+packages/
+  epiml/         # reusable reproducibility/audit package
 ```
 
 ## Website and Publication
@@ -98,6 +102,47 @@ Optional Posit Connect deploy helper:
 
 ```bash
 RSCONNECT_ACCOUNT=<your-account> Rscript scripts/deploy_connect_cloud.R
+```
+
+Package-level reproducibility helpers (optional):
+
+```r
+install.packages("packages/epiml", repos = NULL, type = "source")
+library(epiml)
+
+manifest <- read_outputs_manifest(project_root = getwd())
+audit <- audit_public_outputs(project_root = getwd(), manifest = manifest)
+summarize_output_audit(audit)
+```
+
+## Citations
+
+`epi-ML` computational notebook:
+
+```bibtex
+@misc{ruhela_2026_18750663,
+  author       = {Ruhela, Vansh},
+  title        = {Epidemiological Semiparametric Machine Learning},
+  month        = feb,
+  year         = 2026,
+  publisher    = {Zenodo},
+  version      = {1.0.1},
+  doi          = {10.5281/zenodo.18750663},
+  url          = {https://doi.org/10.5281/zenodo.18750663},
+}
+```
+
+`epiml` package component BibTeX:
+
+```bibtex
+@Manual{ruhela_epiml_2026,
+  title   = {epiml: Reproducibility Utilities for Epidemiological ML Workflows},
+  author  = {Ruhela, Vansh Singh},
+  year    = {2026},
+  note    = {R package version 0.1.0},
+  doi     = {10.5281/zenodo.18750662},
+  url     = {https://github.com/ruhelavansh-oss/epi-ML/tree/main/packages/epiml}
+}
 ```
 
 ## Data Governance
