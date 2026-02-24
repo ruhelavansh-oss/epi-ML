@@ -2,9 +2,7 @@
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18752220.svg)](https://doi.org/10.5281/zenodo.18752220)
 
-This repository hosts the study and publication framework for a retrospective observational cohort of alcohol and cannabis use in the Canadian Postsecondary Education Alcohol and Drug Use Survey public use microdata file (CPADS 2021-2022 PUMF).
-
-The repository also includes a reusable reproducibility package under `packages/epiml` for manifest auditing, workflow orchestration, and synthetic-data testing workflows.
+This repository hosts the study and publication framework for a retrospective observational cohort of alcohol and cannabis use in the Canadian Postsecondary Education Alcohol and Drug Use Survey public use microdata file (CPADS 2021-2022 PUMF). The repository also includes a reusable reproducibility package under `packages/epiml` for manifest auditing, workflow orchestration, and synthetic-data testing workflows.
 
 ## Research Focus
 
@@ -152,7 +150,6 @@ summarize_output_audit(audit)
 
 ## Data Governance
 
-- Raw microdata and row-level private outputs are excluded from version control.
 - Runtime paths are environment-driven to avoid hardcoded machine-specific locations.
 - Security/path scans are enforced locally and in CI before deployment.
 - Security policy: `SECURITY.md`
