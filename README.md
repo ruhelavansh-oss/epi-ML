@@ -2,7 +2,7 @@
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18752220.svg)](https://doi.org/10.5281/zenodo.18752220)
 
-This repository hosts the study and publication framework for a retrospective observational cohort of alcohol and cannabis use in the Canadian Postsecondary Education Alcohol and Drug Use Survey (CPADS 2021-2022 PUMF).
+This repository hosts the study and publication framework for a retrospective observational cohort of alcohol and cannabis use in the Canadian Postsecondary Education Alcohol and Drug Use Survey public use microdata file (CPADS 2021-2022 PUMF).
 
 The repository also includes a reusable reproducibility package under `packages/epiml` for manifest auditing, workflow orchestration, and synthetic-data testing workflows.
 
@@ -117,6 +117,11 @@ summarize_output_audit(audit)
 
 ## Citations
 
+`epi-ML` DOI records for `v1.1.1`:
+
+- Current DOI: <https://doi.org/10.5281/zenodo.18752220>
+- Legacy DOI record: <https://doi.org/10.5281/zenodo.18750663>
+
 `epi-ML` computational notebook:
 
 ```bibtex
@@ -126,7 +131,7 @@ summarize_output_audit(audit)
   month        = feb,
   year         = 2026,
   publisher    = {Zenodo},
-  version      = {1.0.1},
+  version      = {1.1.1},
   doi          = {10.5281/zenodo.18752220},
   url          = {https://doi.org/10.5281/zenodo.18752220},
 }

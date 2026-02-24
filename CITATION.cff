@@ -1,9 +1,9 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 title: "Epidemiological Semiparametric Machine Learning"
-version: "1.0.1"
+version: "1.1.1"
 doi: "10.5281/zenodo.18752220"
-date-released: "2026-02-23"
+date-released: "2026-02-24"
 license: "Apache-2.0"
 authors:
   - family-names: "Ruhela"
