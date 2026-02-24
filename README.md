@@ -1,6 +1,6 @@
 # Epidemiological Semiparametric Machine Learning (EML)
 
-[![DOI](https://sandbox.zenodo.org/badge/1164041017.svg)](https://handle.test.datacite.org/10.5072/zenodo.444800)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18750662.svg)](https://doi.org/10.5281/zenodo.18750662)
 
 This repository hosts the study and publication framework for a retrospective observational cohort of alcohol and cannabis use in the Canadian Postsecondary Education Alcohol and Drug Use Survey (CPADS 2021-2022 PUMF).
 

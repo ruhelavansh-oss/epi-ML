@@ -8,6 +8,8 @@ date: last-modified
 
 This project presents a retrospective epidemiologic study of alcohol and cannabis use among postsecondary students using the CPADS 2021-2022 public-use microdata. The objective is to estimate population burden, associational structure, and causal-effect targets under explicit assumptions.
 
+<a href="https://doi.org/10.5281/zenodo.18750662"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.18750662.svg" alt="DOI"></a>
+
 ## Project Scope
 
 The scientific workflow combines:
