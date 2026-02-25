@@ -28,12 +28,12 @@ paths <- get_paths()
 init_paths(paths)
 
 output_dir <- paths$output_private_dir
-wrangled_path <- file.path(paths$wrangled_dir, "cpads_pumf_wrangled.rds")
+wrangled_path <- file.path(paths$wrangled_dir, "data_wrangled.rds")
 
 if (!file.exists(wrangled_path)) {
   stop("Missing wrangled data file: ", safe_label_path(wrangled_path, paths))
 }
-pumf <- readRDS(wrangled_path)
+df <- readRDS(wrangled_path)
 
 cat("=== PHASE 7e: FINAL INTEGRATED eBAC PIPELINE ===\n\n")
 
@@ -41,23 +41,23 @@ cat("=== PHASE 7e: FINAL INTEGRATED eBAC PIPELINE ===\n\n")
 # 0) Variable audit and setup
 # -----------------------------------------------------------------------------
 required <- c(
-  "wtpumf", "ebac_tot", "ebac_legal", "alcohol_past12m",
+  "weight", "ebac_tot", "ebac_legal", "alcohol_past12m",
   "cannabis_any_use", "heavy_drinking_30d", "gender", "age_group",
   "province_region", "mental_health", "physical_health"
 )
-missing_req <- setdiff(required, names(pumf))
+missing_req <- setdiff(required, names(df))
 if (length(missing_req) > 0) {
   stop("Missing required variables: ", paste(missing_req, collapse = ", "))
 }
 
-# Optional demographic fields based on CPADS user guide definitions
-has_dvdemq02 <- "dvdemq02" %in% names(pumf)  # sexual orientation
-has_dvdemq6 <- "dvdemq6" %in% names(pumf)    # ethnicity
+# Optional demographic fields based on data user guide definitions
+has_dvdemq02 <- "dvdemq02" %in% names(df)  # sexual orientation
+has_dvdemq6 <- "dvdemq6" %in% names(df)    # ethnicity
 user_guide_ethnicity_var <- "dvdemq6"
-has_user_guide_ethnicity <- user_guide_ethnicity_var %in% names(pumf)
-race_named_vars <- names(pumf)[grepl("(^race$|race_)", names(pumf), ignore.case = TRUE)]
+has_user_guide_ethnicity <- user_guide_ethnicity_var %in% names(df)
+race_named_vars <- names(df)[grepl("(^race$|race_)", names(df), ignore.case = TRUE)]
 
-pumf <- pumf %>%
+df <- df %>%
   mutate(
     sexual_orientation_dvdemq02 = if (has_dvdemq02) {
       factor(
@@ -112,11 +112,11 @@ audit_tbl <- tibble(
     "named_race_vars_by_name_scan"
   ),
   value = c(
-    nrow(pumf),
-    "ebac_tot" %in% names(pumf),
-    "ebac_legal" %in% names(pumf),
-    "demq3" %in% names(pumf),
-    "demq4" %in% names(pumf),
+    nrow(df),
+    "ebac_tot" %in% names(df),
+    "ebac_legal" %in% names(df),
+    "demq3" %in% names(df),
+    "demq4" %in% names(df),
     has_dvdemq02,
     has_dvdemq6,
     user_guide_ethnicity_var,
@@ -133,9 +133,9 @@ user_guide_var_map <- tibble(
     "Are you an international student?"
   ),
   exists_in_wrangled_data = c(
-    "dvdemq6" %in% names(pumf),
-    "dvdemq02" %in% names(pumf),
-    "demq5" %in% names(pumf)
+    "dvdemq6" %in% names(df),
+    "dvdemq02" %in% names(df),
+    "demq5" %in% names(df)
   ),
   coding_note = c(
     "1=Black; 2=East/Southeast Asian; 3=Indigenous; 4=Latino; 5=Middle Eastern; 6=South Asian; 7=White; 8=Other/Multiple; special codes recoded to NA",
@@ -195,11 +195,11 @@ extract_linear <- function(model_obj, model_name) {
 }
 
 weighted_mean_overall <- function(data, outcome, metric_name) {
-  d <- data %>% filter(!is.na(.data[[outcome]]), !is.na(wtpumf))
+  d <- data %>% filter(!is.na(.data[[outcome]]), !is.na(weight))
   if (nrow(d) == 0) {
     return(tibble())
   }
-  des <- svydesign(ids = ~1, weights = ~wtpumf, data = d)
+  des <- svydesign(ids = ~1, weights = ~weight, data = d)
   est <- svymean(as.formula(paste0("~", outcome)), des, na.rm = TRUE)
   ci <- confint(est)
   tibble(
@@ -216,11 +216,11 @@ weighted_mean_overall <- function(data, outcome, metric_name) {
 
 weighted_mean_by_group <- function(data, outcome, group_var, metric_name) {
   d <- data %>%
-    filter(!is.na(.data[[outcome]]), !is.na(.data[[group_var]]), !is.na(wtpumf))
+    filter(!is.na(.data[[outcome]]), !is.na(.data[[group_var]]), !is.na(weight))
   if (nrow(d) == 0) {
     return(tibble())
   }
-  des <- svydesign(ids = ~1, weights = ~wtpumf, data = d)
+  des <- svydesign(ids = ~1, weights = ~weight, data = d)
   by_obj <- svyby(
     as.formula(paste0("~", outcome)),
     as.formula(paste0("~", group_var)),
@@ -250,13 +250,13 @@ weighted_mean_by_group <- function(data, outcome, group_var, metric_name) {
 ess <- function(w) (sum(w)^2) / sum(w^2)
 
 # -----------------------------------------------------------------------------
-# 1a) eBAC formula audit (CPADS guide pp. 85-87)
+# 1a) eBAC formula audit (data guide pp. 85-87)
 # -----------------------------------------------------------------------------
-cat("\n--- 1a) eBAC formula audit (Woman/Man coefficients) ---\n")
+cat("\n--- 1a) eBAC formula audit (Female/Male coefficients) ---\n")
 
 formula_required_vars <- c("gender", "alc13a", "alc13b_a", "alc13b_b", "demq3", "demq4", "ebac_tot", "ebac_legal")
-formula_missing_vars <- setdiff(formula_required_vars, names(pumf))
-formula_available_vars <- intersect(formula_required_vars, names(pumf))
+formula_missing_vars <- setdiff(formula_required_vars, names(df))
+formula_available_vars <- intersect(formula_required_vars, names(df))
 formula_recompute_feasible <- length(formula_missing_vars) == 0
 
 formula_input_audit <- tibble(
@@ -272,18 +272,18 @@ formula_input_audit <- tibble(
     formula_recompute_feasible,
     ifelse(length(formula_missing_vars) == 0, "NONE", paste(formula_missing_vars, collapse = ";")),
     ifelse(length(formula_available_vars) == 0, "NONE", paste(formula_available_vars, collapse = ";")),
-    sum(as.character(pumf$gender) == "Woman", na.rm = TRUE),
-    sum(as.character(pumf$gender) == "Man", na.rm = TRUE),
-    sum(as.character(pumf$gender) == "Transgender/Non-binary", na.rm = TRUE)
+    sum(as.character(df$gender) == "Female", na.rm = TRUE),
+    sum(as.character(df$gender) == "Male", na.rm = TRUE),
+    sum(as.character(df$gender) == "Non-binary", na.rm = TRUE)
   )
 )
 
 if (formula_recompute_feasible) {
-  ebac_formula_df <- pumf %>%
+  ebac_formula_df <- df %>%
     mutate(
       gender_for_formula = case_when(
-        as.character(gender) == "Woman" ~ "Woman",
-        as.character(gender) == "Man" ~ "Man",
+        as.character(gender) == "Female" ~ "Female",
+        as.character(gender) == "Male" ~ "Male",
         TRUE ~ NA_character_
       ),
       grams_alcohol = 13.6 * as.numeric(alc13a),
@@ -291,8 +291,8 @@ if (formula_recompute_feasible) {
       body_weight_kg = as.numeric(demq4),
       body_height_cm = as.numeric(demq3),
       r = case_when(
-        gender_for_formula == "Woman" ~ 0.31223 - 0.006446 * body_weight_kg + 0.004466 * body_height_cm,
-        gender_for_formula == "Man" ~ 0.31608 - 0.004821 * body_weight_kg + 0.004632 * body_height_cm,
+        gender_for_formula == "Female" ~ 0.31223 - 0.006446 * body_weight_kg + 0.004466 * body_height_cm,
+        gender_for_formula == "Male" ~ 0.31608 - 0.004821 * body_weight_kg + 0.004632 * body_height_cm,
         TRUE ~ NA_real_
       ),
       formula_inputs_complete = !is.na(gender_for_formula) &
@@ -350,7 +350,7 @@ if (formula_recompute_feasible) {
       ifelse(nrow(compare_legal) > 0, mean(compare_legal$ebac_legal_formula == compare_legal$ebac_legal), NA_real_),
       nrow(compare_legal_off_boundary),
       ifelse(nrow(compare_legal_off_boundary) > 0, mean(compare_legal_off_boundary$ebac_legal_formula == compare_legal_off_boundary$ebac_legal), NA_real_),
-      "Formula applies only to Woman/Man rows; non-binary rows are excluded from direct formula recomputation."
+      "Formula applies only to Female/Male rows; non-binary rows are excluded from direct formula recomputation."
     )
   )
 } else {
@@ -359,7 +359,7 @@ if (formula_recompute_feasible) {
     value = c(
       "not_computable_missing_inputs",
       paste(formula_missing_vars, collapse = ";"),
-      "Public wrangled PUMF includes ebac_tot/ebac_legal but lacks some direct formula inputs (typically demq3/demq4)."
+      "Public wrangled dataset includes ebac_tot/ebac_legal but lacks some direct formula inputs (typically demq3/demq4)."
     )
   )
 }
@@ -374,7 +374,7 @@ write_csv(formula_validation, file.path(output_dir, "ebac_final_formula_validati
 # -----------------------------------------------------------------------------
 cat("\n--- 1) Domain/sample accounting and QA checks ---\n")
 
-pumf <- pumf %>% mutate(ebac_observed = as.integer(!is.na(ebac_tot)))
+df <- df %>% mutate(ebac_observed = as.integer(!is.na(ebac_tot)))
 
 sample_tbl <- tibble(
   sample_name = c(
@@ -384,10 +384,10 @@ sample_tbl <- tibble(
     "eBAC missing among alcohol users"
   ),
   n = c(
-    nrow(pumf),
-    sum(pumf$alcohol_past12m == 1, na.rm = TRUE),
-    sum(pumf$alcohol_past12m == 1 & pumf$ebac_observed == 1, na.rm = TRUE),
-    sum(pumf$alcohol_past12m == 1 & pumf$ebac_observed == 0, na.rm = TRUE)
+    nrow(df),
+    sum(df$alcohol_past12m == 1, na.rm = TRUE),
+    sum(df$alcohol_past12m == 1 & df$ebac_observed == 1, na.rm = TRUE),
+    sum(df$alcohol_past12m == 1 & df$ebac_observed == 0, na.rm = TRUE)
   )
 )
 print(sample_tbl, n = Inf)
@@ -401,24 +401,24 @@ qa_tbl <- tibble(
     "weights_positive"
   ),
   value = c(
-    sprintf("[%.3f, %.3f]", min(pumf$ebac_tot, na.rm = TRUE), max(pumf$ebac_tot, na.rm = TRUE)),
+    sprintf("[%.3f, %.3f]", min(df$ebac_tot, na.rm = TRUE), max(df$ebac_tot, na.rm = TRUE)),
     {
-      tmp <- pumf %>% filter(!is.na(ebac_tot), !is.na(ebac_legal), ebac_tot != 0.08)
+      tmp <- df %>% filter(!is.na(ebac_tot), !is.na(ebac_legal), ebac_tot != 0.08)
       sprintf("%.5f", mean(as.integer(tmp$ebac_tot > 0.08) == tmp$ebac_legal))
     },
-    sprintf("%.4f", mean(is.na(pumf$ebac_tot))),
-    sprintf("%.4f", mean(is.na(pumf$ebac_tot[pumf$alcohol_past12m == 0]))),
-    as.character(all(pumf$wtpumf[!is.na(pumf$wtpumf)] > 0))
+    sprintf("%.4f", mean(is.na(df$ebac_tot))),
+    sprintf("%.4f", mean(is.na(df$ebac_tot[df$alcohol_past12m == 0]))),
+    as.character(all(df$weight[!is.na(df$weight)] > 0))
   ),
   pass = c(
-    all(pumf$ebac_tot[!is.na(pumf$ebac_tot)] >= 0 & pumf$ebac_tot[!is.na(pumf$ebac_tot)] <= 0.8),
+    all(df$ebac_tot[!is.na(df$ebac_tot)] >= 0 & df$ebac_tot[!is.na(df$ebac_tot)] <= 0.8),
     {
-      tmp <- pumf %>% filter(!is.na(ebac_tot), !is.na(ebac_legal), ebac_tot != 0.08)
+      tmp <- df %>% filter(!is.na(ebac_tot), !is.na(ebac_legal), ebac_tot != 0.08)
       mean(as.integer(tmp$ebac_tot > 0.08) == tmp$ebac_legal) >= 0.999
     },
-    mean(is.na(pumf$ebac_tot)) <= 0.40,
-    mean(is.na(pumf$ebac_tot[pumf$alcohol_past12m == 0])) > 0.99,
-    all(pumf$wtpumf[!is.na(pumf$wtpumf)] > 0)
+    mean(is.na(df$ebac_tot)) <= 0.40,
+    mean(is.na(df$ebac_tot[df$alcohol_past12m == 0])) > 0.99,
+    all(df$weight[!is.na(df$weight)] > 0)
   )
 )
 print(qa_tbl, n = Inf)
@@ -440,10 +440,10 @@ if (has_dvdemq02) group_vars <- c(group_vars, "sexual_orientation_dvdemq02")
 if (has_dvdemq6) group_vars <- c(group_vars, "ethnicity_dvdemq6")
 
 desc_tbl <- bind_rows(
-  weighted_mean_overall(pumf, "ebac_legal", "ebac_legal_prevalence"),
-  weighted_mean_overall(pumf, "ebac_tot", "ebac_tot_mean"),
-  map_dfr(group_vars, ~ weighted_mean_by_group(pumf, "ebac_legal", .x, "ebac_legal_prevalence")),
-  map_dfr(group_vars, ~ weighted_mean_by_group(pumf, "ebac_tot", .x, "ebac_tot_mean"))
+  weighted_mean_overall(df, "ebac_legal", "ebac_legal_prevalence"),
+  weighted_mean_overall(df, "ebac_tot", "ebac_tot_mean"),
+  map_dfr(group_vars, ~ weighted_mean_by_group(df, "ebac_legal", .x, "ebac_legal_prevalence")),
+  map_dfr(group_vars, ~ weighted_mean_by_group(df, "ebac_tot", .x, "ebac_tot_mean"))
 )
 print(desc_tbl %>% arrange(metric, group_var, group_level), n = 80)
 write_csv(desc_tbl, file.path(output_dir, "ebac_final_weighted_descriptives.csv"))
@@ -455,10 +455,10 @@ cat("\n--- 3) Weighted association models ---\n")
 
 model_vars <- c(
   "ebac_legal", "ebac_tot", "cannabis_any_use", "gender", "age_group",
-  "province_region", "mental_health", "physical_health", "wtpumf"
+  "province_region", "mental_health", "physical_health", "weight"
 )
-df_obs <- pumf %>% select(all_of(model_vars)) %>% drop_na()
-des_obs <- svydesign(ids = ~1, weights = ~wtpumf, data = df_obs)
+df_obs <- df %>% select(all_of(model_vars)) %>% drop_na()
+des_obs <- svydesign(ids = ~1, weights = ~weight, data = df_obs)
 
 fit_logit_main <- svyglm(
   ebac_legal ~ cannabis_any_use + gender + age_group + province_region +
@@ -517,14 +517,14 @@ write_csv(int_tests, file.path(output_dir, "ebac_final_interaction_tests.csv"))
 # -----------------------------------------------------------------------------
 cat("\n--- 4) Selection-adjusted models (IPW) ---\n")
 
-target <- pumf %>%
+target <- df %>%
   filter(alcohol_past12m == 1) %>%
   mutate(R = as.integer(!is.na(ebac_tot))) %>%
   select(
-    R, wtpumf, ebac_legal, ebac_tot, cannabis_any_use,
+    R, weight, ebac_legal, ebac_tot, cannabis_any_use,
     gender, age_group, province_region, mental_health, physical_health
   ) %>%
-  drop_na(wtpumf, cannabis_any_use, gender, age_group, province_region, mental_health, physical_health)
+  drop_na(weight, cannabis_any_use, gender, age_group, province_region, mental_health, physical_health)
 
 obs_mod <- glm(
   R ~ cannabis_any_use + gender + age_group + province_region + mental_health + physical_health,
@@ -542,7 +542,7 @@ q99 <- quantile(target$sw[target$R == 1], 0.99, na.rm = TRUE)
 target <- target %>%
   mutate(
     sw_trim = ifelse(R == 1, pmin(pmax(sw, q01), q99), NA_real_),
-    w_combined = ifelse(R == 1, wtpumf * sw_trim, NA_real_)
+    w_combined = ifelse(R == 1, weight * sw_trim, NA_real_)
   )
 
 ipw_diag <- tibble(
@@ -556,7 +556,7 @@ ipw_diag <- tibble(
     median(target$sw[target$R == 1], na.rm = TRUE),
     quantile(target$sw[target$R == 1], 0.99, na.rm = TRUE),
     max(target$sw[target$R == 1], na.rm = TRUE),
-    ess(target$wtpumf[target$R == 1]),
+    ess(target$weight[target$R == 1]),
     ess(target$w_combined[target$R == 1])
   )
 )

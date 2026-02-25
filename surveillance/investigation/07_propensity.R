@@ -21,12 +21,12 @@ output_dir <- paths$output_private_dir
 fig_dir <- paths$figures_dir
 cat("=== PHASE 7: PROPENSITY SCORES & IPW ===\n\n")
 
-pumf <- readRDS(file.path(wrangled_dir, "cpads_pumf_wrangled.rds"))
+df <- readRDS(file.path(wrangled_dir, "data_wrangled.rds"))
 
 # Complete cases for causal analysis
 covars <- c("age_group", "gender", "province_region", "mental_health", "physical_health")
-analysis_vars <- c("cannabis_any_use", "heavy_drinking_30d", covars, "wtpumf")
-df <- pumf %>%
+analysis_vars <- c("cannabis_any_use", "heavy_drinking_30d", covars, "weight")
+df <- df %>%
   dplyr::select(dplyr::all_of(analysis_vars)) %>%
   tidyr::drop_na()
 cat("Analysis sample (complete cases):", nrow(df), "observations\n\n")

@@ -24,11 +24,11 @@
 # cat("=== PHASE 4: DESCRIPTIVE STATISTICS & PROBABILITY ===\n\n")
 
 # # --- Load wrangled data ---
-# pumf <- readRDS(file.path(wrangled_dir, "cpads_pumf_wrangled.rds"))
-# pumf_svy <- readRDS(file.path(wrangled_dir, "cpads_pumf_survey.rds"))
+# df <- readRDS(file.path(wrangled_dir, "data_wrangled.rds"))
+# df_svy <- readRDS(file.path(wrangled_dir, "data_survey.rds"))
 # cads_alc <- readRDS(file.path(wrangled_dir, "cads_alcohol.rds"))
 
-# cat("CPADS_PUMF:", nrow(pumf), "observations\n")
+# cat("data_dataset:", nrow(df), "observations\n")
 # cat("CADS Alcohol:", nrow(cads_alc), "aggregate rows\n\n")
 
 # # =============================================================================
@@ -40,34 +40,34 @@
 
 # # --- Sample Space S ---
 # cat("--- 1.1 Sample Space Definition ---\n")
-# cat("S = {all CPADS PUMF respondents}, |S| =", nrow(pumf), "\n")
+# cat("S = {all data dataset respondents}, |S| =", nrow(df), "\n")
 # cat("For alcohol use: S_alc = {0 (never), 1 (ever used)}\n")
-# cat("  n(alcohol_any_use = 1):", sum(pumf$alcohol_any_use == 1, na.rm = TRUE), "\n")
-# cat("  n(alcohol_any_use = 0):", sum(pumf$alcohol_any_use == 0, na.rm = TRUE), "\n")
-# cat("  n(NA):", sum(is.na(pumf$alcohol_any_use)), "\n\n")
+# cat("  n(alcohol_any_use = 1):", sum(df$alcohol_any_use == 1, na.rm = TRUE), "\n")
+# cat("  n(alcohol_any_use = 0):", sum(df$alcohol_any_use == 0, na.rm = TRUE), "\n")
+# cat("  n(NA):", sum(is.na(df$alcohol_any_use)), "\n\n")
 
 # # --- P(A): Marginal Probabilities ---
 # cat("--- 1.2 Marginal Probabilities P(A) ---\n")
 # cat("Axioms: 0 <= P(A) <= 1, P(S) = 1, P(A^c) = 1 - P(A)\n\n")
 
 # # Survey-weighted prevalence
-# pumf_svy_wrangled <- svydesign(ids = ~1, weights = ~wtpumf, data = pumf)
+# df_svy_wrangled <- svydesign(ids = ~1, weights = ~weight, data = df)
 
 # # P(Alcohol use)
-# p_alc <- svymean(~alcohol_any_use, pumf_svy_wrangled, na.rm = TRUE)
+# p_alc <- svymean(~alcohol_any_use, df_svy_wrangled, na.rm = TRUE)
 # p_alc_ci <- confint(p_alc)
 # cat(sprintf("P(Alcohol ever) = %.4f (95%% CI: %.4f, %.4f)\n",
 #             coef(p_alc), p_alc_ci[1], p_alc_ci[2]))
 # cat(sprintf("P(Alcohol never) = 1 - P(A) = %.4f\n\n", 1 - coef(p_alc)))
 
 # # P(Binge drinking)
-# p_binge <- svymean(~alcohol_binge, pumf_svy_wrangled, na.rm = TRUE)
+# p_binge <- svymean(~alcohol_binge, df_svy_wrangled, na.rm = TRUE)
 # p_binge_ci <- confint(p_binge)
 # cat(sprintf("P(Binge drinking) = %.4f (95%% CI: %.4f, %.4f)\n",
 #             coef(p_binge), p_binge_ci[1], p_binge_ci[2]))
 
 # # P(Cannabis use)
-# p_can <- svymean(~cannabis_any_use, pumf_svy_wrangled, na.rm = TRUE)
+# p_can <- svymean(~cannabis_any_use, df_svy_wrangled, na.rm = TRUE)
 # p_can_ci <- confint(p_can)
 # cat(sprintf("P(Cannabis ever) = %.4f (95%% CI: %.4f, %.4f)\n\n",
 #             coef(p_can), p_can_ci[1], p_can_ci[2]))
@@ -78,7 +78,7 @@
 #   cat(sprintf("\nP(Alcohol | %s):\n", v))
 #   fml <- as.formula(paste("~alcohol_any_use +", v))
 #   tab <- svyby(~alcohol_any_use, as.formula(paste("~", v)),
-#                pumf_svy_wrangled, svymean, na.rm = TRUE)
+#                df_svy_wrangled, svymean, na.rm = TRUE)
 #   print(tab)
 # }
 
@@ -87,12 +87,12 @@
 # cat("E[X] = sum(x * P(X=x)),  Var(X) = E[(X - mu)^2]\n\n")
 
 # # Survey weights
-# wt_mean_age <- svymean(~age_groups, pumf_svy_wrangled)
+# wt_mean_age <- svymean(~age_groups, df_svy_wrangled)
 # cat(sprintf("E[age_group_code] = %.3f\n", coef(wt_mean_age)))
 
 # # For alcohol frequency (among drinkers)
-# pumf_drinkers <- pumf %>% filter(alcohol_any_use == 1, !is.na(alc03))
-# svy_drinkers <- svydesign(ids = ~1, weights = ~wtpumf, data = pumf_drinkers)
+# df_drinkers <- df %>% filter(alcohol_any_use == 1, !is.na(alc03))
+# svy_drinkers <- svydesign(ids = ~1, weights = ~weight, data = df_drinkers)
 # freq_mean <- svymean(~alc03, svy_drinkers)
 # freq_var <- svyvar(~alc03, svy_drinkers)
 # cat(sprintf("E[alc_frequency_code | drinker] = %.3f\n", coef(freq_mean)))
@@ -104,11 +104,11 @@
 # cat("P(X >= a) <= E[X] / a  (for X >= 0)\n\n")
 
 # # Using survey weight variable as an example of a non-negative continuous variable
-# ex_wt <- mean(pumf$wtpumf)
+# ex_wt <- mean(df$weight)
 # a_val <- 2.0
 # markov_bound <- ex_wt / a_val
-# empirical_prob <- mean(pumf$wtpumf >= a_val)
-# cat(sprintf("Variable: wtpumf,  E[X] = %.3f,  a = %.1f\n", ex_wt, a_val))
+# empirical_prob <- mean(df$weight >= a_val)
+# cat(sprintf("Variable: weight,  E[X] = %.3f,  a = %.1f\n", ex_wt, a_val))
 # cat(sprintf("Markov bound: P(X >= %.1f) <= %.4f\n", a_val, markov_bound))
 # cat(sprintf("Empirical:    P(X >= %.1f)  = %.4f\n", a_val, empirical_prob))
 # cat(sprintf("Markov holds: %s (bound >= empirical)\n\n",
@@ -118,12 +118,12 @@
 # cat("--- 1.5 Chebyshev's Inequality ---\n")
 # cat("P(|X - mu| >= k*sigma) <= 1/k^2\n\n")
 
-# mu_wt <- mean(pumf$wtpumf)
-# sd_wt <- sd(pumf$wtpumf)
+# mu_wt <- mean(df$weight)
+# sd_wt <- sd(df$weight)
 
 # for (k in c(1, 2, 3)) {
 #   cheby_bound <- 1 / k^2
-#   empirical <- mean(abs(pumf$wtpumf - mu_wt) >= k * sd_wt)
+#   empirical <- mean(abs(df$weight - mu_wt) >= k * sd_wt)
 #   cat(sprintf("k=%d: Chebyshev bound = %.4f, Empirical = %.4f, Holds: %s\n",
 #               k, cheby_bound, empirical,
 #               ifelse(cheby_bound >= empirical, "YES", "NO")))
@@ -142,13 +142,13 @@
 # cat("P(A ∩ B) = P(Alcohol AND Cannabis)\n\n")
 
 # # Create joint variable
-# pumf$alc_and_can <- ifelse(
-#   !is.na(pumf$alcohol_any_use) & !is.na(pumf$cannabis_any_use),
-#   pumf$alcohol_any_use * pumf$cannabis_any_use,
+# df$alc_and_can <- ifelse(
+#   !is.na(df$alcohol_any_use) & !is.na(df$cannabis_any_use),
+#   df$alcohol_any_use * df$cannabis_any_use,
 #   NA
 # )
 
-# svy_joint <- svydesign(ids = ~1, weights = ~wtpumf, data = pumf)
+# svy_joint <- svydesign(ids = ~1, weights = ~weight, data = df)
 # p_joint <- svymean(~alc_and_can, svy_joint, na.rm = TRUE)
 # cat(sprintf("P(Alcohol ∩ Cannabis) = %.4f\n", coef(p_joint)))
 # cat(sprintf("P(Alcohol) * P(Cannabis) = %.4f * %.4f = %.4f\n",
@@ -166,8 +166,8 @@
 #             coef(p_joint), coef(p_can), p_alc_given_can))
 
 # # Direct computation
-# can_users <- pumf %>% filter(cannabis_any_use == 1)
-# svy_can <- svydesign(ids = ~1, weights = ~wtpumf, data = can_users)
+# can_users <- df %>% filter(cannabis_any_use == 1)
+# svy_can <- svydesign(ids = ~1, weights = ~weight, data = can_users)
 # p_alc_given_can_direct <- svymean(~alcohol_any_use, svy_can, na.rm = TRUE)
 # cat(sprintf("Direct: P(Alcohol | Cannabis user) = %.4f\n\n",
 #             coef(p_alc_given_can_direct)))
@@ -183,7 +183,7 @@
 # cat("H1: They are dependent\n\n")
 
 # # Chi-squared test (unweighted for simplicity, then survey-weighted)
-# tab_2x2 <- table(pumf$alcohol_any_use, pumf$cannabis_any_use, useNA = "no")
+# tab_2x2 <- table(df$alcohol_any_use, df$cannabis_any_use, useNA = "no")
 # cat("Contingency table (unweighted):\n")
 # print(tab_2x2)
 
@@ -197,11 +197,11 @@
 #   cat(sprintf("Survey-weighted Chi-squared = %.2f, p-value = %s\n\n",
 #               svy_chi$statistic, formatC(svy_chi$p.value, format = "e", digits = 3)))
 # } else {
-#   cat("\nNote: alcohol_any_use has only 1 level (100% prevalence in CPADS PUMF).\n")
+#   cat("\nNote: alcohol_any_use has only 1 level (100% prevalence in data dataset).\n")
 #   cat("All postsecondary respondents who answered reported alcohol use.\n")
 #   cat("Using binge drinking × cannabis for independence test instead.\n\n")
 
-#   tab_alt <- table(pumf$alcohol_binge, pumf$cannabis_any_use, useNA = "no",
+#   tab_alt <- table(df$alcohol_binge, df$cannabis_any_use, useNA = "no",
 #                    dnn = c("Binge", "Cannabis"))
 #   print(tab_alt)
 #   if (nrow(tab_alt) >= 2 && ncol(tab_alt) >= 2) {
@@ -210,8 +210,8 @@
 #                 chi_alt$statistic, chi_alt$parameter,
 #                 formatC(chi_alt$p.value, format = "e", digits = 3)))
 
-#     pumf_bc <- pumf %>% filter(!is.na(alcohol_binge), !is.na(cannabis_any_use))
-#     svy_bc <- svydesign(ids = ~1, weights = ~wtpumf, data = pumf_bc)
+#     df_bc <- df %>% filter(!is.na(alcohol_binge), !is.na(cannabis_any_use))
+#     svy_bc <- svydesign(ids = ~1, weights = ~weight, data = df_bc)
 #     svy_chi_alt <- svychisq(~alcohol_binge + cannabis_any_use, svy_bc, statistic = "Chisq")
 #     cat(sprintf("Survey-weighted Chi-sq = %.2f, p = %s\n\n",
 #                 svy_chi_alt$statistic, formatC(svy_chi_alt$p.value, format = "e", digits = 3)))
@@ -223,16 +223,16 @@
 # cat("P(B|A) = P(A|B) * P(B) / P(A)\n\n")
 
 # # P(Poor mental health | Binge drinker) via Bayes
-# pumf$poor_mh <- ifelse(pumf$mental_health %in% c("Fair", "Poor"), 1L,
-#                 ifelse(!is.na(pumf$mental_health), 0L, NA_integer_))
+# df$poor_mh <- ifelse(df$mental_health %in% c("Fair", "Poor"), 1L,
+#                 ifelse(!is.na(df$mental_health), 0L, NA_integer_))
 
-# svy_mh <- svydesign(ids = ~1, weights = ~wtpumf, data = pumf)
+# svy_mh <- svydesign(ids = ~1, weights = ~weight, data = df)
 # p_poor_mh <- svymean(~poor_mh, svy_mh, na.rm = TRUE)
 # cat(sprintf("P(Poor/Fair MH) = %.4f\n", coef(p_poor_mh)))
 
 # # P(Binge | Poor MH)
-# binge_given_poor <- pumf %>% filter(poor_mh == 1)
-# svy_bg <- svydesign(ids = ~1, weights = ~wtpumf, data = binge_given_poor)
+# binge_given_poor <- df %>% filter(poor_mh == 1)
+# svy_bg <- svydesign(ids = ~1, weights = ~weight, data = binge_given_poor)
 # p_binge_given_poor <- svymean(~alcohol_binge, svy_bg, na.rm = TRUE)
 # cat(sprintf("P(Binge | Poor MH) = %.4f\n", coef(p_binge_given_poor)))
 
@@ -254,7 +254,7 @@
 # cat("sqrt(n)(X_bar - mu)/sigma -> N(0,1) as n -> infinity\n\n")
 
 # # Draw repeated samples of alcohol_binge, compute means
-# binge_valid <- pumf$alcohol_binge[!is.na(pumf$alcohol_binge)]
+# binge_valid <- df$alcohol_binge[!is.na(df$alcohol_binge)]
 # mu_binge <- mean(binge_valid)
 # sigma_binge <- sd(binge_valid)
 
@@ -289,20 +289,20 @@
 
 # # --- Distribution Fitting ---
 # cat("\n--- 3.2 Distribution of Survey Weights ---\n")
-# cat("Testing normality of wtpumf:\n")
-# wt_sample <- sample(pumf$wtpumf, min(5000, nrow(pumf)))
+# cat("Testing normality of weight:\n")
+# wt_sample <- sample(df$weight, min(5000, nrow(df)))
 # shapiro_wt <- shapiro.test(wt_sample)
 # cat(sprintf("Shapiro-Wilk W = %.4f, p = %s\n",
 #             shapiro_wt$statistic,
 #             formatC(shapiro_wt$p.value, format = "e", digits = 3)))
 
 # # Summary stats
-# cat(sprintf("\nwtpumf summary:\n"))
-# cat(sprintf("  Mean   = %.4f\n", mean(pumf$wtpumf)))
-# cat(sprintf("  Median = %.4f\n", median(pumf$wtpumf)))
-# cat(sprintf("  SD     = %.4f\n", sd(pumf$wtpumf)))
-# cat(sprintf("  Skew   = %.4f\n", moments::skewness(pumf$wtpumf)))
-# cat(sprintf("  Kurt   = %.4f\n", moments::kurtosis(pumf$wtpumf)))
+# cat(sprintf("\nweight summary:\n"))
+# cat(sprintf("  Mean   = %.4f\n", mean(df$weight)))
+# cat(sprintf("  Median = %.4f\n", median(df$weight)))
+# cat(sprintf("  SD     = %.4f\n", sd(df$weight)))
+# cat(sprintf("  Skew   = %.4f\n", moments::skewness(df$weight)))
+# cat(sprintf("  Kurt   = %.4f\n", moments::kurtosis(df$weight)))
 
 # # --- Save results ---
 # cat("\n--- Saving Phase 4 Initial Results ---\n")
@@ -332,7 +332,7 @@
 #!/usr/bin/env Rscript
 # =============================================================================
 # 04_descriptive_stats.R — Phase 4: Descriptive Statistics & Probability
-# CPADS 2021–2022 PUMF (Cleaned)
+# data 2021–2022 dataset (Cleaned)
 # =============================================================================
 # Computes basic probability quantities (Seeing Theory style) using survey weights.
 # =============================================================================
@@ -362,8 +362,8 @@ dir.create(fig_dir, recursive = TRUE, showWarnings = FALSE)
 cat("=== PHASE 4: DESCRIPTIVE STATISTICS & PROBABILITY ===\n\n")
 
 # --- Load wrangled data ---
-pumf <- readRDS(file.path(wrangled_dir, "cpads_pumf_wrangled.rds"))
-pumf_svy <- readRDS(file.path(wrangled_dir, "cpads_pumf_survey.rds"))
+df <- readRDS(file.path(wrangled_dir, "data_wrangled.rds"))
+df_svy <- readRDS(file.path(wrangled_dir, "data_survey.rds"))
 
 # Optional: CADS alcohol aggregate (only if present)
 cads_path <- file.path(wrangled_dir, "cads_alcohol.rds")
@@ -375,11 +375,11 @@ if (file.exists(cads_path)) {
   cat("CADS Alcohol: not found (skipping)\n")
 }
 
-cat("CPADS_PUMF:", nrow(pumf), "observations\n\n")
+cat("data_dataset:", nrow(df), "observations\n\n")
 
 # Ensure expected variables exist (fail early with a clear message)
 required_vars <- c(
-  "wtpumf",
+  "weight",
   "alcohol_ever",
   "alcohol_past12m",
   "heavy_drinking_30d",
@@ -391,10 +391,10 @@ required_vars <- c(
   "alc06",
   "age_groups"
 )
-missing_vars <- setdiff(required_vars, names(pumf))
+missing_vars <- setdiff(required_vars, names(df))
 if (length(missing_vars) > 0) {
   stop(
-    "Missing required variables in pumf: ",
+    "Missing required variables in df: ",
     paste(missing_vars, collapse = ", ")
   )
 }
@@ -408,7 +408,7 @@ cat(paste(rep("=", 62), collapse = ""), "\n\n")
 
 # --- Sample Space S ---
 cat("--- 1.1 Sample Space Definition ---\n")
-cat("S = {all CPADS PUMF respondents}, |S| =", nrow(pumf), "\n\n")
+cat("S = {all data dataset respondents}, |S| =", nrow(df), "\n\n")
 
 cat("Binary indicators in wrangled data:\n")
 cat("  alcohol_ever (lifetime)        : 0/1/NA\n")
@@ -417,16 +417,16 @@ cat("  heavy_drinking_30d (past 30d)  : 0/1/NA\n")
 cat("  cannabis_any_use (past 12m)    : 0/1/NA\n\n")
 
 cat("Unweighted counts:\n")
-cat("  n(alcohol_ever = 1):", sum(pumf$alcohol_ever == 1, na.rm = TRUE), "\n")
-cat("  n(alcohol_ever = 0):", sum(pumf$alcohol_ever == 0, na.rm = TRUE), "\n")
-cat("  n(NA):", sum(is.na(pumf$alcohol_ever)), "\n\n")
+cat("  n(alcohol_ever = 1):", sum(df$alcohol_ever == 1, na.rm = TRUE), "\n")
+cat("  n(alcohol_ever = 0):", sum(df$alcohol_ever == 0, na.rm = TRUE), "\n")
+cat("  n(NA):", sum(is.na(df$alcohol_ever)), "\n\n")
 
 # --- P(A): Marginal Probabilities ---
 cat("--- 1.2 Marginal Probabilities P(A) (survey-weighted) ---\n")
 cat("Axioms: 0 <= P(A) <= 1, P(S) = 1, P(A^c) = 1 - P(A)\n\n")
 
 # P(Alcohol lifetime)
-p_alc_ever <- svymean(~alcohol_ever, pumf_svy, na.rm = TRUE)
+p_alc_ever <- svymean(~alcohol_ever, df_svy, na.rm = TRUE)
 p_alc_ever_ci <- confint(p_alc_ever)
 cat(sprintf(
   "P(Alcohol lifetime) = %.4f (95%% CI: %.4f, %.4f)\n",
@@ -440,7 +440,7 @@ cat(sprintf(
 ))
 
 # P(Alcohol past 12 months)
-p_alc_12m <- svymean(~alcohol_past12m, pumf_svy, na.rm = TRUE)
+p_alc_12m <- svymean(~alcohol_past12m, df_svy, na.rm = TRUE)
 p_alc_12m_ci <- confint(p_alc_12m)
 cat(sprintf(
   "P(Alcohol past 12 months) = %.4f (95%% CI: %.4f, %.4f)\n",
@@ -450,7 +450,7 @@ cat(sprintf(
 ))
 
 # P(Heavy drinking past 30 days)
-p_heavy_30d <- svymean(~heavy_drinking_30d, pumf_svy, na.rm = TRUE)
+p_heavy_30d <- svymean(~heavy_drinking_30d, df_svy, na.rm = TRUE)
 p_heavy_30d_ci <- confint(p_heavy_30d)
 cat(sprintf(
   "P(Heavy drinking past 30 days) = %.4f (95%% CI: %.4f, %.4f)\n",
@@ -460,7 +460,7 @@ cat(sprintf(
 ))
 
 # P(Cannabis past 12 months)
-p_can_12m <- svymean(~cannabis_any_use, pumf_svy, na.rm = TRUE)
+p_can_12m <- svymean(~cannabis_any_use, df_svy, na.rm = TRUE)
 p_can_12m_ci <- confint(p_can_12m)
 cat(sprintf(
   "P(Cannabis past 12 months) = %.4f (95%% CI: %.4f, %.4f)\n\n",
@@ -476,7 +476,7 @@ for (v in c("gender", "age_group", "province_region", "mental_health")) {
   tab <- svyby(
     ~alcohol_past12m,
     as.formula(paste0("~", v)),
-    pumf_svy,
+    df_svy,
     svymean,
     na.rm = TRUE,
     vartype = c("se", "ci")
@@ -489,15 +489,15 @@ cat("\n--- 1.3 Expectation and Variance ---\n")
 cat("E[X] = sum(x * P(X=x)),  Var(X) = E[(X - mu)^2]\n\n")
 
 # Example: expected age group code (weighted)
-wt_mean_age_code <- svymean(~age_groups, pumf_svy, na.rm = TRUE)
+wt_mean_age_code <- svymean(~age_groups, df_svy, na.rm = TRUE)
 cat(sprintf("E[age_groups (code)] = %.3f\n\n", coef(wt_mean_age_code)[1]))
 
 # Alcohol frequency code among past-12-month drinkers: use alc06 (numeric codes)
-pumf_drinkers_12m <- pumf %>% filter(alcohol_past12m == 1, !is.na(alc06))
+df_drinkers_12m <- df %>% filter(alcohol_past12m == 1, !is.na(alc06))
 svy_drinkers_12m <- svydesign(
   ids = ~1,
-  weights = ~wtpumf,
-  data = pumf_drinkers_12m
+  weights = ~weight,
+  data = df_drinkers_12m
 )
 freq_mean <- svymean(~alc06, svy_drinkers_12m, na.rm = TRUE)
 freq_var <- svyvar(~alc06, svy_drinkers_12m, na.rm = TRUE)
@@ -518,11 +518,11 @@ cat(sprintf(
 cat("--- 1.4 Markov's Inequality ---\n")
 cat("P(X >= a) <= E[X] / a  (for X >= 0)\n\n")
 
-ex_wt <- mean(pumf$wtpumf, na.rm = TRUE)
+ex_wt <- mean(df$weight, na.rm = TRUE)
 a_val <- 2.0
 markov_bound <- ex_wt / a_val
-empirical_prob <- mean(pumf$wtpumf >= a_val, na.rm = TRUE)
-cat(sprintf("Variable: wtpumf,  E[X] = %.3f,  a = %.1f\n", ex_wt, a_val))
+empirical_prob <- mean(df$weight >= a_val, na.rm = TRUE)
+cat(sprintf("Variable: weight,  E[X] = %.3f,  a = %.1f\n", ex_wt, a_val))
 cat(sprintf("Markov bound: P(X >= %.1f) <= %.4f\n", a_val, markov_bound))
 cat(sprintf("Empirical:    P(X >= %.1f)  = %.4f\n", a_val, empirical_prob))
 cat(sprintf(
@@ -534,12 +534,12 @@ cat(sprintf(
 cat("--- 1.5 Chebyshev's Inequality ---\n")
 cat("P(|X - mu| >= k*sigma) <= 1/k^2\n\n")
 
-mu_wt <- mean(pumf$wtpumf, na.rm = TRUE)
-sd_wt <- sd(pumf$wtpumf, na.rm = TRUE)
+mu_wt <- mean(df$weight, na.rm = TRUE)
+sd_wt <- sd(df$weight, na.rm = TRUE)
 
 for (k in c(1, 2, 3)) {
   cheby_bound <- 1 / k^2
-  empirical <- mean(abs(pumf$wtpumf - mu_wt) >= k * sd_wt, na.rm = TRUE)
+  empirical <- mean(abs(df$weight - mu_wt) >= k * sd_wt, na.rm = TRUE)
   cat(sprintf(
     "k=%d: Chebyshev bound = %.4f, Empirical = %.4f, Holds: %s\n",
     k,
@@ -562,7 +562,7 @@ cat("--- 2.1 Joint Probabilities ---\n")
 cat("P(A ∩ B) = P(Alcohol past 12 months AND Cannabis past 12 months)\n\n")
 
 # Create joint variable (1 if both 1, 0 if at least one 0; NA if either missing)
-pumf <- pumf %>%
+df <- df %>%
   mutate(
     alc12m_and_can12m = case_when(
       is.na(alcohol_past12m) | is.na(cannabis_any_use) ~ NA_integer_,
@@ -571,7 +571,7 @@ pumf <- pumf %>%
     )
   )
 
-svy_joint <- svydesign(ids = ~1, weights = ~wtpumf, data = pumf)
+svy_joint <- svydesign(ids = ~1, weights = ~weight, data = df)
 
 p_joint <- svymean(~alc12m_and_can12m, svy_joint, na.rm = TRUE)
 p_joint_ci <- confint(p_joint)
@@ -606,8 +606,8 @@ cat(sprintf(
   p_alc_given_can
 ))
 
-can_users <- pumf %>% filter(cannabis_any_use == 1)
-svy_can <- svydesign(ids = ~1, weights = ~wtpumf, data = can_users)
+can_users <- df %>% filter(cannabis_any_use == 1)
+svy_can <- svydesign(ids = ~1, weights = ~weight, data = can_users)
 p_alc_given_can_direct <- svymean(~alcohol_past12m, svy_can, na.rm = TRUE)
 cat(sprintf(
   "Direct: P(Alcohol12m | Cannabis12m=1) = %.4f\n\n",
@@ -627,7 +627,7 @@ cat("--- 2.3 Independence Testing ---\n")
 cat("H0: Alcohol12m and Cannabis12m are independent\n")
 cat("H1: They are dependent\n\n")
 
-tab_2x2 <- table(pumf$alcohol_past12m, pumf$cannabis_any_use, useNA = "no")
+tab_2x2 <- table(df$alcohol_past12m, df$cannabis_any_use, useNA = "no")
 cat("Contingency table (unweighted):\n")
 print(tab_2x2)
 
@@ -656,8 +656,8 @@ if (nrow(tab_2x2) >= 2 && ncol(tab_2x2) >= 2) {
   )
 
   tab_alt <- table(
-    pumf$heavy_drinking_30d,
-    pumf$cannabis_any_use,
+    df$heavy_drinking_30d,
+    df$cannabis_any_use,
     useNA = "no",
     dnn = c("Heavy30d", "Cannabis12m")
   )
@@ -672,9 +672,9 @@ if (nrow(tab_2x2) >= 2 && ncol(tab_2x2) >= 2) {
       formatC(chi_alt$p.value, format = "e", digits = 3)
     ))
 
-    pumf_hc <- pumf %>%
+    df_hc <- df %>%
       filter(!is.na(heavy_drinking_30d), !is.na(cannabis_any_use))
-    svy_hc <- svydesign(ids = ~1, weights = ~wtpumf, data = pumf_hc)
+    svy_hc <- svydesign(ids = ~1, weights = ~weight, data = df_hc)
     svy_chi_alt <- svychisq(
       ~ heavy_drinking_30d + cannabis_any_use,
       svy_hc,
@@ -693,7 +693,7 @@ cat("--- 2.4 Bayes' Rule ---\n")
 cat("P(B|A) = P(A|B) * P(B) / P(A)\n\n")
 
 # Define Poor/Fair mental health indicator from wrangled mental_health
-pumf <- pumf %>%
+df <- df %>%
   mutate(
     poor_mh = case_when(
       is.na(mental_health) ~ NA_integer_,
@@ -702,7 +702,7 @@ pumf <- pumf %>%
     )
   )
 
-svy_mh <- svydesign(ids = ~1, weights = ~wtpumf, data = pumf)
+svy_mh <- svydesign(ids = ~1, weights = ~weight, data = df)
 p_poor_mh <- svymean(~poor_mh, svy_mh, na.rm = TRUE)
 p_poor_mh_ci <- confint(p_poor_mh)
 
@@ -714,8 +714,8 @@ cat(sprintf(
 ))
 
 # Use heavy_drinking_30d as the “binge-like” event for Bayes example
-heavy_given_poor <- pumf %>% filter(poor_mh == 1)
-svy_hg <- svydesign(ids = ~1, weights = ~wtpumf, data = heavy_given_poor)
+heavy_given_poor <- df %>% filter(poor_mh == 1)
+svy_hg <- svydesign(ids = ~1, weights = ~weight, data = heavy_given_poor)
 p_heavy_given_poor <- svymean(~heavy_drinking_30d, svy_hg, na.rm = TRUE)
 p_heavy_given_poor_ci <- confint(p_heavy_given_poor)
 
@@ -751,7 +751,7 @@ cat("--- 3.1 Central Limit Theorem Demonstration ---\n")
 cat("sqrt(n)(X_bar - mu)/sigma -> N(0,1) as n -> infinity\n\n")
 
 # Use heavy_drinking_30d as Bernoulli example
-heavy_valid <- pumf$heavy_drinking_30d[!is.na(pumf$heavy_drinking_30d)]
+heavy_valid <- df$heavy_drinking_30d[!is.na(df$heavy_drinking_30d)]
 mu_heavy <- mean(heavy_valid)
 sigma_heavy <- sd(heavy_valid)
 
@@ -794,8 +794,8 @@ print(clt_results, n = Inf)
 
 # --- Distribution of Survey Weights ---
 cat("\n--- 3.2 Distribution of Survey Weights ---\n")
-cat("Testing normality of wtpumf:\n")
-wt_sample <- sample(pumf$wtpumf, min(5000, nrow(pumf)))
+cat("Testing normality of weight:\n")
+wt_sample <- sample(df$weight, min(5000, nrow(df)))
 shapiro_wt <- shapiro.test(wt_sample)
 cat(sprintf(
   "Shapiro-Wilk W = %.4f, p = %s\n",
@@ -804,19 +804,19 @@ cat(sprintf(
 ))
 
 # Summary stats (no extra packages)
-wt_mean <- mean(pumf$wtpumf, na.rm = TRUE)
-wt_median <- median(pumf$wtpumf, na.rm = TRUE)
-wt_sd <- sd(pumf$wtpumf, na.rm = TRUE)
+wt_mean <- mean(df$weight, na.rm = TRUE)
+wt_median <- median(df$weight, na.rm = TRUE)
+wt_sd <- sd(df$weight, na.rm = TRUE)
 
 # Sample skewness/kurtosis (moment estimators)
-wt_centered <- pumf$wtpumf[!is.na(pumf$wtpumf)] - wt_mean
+wt_centered <- df$weight[!is.na(df$weight)] - wt_mean
 m2 <- mean(wt_centered^2)
 m3 <- mean(wt_centered^3)
 m4 <- mean(wt_centered^4)
 wt_skew <- m3 / (m2^(3 / 2))
 wt_kurt <- m4 / (m2^2)
 
-cat("\nwtpumf summary:\n")
+cat("\nweight summary:\n")
 cat(sprintf("  Mean   = %.4f\n", wt_mean))
 cat(sprintf("  Median = %.4f\n", wt_median))
 cat(sprintf("  SD     = %.4f\n", wt_sd))

@@ -21,7 +21,7 @@ all_ok <- check("Manifest exists", file.exists(manifest), safe_label_path(manife
 
 if (file.exists(manifest)) {
   manifest_txt <- paste(readLines(manifest, warn = FALSE), collapse = "\n")
-  leaks <- grepl("\"data/private/|\"data/public/|CPADS_PUMF\\.csv", manifest_txt)
+  leaks <- grepl("\"data/private/|\"data/public/|data_dataset\\.csv", manifest_txt)
   all_ok <- check(
     "Manifest excludes private data paths",
     !leaks,
@@ -39,7 +39,7 @@ public_outputs_dir <- file.path(paths$public_data_dir, "outputs")
 required_outputs <- c(
   "power_one_proportion_grid.csv",
   "power_two_proportion_gender.csv",
-  "power_analysis_summary.csv",
+  "power_summary.csv",
   "power_interaction_sample_size_targets.csv",
   "power_interaction_assumptions.csv",
   "power_interaction_group_allocations.csv",

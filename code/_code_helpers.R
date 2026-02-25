@@ -48,10 +48,10 @@ safe_paths <- function() {
   root <- normalizePath(project_root_guess, winslash = "/", mustWork = FALSE)
 
   absolutize <- function(x, fallback, base = root) {
-    raw <- x %||% fallback
-    is_abs <- grepl("^(/|[A-Za-z]:[/\\\\])", raw)
-    if (!is_abs) raw <- file.path(base, raw)
-    normalizePath(raw, winslash = "/", mustWork = FALSE)
+    value <- x %||% fallback
+    is_abs <- grepl("^(/|[A-Za-z]:[/\\\\])", value)
+    if (!is_abs) value <- file.path(base, value)
+    normalizePath(value, winslash = "/", mustWork = FALSE)
   }
 
   project_root <- absolutize(p$project_root, root, base = root)
@@ -206,8 +206,8 @@ relative_page_link <- function(href) {
 extract_declared_outputs <- function(lines) {
   pattern <- "['\\\"]([A-Za-z0-9_./-]+\\.(csv|rds|png|pdf|html|txt|md|tex|bib))['\\\"]"
   m <- gregexpr(pattern, lines, perl = TRUE)
-  raw <- regmatches(lines, m)
-  vals <- unique(gsub("^['\\\"]|['\\\"]$", "", unlist(raw)))
+  matched <- regmatches(lines, m)
+  vals <- unique(gsub("^['\\\"]|['\\\"]$", "", unlist(matched)))
   vals <- vals[!grepl("\\.(R|r|Rmd|rmd|qmd)$", vals)]
   # Internal row-level artifacts (RDS) are intentionally excluded from public module tables.
   vals <- vals[!grepl("\\.rds$", tolower(vals))]

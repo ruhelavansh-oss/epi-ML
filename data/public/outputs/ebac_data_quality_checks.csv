@@ -1,5 +1,5 @@
 check_name,value,pass,note
-anthropometric_vars_present,demq3=FALSE; demq4=FALSE,TRUE,Expected in public PUMF: unavailable; do not recompute eBAC from Widmark inputs.
+anthropometric_vars_present,demq3=FALSE; demq4=FALSE,TRUE,Expected in public dataset: unavailable; do not recompute eBAC from Widmark inputs.
 ebac_tot_range_plausible,"[0.000, 0.500]",TRUE,Expected eBAC totals in plausible human range; out-of-range values indicate data coding issues.
 ebac_legal_consistency_with_threshold_strict,agreement=0.98733; mismatches=283; exact_0.08_n=664,TRUE,Strict check may disagree at exactly 0.08 due to rounding/precision boundary.
 ebac_legal_consistency_with_threshold_off_boundary,agreement=1.00000; n=21665,TRUE,Primary correctness check excluding exact 0.08 boundary values.

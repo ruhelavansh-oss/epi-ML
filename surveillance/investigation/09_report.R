@@ -49,9 +49,9 @@ table_html <- function(df, digits = 3) {
   })
   head_cells <- paste0("<th>", escape_html(cols), "</th>", collapse = "")
   paste0(
-    "<table class='tbl'><thead><tr>", head_cells, "</tr></thead><tbody>",
+    "<div class='tbl-wrap'><table class='tbl'><thead><tr>", head_cells, "</tr></thead><tbody>",
     paste0(body, collapse = "\n"),
-    "</tbody></table>"
+    "</tbody></table></div>"
   )
 }
 
@@ -61,12 +61,12 @@ read_csv_safe <- function(path) {
 }
 
 # ---- Load outputs ----
-pumf <- readRDS(file.path(wrangled_dir, "cpads_pumf_wrangled.rds"))
+df <- readRDS(file.path(wrangled_dir, "data_wrangled.rds"))
 prev <- read_csv_safe(file.path(out_dir, "frequentist_heavy_drinking_prevalence_ci.csv"))
 hyp <- read_csv_safe(file.path(out_dir, "frequentist_hypothesis_tests.csv"))
 bayes_post <- read_csv_safe(file.path(out_dir, "bayesian_posterior_summaries.csv"))
 bayes_bf <- read_csv_safe(file.path(out_dir, "bayesian_bayes_factors.csv"))
-power <- read_csv_safe(file.path(out_dir, "power_analysis_summary.csv"))
+power <- read_csv_safe(file.path(out_dir, "power_summary.csv"))
 power_int_targets <- read_csv_safe(file.path(out_dir, "power_interaction_sample_size_targets.csv"))
 power_int_alloc <- read_csv_safe(file.path(out_dir, "power_interaction_group_allocations.csv"))
 power_int_penalty <- read_csv_safe(file.path(out_dir, "power_interaction_imbalance_penalty.csv"))
@@ -140,7 +140,7 @@ html <- paste0(
   <meta charset='utf-8'>
   <meta name='viewport' content='width=device-width, initial-scale=1'>
   <meta name='author' content='Vansh Singh Ruhela'>
-  <title>CPADS Analysis Report (Updated Workflow)</title>
+  <title>Data Report (Updated Workflow)</title>
   <script src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; margin: 0; color: #1f2937; background: #f8fafc; line-height: 1.45; }
@@ -151,8 +151,9 @@ html <- paste0(
     .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px 18px; margin: 14px 0; }
     .kpi { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; margin-top: 10px; }
     .kpi div { background: #f1f5f9; border-radius: 8px; padding: 10px; }
-    .tbl { border-collapse: collapse; width: 100%; font-size: 0.95rem; margin: 8px 0 12px; }
-    .tbl th, .tbl td { border: 1px solid #cbd5e1; padding: 8px; text-align: left; }
+    .tbl-wrap { width: 100%; overflow-x: auto; margin: 10px 0 15px; }
+    .tbl { border-collapse: collapse; border-spacing: 0; width: max-content; min-width: 100%; font-size: 0.95rem; table-layout: auto; }
+    .tbl th, .tbl td { border: 1px solid #cbd5e1; padding: 10px 15px; text-align: left; white-space: nowrap; line-height: 1.2; word-break: normal; }
     .tbl th { background: #e2e8f0; }
     figure { margin: 14px 0; }
     figure img { width: 100%; max-width: 980px; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; }
@@ -164,8 +165,8 @@ html <- paste0(
 </head>
 <body>
   <div class='wrap'>
-    <h1>Alcohol Use Among Canadian Postsecondary Students: Updated CPADS Report</h1>
-    <div class='meta'><strong>Author:</strong> Vansh Singh Ruhela<br><strong>Generated:</strong> ", escape_html(today), "<br><strong>Data:</strong> CPADS 2021-2022 PUMF (n = ", nrow(pumf), ")</div>
+    <h1>Alcohol Use Among Canadian Postsecondary Students: Updated data Report</h1>
+    <div class='meta'><strong>Author:</strong> Vansh Singh Ruhela<br><strong>Generated:</strong> ", escape_html(today), "<br><strong>Data:</strong> 2021-2022 public-use survey dataset (n = ", nrow(df), ")</div>
 
     <div class='card'>
       <h2>Abstract</h2>
@@ -181,13 +182,13 @@ html <- paste0(
       <h2>Background</h2>
       <p>Analyses were run from the current workflow outputs:</p>
       <ul>
-        <li>Power analysis: a priori interaction-term sample-size planning for gender (self-reported) subgroup contrasts, plus compatibility outputs.</li>
+        <li>Power planning: a priori interaction-term sample-size planning for sex-category subgroup contrasts, plus compatibility outputs.</li>
         <li>Frequentist inference: survey-weighted prevalence estimates and hypothesis tests.</li>
         <li>Bayesian inference: posterior summaries and Bayes factors.</li>
         <li>Regression and model comparison: survey-weighted logistic and nested models.</li>
         <li>Causal estimation: naive, G-computation, IPW, AIPW (manual fallback), ATT/ATC/matching and CATE.</li>
       </ul>
-      <p><strong>Important boundary:</strong> CPADS analyses are observational and non-randomized. Any block-randomization tables below are prospective trial-planning blueprints, not retroactive assignment claims.</p>
+      <p><strong>Important boundary:</strong> data analyses are observational and non-randomized. Any block-randomization tables below are prospective trial-planning blueprints, not retroactive assignment claims.</p>
     </div>
 
     <div class='card'>
@@ -195,7 +196,7 @@ html <- paste0(
       ", table_html(power, digits = 4), "
       <h3>A priori interaction sample-size targets (80% to 99.9%)</h3>
       ", table_html(power_int_targets, digits = 4), "
-      <h3>Required people by group (Woman/Man), equal vs observed allocation</h3>
+      <h3>Required people by gender group (Female/Male), equal vs observed allocation</h3>
       ", table_html(power_int_alloc, digits = 0), "
       <h3>Observed-imbalance penalty vs equal-strata allocation</h3>
       ", table_html(power_int_penalty, digits = 4), "
@@ -213,33 +214,33 @@ html <- paste0(
 
     <div class='card'>
       <h2>Estimated blood alcohol concentration (eBAC)</h2>
-      <p>Following the CPADS 2021-2022 PUMF documentation (Seidl et al., 2000), estimated blood alcohol concentration on the heaviest drinking day is computed using a Widmark-style equation:</p>
+      <p>Following the 2021-2022 survey documentation (Seidl et al., 2000), estimated blood alcohol concentration on the heaviest drinking day is computed using a Widmark-style equation:</p>
       <p>\\[
       \\mathrm{eBAC} = \\frac{G}{r\\,W} - \\beta\\,t,
       \\]</p>
       <p>where \\(G\\) is grams of ethanol consumed, \\(r\\) is the distribution factor, \\(W\\) is body weight (kg), \\(\\beta\\) is the ethanol elimination rate, and \\(t\\) is elapsed time since first drink (hours).</p>
-      <p><strong>CPADS mapping note:</strong> CPADS PUMF provides gender (self-reported) categories (<code>Woman</code>, <code>Man</code>, <code>Transgender/Non-binary</code>). This workflow uses Woman/Man as the primary interaction-planning contrast and retains Transgender/Non-binary as explicit feasibility outputs where possible. CPADS PUMF in this workflow does not provide complete sex-at-birth fields, so subgrouping is based on gender (self-reported). eBAC analyses use the provided measured outcomes (<code>ebac_tot</code>, <code>ebac_legal</code>); the woman/man constants below retain the documented Widmark coefficients.</p>
-      <p><strong>CPADS inputs and unit conversions.</strong> Let \\(D\\) be the maximum number of standard drinks on the heaviest drinking day in the past 30 days (<code>alc13a</code>); \\(H\\) be hours to consume \\(D\\) (<code>alc13b_a</code>); \\(M\\) be minutes to consume \\(D\\) (<code>alc13b_b</code>); \\(W\\) be body weight in kg (<code>demq4</code>); \\(h\\) be height in cm (<code>demq3</code>).</p>
+      <p><strong>Mapping note:</strong> the dataset provides gender categories (<code>Female</code>, <code>Male</code>, <code>Non-binary</code>) from a gender identity measure (dvdemq01); these are not equivalent to sex assigned at birth. This workflow uses Female/Male as the primary interaction-planning contrast and retains Non-binary as explicit feasibility outputs where possible. The dataset in this workflow does not provide complete sex-at-birth fields. eBAC outputs use the measured variables (<code>ebac_tot</code>, <code>ebac_legal</code>); sex-specific constants below retain the documented Widmark coefficients.</p>
+      <p><strong>data inputs and unit conversions.</strong> Let \\(D\\) be the maximum number of standard drinks on the heaviest drinking day in the past 30 days (<code>alc13a</code>); \\(H\\) be hours to consume \\(D\\) (<code>alc13b_a</code>); \\(M\\) be minutes to consume \\(D\\) (<code>alc13b_b</code>); \\(W\\) be body weight in kg (<code>demq4</code>); \\(h\\) be height in cm (<code>demq3</code>).</p>
       <p>\\[
       G = 13.6\\,D, \\qquad
       t = H + \\frac{M}{60} = \\frac{60H+M}{60}.
       \\]</p>
-      <p><strong>Woman/Man distribution factor.</strong></p>
+      <p><strong>Sex-specific distribution factors (Female/Male).</strong></p>
       <p>\\[
       \\begin{aligned}
-      r_{\\mathrm{woman}} &= 0.31223 - 0.006446\\,W + 0.004466\\,h, \\\\
-      r_{\\mathrm{man}}   &= 0.31608 - 0.004821\\,W + 0.004632\\,h.
+      r_{\\mathrm{female}} &= 0.31223 - 0.006446\\,W + 0.004466\\,h, \\\\
+      r_{\\mathrm{male}}   &= 0.31608 - 0.004821\\,W + 0.004632\\,h.
       \\end{aligned}
       \\]</p>
       <p><strong>Elimination rate.</strong> \\(\\beta = 0.017\\;\\mathrm{g/dL/hour}\\).</p>
-      <p><strong>g/L to g/dL conversion used in CPADS.</strong></p>
+      <p><strong>g/L to g/dL conversion used in data.</strong></p>
       <p>\\[
       \\mathrm{eBAC}_{(\\mathrm{g/dL})}
       =
       \\frac{1}{10}\\left(\\frac{G}{r\\,W} - 0.017\\,t\\right).
       \\]</p>
       <p><strong>Expanded formulas (g/dL).</strong></p>
-      <p>Women:</p>
+      <p>Sex category Female:</p>
       <p>\\[
       \\mathrm{eBAC}_{(\\mathrm{g/dL})}
       =
@@ -248,7 +249,7 @@ html <- paste0(
       - 0.017\\,t
       \\right).
       \\]</p>
-      <p>Men:</p>
+      <p>Sex category Male:</p>
       <p>\\[
       \\mathrm{eBAC}_{(\\mathrm{g/dL})}
       =
@@ -266,9 +267,9 @@ html <- paste0(
       \\end{cases}
       \\]</p>
       <p><strong>Domain.</strong> eBAC computations are defined for respondents in-domain for past-30-day alcohol use (<code>alc13a</code>).</p>
-      <h3>Formula input audit (public PUMF)</h3>
+      <h3>Formula input audit (public dataset)</h3>
       ", table_html(ebac_formula_input_audit, digits = 4), "
-      <h3>Formula validation summary (Woman/Man equations)</h3>
+      <h3>Formula validation summary (Female/Male equations)</h3>
       ", table_html(ebac_formula_validation, digits = 4), "
     </div>
 
@@ -341,9 +342,9 @@ html <- paste0(
         <li>Lumley T, Gao P, Schneider B. <em>survey: Analysis of Complex Survey Samples</em>. 2025. R package version 4.4-8. <a href='https://CRAN.R-project.org/package=survey'>https://CRAN.R-project.org/package=survey</a>. doi:10.32614/CRAN.package.survey.</li>
         <li>Firke S, Denney B, Haid C, Knight R, Grosser M, Zadra J. <em>janitor: Simple Tools for Examining and Cleaning Dirty Data</em>. 2024. R package version 2.2.1. <a href='https://CRAN.R-project.org/package=janitor'>https://CRAN.R-project.org/package=janitor</a>. doi:10.32614/CRAN.package.janitor.</li>
         <li>Wickham H, Averick M, Bryan J, et al. Welcome to the tidyverse. <em>Journal of Open Source Software</em>. 2019;4(43):1686. doi:10.21105/joss.01686.</li>
-        <li>Health Canada. <em>Drug and alcohol use in Canada: Postsecondary students — dashboard data (CPADS.csv)</em>. 2026. Accessed 2026-02-20. <a href='https://health-infobase.canada.ca/src/data/substance-use/cpads/CPADS.csv'>https://health-infobase.canada.ca/src/data/substance-use/cpads/CPADS.csv</a>.</li>
-        <li>Health Canada. <em>CPADS 2021-2022 PUMF Data</em>. 2024. Accessed 2026-02-20. <a href='https://open.canada.ca/data/en/dataset/736fa9b2-62e4-4e31-aea4-51869605b363'>https://open.canada.ca/data/en/dataset/736fa9b2-62e4-4e31-aea4-51869605b363</a>.</li>
-        <li>Health Canada. <em>Canadian Postsecondary Education Alcohol and Drug Use Survey: Technical notes</em>. 2024. Accessed 2026-02-20. <a href='https://health-infobase.canada.ca/substance-use/reports/cpads/technical-notes.html'>https://health-infobase.canada.ca/substance-use/reports/cpads/technical-notes.html</a>.</li>
+        <li>Health Canada. <em>Drug and alcohol use in Canada: Postsecondary students — dashboard data (data.csv)</em>. 2026. Accessed 2026-02-20. <a href='https://health-infobase.canada.ca/src/data/substance-use/data/data.csv'>https://health-infobase.canada.ca/src/data/substance-use/data/data.csv</a>.</li>
+        <li>Health Canada. <em>2021-2022 Postsecondary Student Survey Dataset</em>. 2024. Accessed 2026-02-20. <a href='https://open.canada.ca/data/en/dataset/736fa9b2-62e4-4e31-aea4-51869605b363'>https://open.canada.ca/data/en/dataset/736fa9b2-62e4-4e31-aea4-51869605b363</a>.</li>
+        <li>Health Canada. <em>Canadian Postsecondary Education Alcohol and Drug Use Survey: Technical notes</em>. 2024. Accessed 2026-02-20. <a href='https://health-infobase.canada.ca/substance-use/reports/data/technical-notes.html'>https://health-infobase.canada.ca/substance-use/reports/data/technical-notes.html</a>.</li>
       </ol>
     </div>
 

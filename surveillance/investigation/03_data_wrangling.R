@@ -19,14 +19,14 @@ output_dir <- paths$output_private_dir
 wrangled_dir <- paths$wrangled_dir
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 dir.create(wrangled_dir, recursive = TRUE, showWarnings = FALSE)
-cat("=== WRANGLING CPADS_PUMF ===\n\n")
+cat("=== WRANGLING data_dataset ===\n\n")
 # --- loading the observational datafile ---
-assert_required_files(paths, "raw_pumf_file")
-pumf_raw <- read_csv(
-  paths$raw_pumf_file,
+assert_required_files(paths, "data_file")
+df_src <- read_csv(
+  paths$data_file,
   show_col_types = FALSE
 )
-cat("Raw dimensions:", nrow(pumf_raw), "x", ncol(pumf_raw), "\n")
+cat("Input dimensions:", nrow(df_src), "x", ncol(df_src), "\n")
 wrangling_log <- tibble(
   step = character(),
   description = character(),
@@ -45,14 +45,22 @@ log_step <- function(step, desc, rows_b, rows_a, cols) {
     )
 }
 # Data Wrangling
-pumf <- pumf_raw %>% clean_names()
+df <- df_src %>% clean_names()
+if (!("weight" %in% names(df))) {
+  wt_candidates <- c("wtdf", "wtpumf")
+  wt_present <- wt_candidates[wt_candidates %in% names(df)]
+  if (length(wt_present) == 0) {
+    stop("No recognized weight column found in input data.", call. = FALSE)
+  }
+  df <- df %>% dplyr::rename(weight = dplyr::all_of(wt_present[1]))
+}
 cat("Step 1: Column names wrangled (janitor::clean_names)\n")
-log_step("1", "clean_names()", nrow(pumf), nrow(pumf), "all")
-# CPADS PUMF convention: 97/98/99 and 997/998/999 are special missing codes
-preserve_cols <- c("seqid", "wtpumf")
-recode_cols <- setdiff(names(pumf), preserve_cols)
+log_step("1", "clean_names()", nrow(df), nrow(df), "all")
+# data dataset convention: 97/98/99 and 997/998/999 are special missing codes
+preserve_cols <- c("seqid", "weight")
+recode_cols <- setdiff(names(df), preserve_cols)
 special_codes <- c(97, 98, 99, 997, 998, 999)
-pre_special <- pumf %>%
+pre_special <- df %>%
   dplyr::select(dplyr::all_of(recode_cols)) %>%
   dplyr::summarise(dplyr::across(
     dplyr::everything(),
@@ -72,20 +80,20 @@ cat(
   "Total special-code cells:",
   sum(pre_special$n_special),
   "of",
-  nrow(pumf) * length(recode_cols),
+  nrow(df) * length(recode_cols),
   "(",
   round(
-    100 * sum(pre_special$n_special) / (nrow(pumf) * length(recode_cols)),
+    100 * sum(pre_special$n_special) / (nrow(df) * length(recode_cols)),
     1
   ),
   "%)\n"
 )
-pumf_wrangled <- pumf %>%
+df_wrangled <- df %>%
   dplyr::mutate(dplyr::across(
     dplyr::all_of(recode_cols),
     ~ dplyr::if_else(.x %in% special_codes, NA_real_, as.numeric(.x))
   ))
-post_special <- pumf_wrangled %>%
+post_special <- df_wrangled %>%
   dplyr::select(dplyr::all_of(recode_cols)) %>%
   dplyr::summarise(dplyr::across(
     dplyr::everything(),
@@ -102,22 +110,22 @@ cat("Special codes remaining after recode:", sum(post_special$n_special), "\n")
 log_step(
   "2",
   "Recode 97/98/99/997/998/999 to NA",
-  nrow(pumf_wrangled),
-  nrow(pumf_wrangled),
+  nrow(df_wrangled),
+  nrow(df_wrangled),
   paste(nrow(pre_special), "columns")
 )
 cat("\nStep 3: Mapping derived variables\n")
-pumf_wrangled <- pumf_wrangled %>%
+df_wrangled <- df_wrangled %>%
   mutate(
-    # Gender (dvdemq01): (1) Woman (2) Man (3) T/NB, (98) prefers to not say, (99) doesn't know
+    # Gender (dvdemq01): (1) Female (2) Male (3) T/NB, (98) prefers to not say, (99) doesn't know
     gender = factor(
       case_when(
-        dvdemq01 == 1 ~ "Woman",
-        dvdemq01 == 2 ~ "Man",
-        dvdemq01 == 3 ~ "Transgender/Non-binary",
+        dvdemq01 == 1 ~ "Female",
+        dvdemq01 == 2 ~ "Male",
+        dvdemq01 == 3 ~ "Non-binary",
         TRUE ~ NA_character_
       ),
-      levels = c("Woman", "Man", "Transgender/Non-binary")
+      levels = c("Female", "Male", "Non-binary")
     ),
     # Age groups
     age_group = factor(
@@ -235,14 +243,14 @@ cat("  Created:", paste(derived_vars, collapse = ", "), "\n")
 log_step(
   "3",
   "Create derived variables",
-  nrow(pumf_wrangled),
-  nrow(pumf_wrangled),
+  nrow(df_wrangled),
+  nrow(df_wrangled),
   paste(derived_vars, collapse = ", ")
 )
 cat("\nStep 4: Derived variable distributions\n")
 for (v in derived_vars) {
   cat(sprintf("\n  %s:\n", v))
-  x <- pumf_wrangled[[v]]
+  x <- df_wrangled[[v]]
   if (is.factor(x) || is.character(x)) {
     tab <- table(x, useNA = "ifany")
     pct <- round(100 * prop.table(tab), 1)
@@ -264,7 +272,7 @@ for (v in derived_vars) {
   }
 }
 cat("\n\nStep 5: Post-wrangling NA summary\n")
-na_after <- pumf_wrangled %>%
+na_after <- df_wrangled %>%
   summarise(across(everything(), ~ round(100 * mean(is.na(.x)), 1))) %>%
   pivot_longer(everything(), names_to = "variable", values_to = "pct_na") %>%
   filter(pct_na > 0) %>%
@@ -272,17 +280,17 @@ na_after <- pumf_wrangled %>%
 cat("Variables with NA after wrangling (top 30):\n")
 print(na_after, n = 30)
 cat("\nStep 6: Creating survey design object\n")
-pumf_svy <- svydesign(ids = ~1, weights = ~wtpumf, data = pumf_wrangled)
-cat("Survey design created with", nrow(pumf_wrangled), "observations\n")
-cat("Sum of weights:", round(sum(pumf_wrangled$wtpumf, na.rm = TRUE), 1), "\n")
+df_svy <- svydesign(ids = ~1, weights = ~weight, data = df_wrangled)
+cat("Survey design created with", nrow(df_wrangled), "observations\n")
+cat("Sum of weights:", round(sum(df_wrangled$weight, na.rm = TRUE), 1), "\n")
 # --- Save outputs ---
 cat("\nSaving wrangled data...\n")
-saveRDS(pumf_wrangled, file.path(wrangled_dir, "cpads_pumf_wrangled.rds"))
-saveRDS(pumf_svy, file.path(wrangled_dir, "cpads_pumf_survey.rds"))
-write_csv(wrangling_log, file.path(output_dir, "cpads_pumf_wrangling_log.csv"))
-write_csv(na_after, file.path(output_dir, "cpads_pumf_na_summary.csv"))
-cat("cpads_pumf_wrangled.rds:", nrow(pumf_wrangled), "x", ncol(pumf_wrangled), "\n")
-cat("cpads_pumf_survey.rds (svydesign object)\n")
-cat("cpads_pumf_wrangling_log.csv\n")
-cat("cpads_pumf_na_summary.csv\n")
-cat("\n=== CPADS_PUMF WRANGLING COMPLETE ===\n")
+saveRDS(df_wrangled, file.path(wrangled_dir, "data_wrangled.rds"))
+saveRDS(df_svy, file.path(wrangled_dir, "data_survey.rds"))
+write_csv(wrangling_log, file.path(output_dir, "data_wrangling_log.csv"))
+write_csv(na_after, file.path(output_dir, "data_na_summary.csv"))
+cat("data_wrangled.rds:", nrow(df_wrangled), "x", ncol(df_wrangled), "\n")
+cat("data_survey.rds (svydesign object)\n")
+cat("data_wrangling_log.csv\n")
+cat("data_na_summary.csv\n")
+cat("\n=== data_dataset WRANGLING COMPLETE ===\n")

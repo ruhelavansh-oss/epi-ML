@@ -6,13 +6,13 @@ title: "Reproducibility"
 
 The workflow resolves all paths through environment-driven configuration:
 
-- `CPADS_PROJECT_ROOT`
-- `CPADS_DATA_DIR`
-- `CPADS_RAW_PUMF_FILE`
-- `CPADS_OUTPUT_PRIVATE_DIR`
-- `CPADS_OUTPUT_PUBLIC_DIR`
-- `CPADS_REPORTS_DIR`
-- `CPADS_SECRET_KEY`
+- `PROJECT_ROOT`
+- `DATA_DIR`
+- `DATA_FILE`
+- `OUTPUT_PRIVATE_DIR`
+- `OUTPUT_PUBLIC_DIR`
+- `REPORTS_DIR`
+- `SECRET_KEY`
 
 Project defaults are defined in `config/runtime.yml` and can be overridden locally via `.Renviron` or `.env`.
 

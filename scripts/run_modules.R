@@ -6,7 +6,7 @@ setwd(paths$project_root)
 
 power_script <- "surveillance/investigation/05_power_design.R"
 bootstrap_script <- "surveillance/investigation/03_data_wrangling.R"
-wrangled_required <- file.path(paths$wrangled_dir, "cpads_pumf_wrangled.rds")
+wrangled_required <- file.path(paths$wrangled_dir, "data_wrangled.rds")
 
 module_scripts <- list(
   list(path = "surveillance/investigation/03_data_wrangling.R", optional = FALSE),
@@ -66,10 +66,10 @@ build_power_env <- function(paths) {
   heavy <- req$required_n[req$endpoint == "heavy_drinking_30d"][1]
   ebac <- req$required_n[req$endpoint == "ebac_legal"][1]
   if (!is.na(heavy) && length(heavy) == 1) {
-    out <- c(out, sprintf("CPADS_POWER_TARGET_N_HEAVY=%s", as.integer(heavy)))
+    out <- c(out, sprintf("POWER_TARGET_N_HEAVY=%s", as.integer(heavy)))
   }
   if (!is.na(ebac) && length(ebac) == 1) {
-    out <- c(out, sprintf("CPADS_POWER_TARGET_N_EBAC=%s", as.integer(ebac)))
+    out <- c(out, sprintf("POWER_TARGET_N_EBAC=%s", as.integer(ebac)))
   }
 
   out
@@ -86,7 +86,7 @@ if (!file.exists(wrangled_required)) {
 cat("Power-first execution: running", power_script, "before all other modules.\n")
 run_script(power_script, optional = FALSE)
 power_env <- build_power_env(paths)
-required_power_keys <- c("CPADS_POWER_TARGET_N_HEAVY", "CPADS_POWER_TARGET_N_EBAC")
+required_power_keys <- c("POWER_TARGET_N_HEAVY", "POWER_TARGET_N_EBAC")
 present_power_keys <- sub("=.*$", "", power_env)
 missing_power_keys <- setdiff(required_power_keys, present_power_keys)
 

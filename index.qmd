@@ -6,7 +6,7 @@ date: last-modified
 
 ## Introduction
 
-This project presents a retrospective epidemiologic study of alcohol and cannabis use among postsecondary students using the CPADS 2021-2022 public use microdata file (PUMF). The objective is to estimate population burden, associational structure, and causal-effect targets under explicit assumptions. The project ships with a reusable companion package, `epiml`, for manifest validation, output auditing, pipeline execution, and synthetic-data development workflows.
+This project presents a retrospective epidemiologic study of alcohol and cannabis use among postsecondary students using the data 2021-2022 public use microdata file (dataset). The objective is to estimate population burden, associational structure, and causal-effect targets under explicit assumptions. The project ships with a reusable companion package, `epiml`, for manifest validation, output auditing, pipeline execution, and synthetic-data development workflows.
 
 <a href="https://doi.org/10.5281/zenodo.18752220"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.18752220.svg" alt="DOI"></a>
 
@@ -35,7 +35,7 @@ The scientific workflow combines:
 
 ::: {.callout-caution}
 - Public repository content is restricted to code, components illustration, and website assets.
-- PUMF and row-level local outputs are excluded from version control.
+- dataset and row-level local outputs are excluded from version control.
 - Runtime pathing is environment-configured to avoid machine-specific hardcoded locations.
 :::
 

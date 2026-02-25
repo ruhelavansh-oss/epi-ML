@@ -1,7 +1,7 @@
 # #!/usr/bin/env Rscript
 # # =============================================================================
 # # 05_frequentist.R — Phase 5a: Frequentist Inference
-# # Epidemiological Study: Alcohol Use in Canada (CPADS PUMF)
+# # Epidemiological Study: Alcohol Use in Canada (data dataset)
 # # =============================================================================
 # # Following Seeing Theory Chapter 4 (Frequentist Inference):
 # #   - Survey-weighted confidence intervals for binge drinking prevalence
@@ -29,11 +29,11 @@
 # cat("=== PHASE 5a: FREQUENTIST INFERENCE (Seeing Theory Ch.4) ===\n\n")
 
 # # --- Load wrangled data ---
-# pumf     <- readRDS(file.path(wrangled_dir, "cpads_pumf_wrangled.rds"))
-# pumf_svy <- readRDS(file.path(wrangled_dir, "cpads_pumf_survey.rds"))
+# df     <- readRDS(file.path(wrangled_dir, "data_wrangled.rds"))
+# df_svy <- readRDS(file.path(wrangled_dir, "data_survey.rds"))
 # cads_alc <- readRDS(file.path(wrangled_dir, "cads_alcohol.rds"))
 
-# cat("CPADS PUMF:", nrow(pumf), "observations\n")
+# cat("data dataset:", nrow(df), "observations\n")
 # cat("CADS Alcohol:", nrow(cads_alc), "aggregate rows\n")
 # cat("Primary outcome: alcohol_binge (binary: 0/1)\n")
 # cat("Note: alcohol_any_use is 100% = 1 among all respondents,\n")
@@ -48,9 +48,9 @@
 
 # # --- Overall binge prevalence ---
 # cat("--- 1.1 Overall Binge Drinking Prevalence ---\n")
-# p_binge_overall <- svymean(~alcohol_binge, pumf_svy, na.rm = TRUE)
+# p_binge_overall <- svymean(~alcohol_binge, df_svy, na.rm = TRUE)
 # ci_binge_overall <- confint(p_binge_overall)
-# n_binge_valid <- sum(!is.na(pumf$alcohol_binge))
+# n_binge_valid <- sum(!is.na(df$alcohol_binge))
 
 # cat(sprintf("  Weighted prevalence : %.4f (%.2f%%)\n",
 #             coef(p_binge_overall), coef(p_binge_overall) * 100))
@@ -61,7 +61,7 @@
 
 # # --- Binge prevalence by sex ---
 # cat("--- 1.2 Binge Prevalence by Sex ---\n")
-# binge_by_sex <- svyby(~alcohol_binge, ~sex, pumf_svy, svymean, na.rm = TRUE)
+# binge_by_sex <- svyby(~alcohol_binge, ~sex, df_svy, svymean, na.rm = TRUE)
 # ci_by_sex <- confint(binge_by_sex)
 # binge_sex_df <- data.frame(
 #   sex       = binge_by_sex$sex,
@@ -75,7 +75,7 @@
 
 # # --- Binge prevalence by age_group ---
 # cat("--- 1.3 Binge Prevalence by Age Group ---\n")
-# binge_by_age <- svyby(~alcohol_binge, ~age_group, pumf_svy, svymean, na.rm = TRUE)
+# binge_by_age <- svyby(~alcohol_binge, ~age_group, df_svy, svymean, na.rm = TRUE)
 # ci_by_age <- confint(binge_by_age)
 # binge_age_df <- data.frame(
 #   age_group = binge_by_age$age_group,
@@ -89,7 +89,7 @@
 
 # # --- Binge prevalence by province_region ---
 # cat("--- 1.4 Binge Prevalence by Province/Region ---\n")
-# binge_by_region <- svyby(~alcohol_binge, ~province_region, pumf_svy,
+# binge_by_region <- svyby(~alcohol_binge, ~province_region, df_svy,
 #                           svymean, na.rm = TRUE)
 # ci_by_region <- confint(binge_by_region)
 # binge_region_df <- data.frame(
@@ -104,7 +104,7 @@
 
 # # --- Binge prevalence by mental health ---
 # cat("--- 1.5 Binge Prevalence by Mental Health ---\n")
-# binge_by_mh <- svyby(~alcohol_binge, ~mental_health, pumf_svy,
+# binge_by_mh <- svyby(~alcohol_binge, ~mental_health, df_svy,
 #                       svymean, na.rm = TRUE)
 # ci_by_mh <- confint(binge_by_mh)
 # binge_mh_df <- data.frame(
@@ -139,7 +139,7 @@
 # cat("H0: No difference in binge prevalence between sexes\n")
 # cat("H1: Binge prevalence differs by sex\n\n")
 
-# mod_sex <- svyglm(alcohol_binge ~ sex, design = pumf_svy,
+# mod_sex <- svyglm(alcohol_binge ~ sex, design = df_svy,
 #                    family = quasibinomial())
 # sex_summary <- summary(mod_sex)
 # cat("Logistic regression coefficients:\n")
@@ -163,9 +163,9 @@
 
 # # Pairwise: Male vs Female (svyttest)
 # cat("--- 2.1b Pairwise: Male vs Female (svyttest) ---\n")
-# pumf_mf <- pumf %>% filter(sex %in% c("Male", "Female"), !is.na(alcohol_binge))
-# pumf_mf$sex <- droplevels(pumf_mf$sex)
-# svy_mf <- svydesign(ids = ~1, weights = ~wtpumf, data = pumf_mf)
+# df_mf <- df %>% filter(sex %in% c("Male", "Female"), !is.na(alcohol_binge))
+# df_mf$sex <- droplevels(df_mf$sex)
+# svy_mf <- svydesign(ids = ~1, weights = ~weight, data = df_mf)
 
 # ttest_sex <- svyttest(alcohol_binge ~ sex, design = svy_mf)
 # cat(sprintf("svyttest Male vs Female:\n"))
@@ -191,7 +191,7 @@
 # cat("H0: No difference in binge prevalence across age groups\n")
 # cat("H1: Binge prevalence differs by age group\n\n")
 
-# mod_age <- svyglm(alcohol_binge ~ age_group, design = pumf_svy,
+# mod_age <- svyglm(alcohol_binge ~ age_group, design = df_svy,
 #                    family = quasibinomial())
 # age_summary <- summary(mod_age)
 # cat("Logistic regression coefficients:\n")
@@ -214,14 +214,14 @@
 
 # # Pairwise age comparisons (each pair via svyttest)
 # cat("--- 2.2b Pairwise Age Group Comparisons (svyttest) ---\n")
-# age_levels <- levels(pumf$age_group)
+# age_levels <- levels(df$age_group)
 # age_pairs <- combn(age_levels, 2, simplify = FALSE)
 
 # for (pair in age_pairs) {
-#   pumf_pair <- pumf %>%
+#   df_pair <- df %>%
 #     filter(age_group %in% pair, !is.na(alcohol_binge)) %>%
 #     mutate(age_group = factor(as.character(age_group), levels = pair))
-#   svy_pair <- svydesign(ids = ~1, weights = ~wtpumf, data = pumf_pair)
+#   svy_pair <- svydesign(ids = ~1, weights = ~weight, data = df_pair)
 
 #   tt <- svyttest(alcohol_binge ~ age_group, design = svy_pair)
 #   label <- paste(pair, collapse = " vs ")
@@ -244,7 +244,7 @@
 # cat("H0: No difference in binge prevalence across regions\n")
 # cat("H1: Binge prevalence differs by region\n\n")
 
-# mod_region <- svyglm(alcohol_binge ~ province_region, design = pumf_svy,
+# mod_region <- svyglm(alcohol_binge ~ province_region, design = df_svy,
 #                       family = quasibinomial())
 # region_summary <- summary(mod_region)
 # cat("Logistic regression coefficients:\n")
@@ -267,14 +267,14 @@
 
 # # Pairwise region comparisons
 # cat("--- 2.3b Pairwise Region Comparisons (svyttest) ---\n")
-# region_levels <- levels(pumf$province_region)
+# region_levels <- levels(df$province_region)
 # region_pairs <- combn(region_levels, 2, simplify = FALSE)
 
 # for (pair in region_pairs) {
-#   pumf_pair <- pumf %>%
+#   df_pair <- df %>%
 #     filter(province_region %in% pair, !is.na(alcohol_binge)) %>%
 #     mutate(province_region = factor(as.character(province_region), levels = pair))
-#   svy_pair <- svydesign(ids = ~1, weights = ~wtpumf, data = pumf_pair)
+#   svy_pair <- svydesign(ids = ~1, weights = ~weight, data = df_pair)
 
 #   tt <- svyttest(alcohol_binge ~ province_region, design = svy_pair)
 #   label <- paste(pair, collapse = " vs ")
@@ -297,7 +297,7 @@
 # cat("H0: No difference in binge prevalence across mental health levels\n")
 # cat("H1: Binge prevalence differs by mental health status\n\n")
 
-# mod_mh <- svyglm(alcohol_binge ~ mental_health, design = pumf_svy,
+# mod_mh <- svyglm(alcohol_binge ~ mental_health, design = df_svy,
 #                    family = quasibinomial())
 # mh_summary <- summary(mod_mh)
 # cat("Logistic regression coefficients:\n")
@@ -468,8 +468,8 @@
 
 # # Binge x Sex
 # tab_binge_sex <- table(
-#   pumf$alcohol_binge[!is.na(pumf$alcohol_binge) & !is.na(pumf$sex)],
-#   pumf$sex[!is.na(pumf$alcohol_binge) & !is.na(pumf$sex)]
+#   df$alcohol_binge[!is.na(df$alcohol_binge) & !is.na(df$sex)],
+#   df$sex[!is.na(df$alcohol_binge) & !is.na(df$sex)]
 # )
 # chi_sex <- chisq.test(tab_binge_sex)
 # w_sex <- sqrt(chi_sex$statistic / sum(tab_binge_sex))
@@ -478,8 +478,8 @@
 
 # # Binge x Age Group
 # tab_binge_age <- table(
-#   pumf$alcohol_binge[!is.na(pumf$alcohol_binge) & !is.na(pumf$age_group)],
-#   pumf$age_group[!is.na(pumf$alcohol_binge) & !is.na(pumf$age_group)]
+#   df$alcohol_binge[!is.na(df$alcohol_binge) & !is.na(df$age_group)],
+#   df$age_group[!is.na(df$alcohol_binge) & !is.na(df$age_group)]
 # )
 # chi_age <- chisq.test(tab_binge_age)
 # w_age <- sqrt(chi_age$statistic / sum(tab_binge_age))
@@ -488,8 +488,8 @@
 
 # # Binge x Region
 # tab_binge_reg <- table(
-#   pumf$alcohol_binge[!is.na(pumf$alcohol_binge) & !is.na(pumf$province_region)],
-#   pumf$province_region[!is.na(pumf$alcohol_binge) & !is.na(pumf$province_region)]
+#   df$alcohol_binge[!is.na(df$alcohol_binge) & !is.na(df$province_region)],
+#   df$province_region[!is.na(df$alcohol_binge) & !is.na(df$province_region)]
 # )
 # chi_reg <- chisq.test(tab_binge_reg)
 # w_reg <- sqrt(chi_reg$statistic / sum(tab_binge_reg))
@@ -498,8 +498,8 @@
 
 # # Binge x Mental Health
 # tab_binge_mh <- table(
-#   pumf$alcohol_binge[!is.na(pumf$alcohol_binge) & !is.na(pumf$mental_health)],
-#   pumf$mental_health[!is.na(pumf$alcohol_binge) & !is.na(pumf$mental_health)]
+#   df$alcohol_binge[!is.na(df$alcohol_binge) & !is.na(df$mental_health)],
+#   df$mental_health[!is.na(df$alcohol_binge) & !is.na(df$mental_health)]
 # )
 # chi_mh <- chisq.test(tab_binge_mh)
 # w_mh <- sqrt(chi_mh$statistic / sum(tab_binge_mh))
@@ -624,7 +624,7 @@
 #!/usr/bin/env Rscript
 # =============================================================================
 # 05_frequentist.R — Phase 5a: Frequentist Inference
-# CPADS 2021–2022 PUMF (Cleaned) — Seeing Theory Ch.4 style
+# data 2021–2022 dataset (Cleaned) — Seeing Theory Ch.4 style
 # =============================================================================
 # Survey-weighted (where appropriate):
 #   1) Prevalence estimates + 95% CIs for heavy_drinking_30d overall and by:
@@ -663,22 +663,22 @@ dir.create(fig_dir, recursive = TRUE, showWarnings = FALSE)
 cat("=== PHASE 5a: FREQUENTIST INFERENCE (Seeing Theory Ch.4) ===\n\n")
 
 # --- Load wrangled data ---
-pumf_path <- file.path(wrangled_dir, "cpads_pumf_wrangled.rds")
-svy_path <- file.path(wrangled_dir, "cpads_pumf_survey.rds")
+df_path <- file.path(wrangled_dir, "data_wrangled.rds")
+svy_path <- file.path(wrangled_dir, "data_survey.rds")
 
-if (!file.exists(pumf_path)) {
-  stop("Missing file: ", pumf_path)
+if (!file.exists(df_path)) {
+  stop("Missing file: ", df_path)
 }
-pumf <- readRDS(pumf_path)
+df <- readRDS(df_path)
 
 # Prefer persisted survey object to preserve consistency with Phase 3
 if (file.exists(svy_path)) {
-  pumf_svy <- readRDS(svy_path)
+  df_svy <- readRDS(svy_path)
 } else {
-  if (!("wtpumf" %in% names(pumf))) {
-    stop("Cannot build survey design: missing wtpumf")
+  if (!("weight" %in% names(df))) {
+    stop("Cannot build survey design: missing weight")
   }
-  pumf_svy <- svydesign(ids = ~1, weights = ~wtpumf, data = pumf)
+  df_svy <- svydesign(ids = ~1, weights = ~weight, data = df)
 }
 
 # ---- Safety checks ----
@@ -688,23 +688,23 @@ required <- c(
   "age_group",
   "province_region",
   "mental_health",
-  "wtpumf"
+  "weight"
 )
-missing <- setdiff(required, names(pumf))
+missing <- setdiff(required, names(df))
 if (length(missing) > 0) {
-  stop("Missing required variables in pumf: ", paste(missing, collapse = ", "))
+  stop("Missing required variables in df: ", paste(missing, collapse = ", "))
 }
 
 # Ensure outcome is numeric 0/1 with NA allowed (svymean expects numeric for mean-as-prevalence)
 # (This is not "coercion to dodge errors": it enforces the model's mathematical domain.)
-if (!is.numeric(pumf$heavy_drinking_30d)) {
+if (!is.numeric(df$heavy_drinking_30d)) {
   stop(
     "heavy_drinking_30d must be numeric 0/1/NA. Found type: ",
-    typeof(pumf$heavy_drinking_30d)
+    typeof(df$heavy_drinking_30d)
   )
 }
 bad_vals <- setdiff(
-  unique(pumf$heavy_drinking_30d[!is.na(pumf$heavy_drinking_30d)]),
+  unique(df$heavy_drinking_30d[!is.na(df$heavy_drinking_30d)]),
   c(0, 1)
 )
 if (length(bad_vals) > 0) {
@@ -714,7 +714,7 @@ if (length(bad_vals) > 0) {
   )
 }
 
-cat("CPADS PUMF:", nrow(pumf), "observations\n")
+cat("data dataset:", nrow(df), "observations\n")
 cat("Primary outcome: heavy_drinking_30d (binary: 0/1)\n\n")
 
 # =============================================================================
@@ -944,7 +944,7 @@ all_tests <- tibble::tibble(
 run_overall_wald <- function(group_var, label) {
   cat(sprintf("--- %s (svyglm quasibinomial + Wald) ---\n", label))
   f <- stats::as.formula(paste0("heavy_drinking_30d ~ ", group_var))
-  mod <- survey::svyglm(f, design = pumf_svy, family = quasibinomial())
+  mod <- survey::svyglm(f, design = df_svy, family = quasibinomial())
   an <- survey::regTermTest(
     mod,
     stats::as.formula(paste0("~", group_var)),
@@ -977,7 +977,7 @@ run_overall_wald <- function(group_var, label) {
 
 run_pairwise_ttests <- function(group_var, label_prefix) {
   cat(sprintf("--- Pairwise comparisons: %s (svyttest) ---\n", label_prefix))
-  lvls <- levels(pumf[[group_var]])
+  lvls <- levels(df[[group_var]])
   if (is.null(lvls) || length(lvls) < 2) {
     cat("Skipping pairwise: <2 levels.\n\n")
     return(invisible(NULL))
@@ -985,7 +985,7 @@ run_pairwise_ttests <- function(group_var, label_prefix) {
 
   pairs <- combn(lvls, 2, simplify = FALSE)
   for (pair in pairs) {
-    df_pair <- pumf %>%
+    df_pair <- df %>%
       dplyr::filter(!is.na(heavy_drinking_30d), !is.na(.data[[group_var]])) %>%
       dplyr::filter(.data[[group_var]] %in% pair) %>%
       dplyr::mutate(
@@ -1000,7 +1000,7 @@ run_pairwise_ttests <- function(group_var, label_prefix) {
       next
     }
 
-    svy_pair <- survey::svydesign(ids = ~1, weights = ~wtpumf, data = df_pair)
+    svy_pair <- survey::svydesign(ids = ~1, weights = ~weight, data = df_pair)
     tt <- survey::svyttest(
       stats::as.formula(paste0("heavy_drinking_30d ~ ", group_var)),
       design = svy_pair
@@ -1038,7 +1038,7 @@ cat("SECTION 1: SURVEY-WEIGHTED CONFIDENCE INTERVALS\n")
 cat(paste(rep("=", 70), collapse = ""), "\n\n")
 
 cat("--- 1.1 Overall Heavy Drinking (past 30 days) ---\n")
-p_overall <- survey::svymean(~heavy_drinking_30d, pumf_svy, na.rm = TRUE)
+p_overall <- survey::svymean(~heavy_drinking_30d, df_svy, na.rm = TRUE)
 ci_overall <- confint(p_overall)
 cat(sprintf(
   "  Weighted prevalence : %.4f (%.2f%%)\n",
@@ -1053,26 +1053,26 @@ cat(sprintf(
 ))
 cat(sprintf(
   "  Valid n (unweighted): %d\n\n",
-  sum(!is.na(pumf$heavy_drinking_30d))
+  sum(!is.na(df$heavy_drinking_30d))
 ))
 
 cat("--- 1.2 By Gender ---\n")
-prev_gender <- svyby_prev("heavy_drinking_30d", "gender", pumf_svy)
+prev_gender <- svyby_prev("heavy_drinking_30d", "gender", df_svy)
 print(prev_gender, n = Inf)
 cat("\n")
 
 cat("--- 1.3 By Age Group ---\n")
-prev_age <- svyby_prev("heavy_drinking_30d", "age_group", pumf_svy)
+prev_age <- svyby_prev("heavy_drinking_30d", "age_group", df_svy)
 print(prev_age, n = Inf)
 cat("\n")
 
 cat("--- 1.4 By Province/Region ---\n")
-prev_region <- svyby_prev("heavy_drinking_30d", "province_region", pumf_svy)
+prev_region <- svyby_prev("heavy_drinking_30d", "province_region", df_svy)
 print(prev_region, n = Inf)
 cat("\n")
 
 cat("--- 1.5 By Mental Health ---\n")
-prev_mh <- svyby_prev("heavy_drinking_30d", "mental_health", pumf_svy)
+prev_mh <- svyby_prev("heavy_drinking_30d", "mental_health", df_svy)
 print(prev_mh, n = Inf)
 cat("\n")
 
@@ -1169,10 +1169,10 @@ cohens_w_unweighted <- function(x, g) {
   )
 }
 
-w_gender <- cohens_w_unweighted(pumf$heavy_drinking_30d, pumf$gender)
-w_age <- cohens_w_unweighted(pumf$heavy_drinking_30d, pumf$age_group)
-w_region <- cohens_w_unweighted(pumf$heavy_drinking_30d, pumf$province_region)
-w_mh <- cohens_w_unweighted(pumf$heavy_drinking_30d, pumf$mental_health)
+w_gender <- cohens_w_unweighted(df$heavy_drinking_30d, df$gender)
+w_age <- cohens_w_unweighted(df$heavy_drinking_30d, df$age_group)
+w_region <- cohens_w_unweighted(df$heavy_drinking_30d, df$province_region)
+w_mh <- cohens_w_unweighted(df$heavy_drinking_30d, df$mental_health)
 
 cat(sprintf(
   "  Heavy x Gender:        Chi-sq = %.2f, w = %.4f\n",
@@ -1273,7 +1273,7 @@ ci_all <- dplyr::bind_rows(
     se = as.numeric(SE(p_overall)[1]),
     ci_lower = as.numeric(ci_overall[1, 1]),
     ci_upper = as.numeric(ci_overall[1, 2]),
-    n_unweighted_nonmissing = sum(!is.na(pumf$heavy_drinking_30d))
+    n_unweighted_nonmissing = sum(!is.na(df$heavy_drinking_30d))
   ),
   prev_gender %>%
     dplyr::mutate(variable = "Gender") %>%

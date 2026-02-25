@@ -1,7 +1,7 @@
 ###############################################################################
 # 07_dag.R
 # Directed Acyclic Graph (DAG) for the cannabis_any_use -> heavy_drinking_30d
-# causal pathway using CPADS PUMF data.
+# causal pathway using data dataset data.
 #
 # Identifies minimal sufficient adjustment sets and instrumental variables.
 # Saves DAG plot to outputs/figures/dag_heavy_drinking.pdf
@@ -24,9 +24,9 @@ cat("=== 07_dag.R: DAG Specification and Analysis ===\n\n")
 # 1. Load data (for reference / summary only)
 # ---------------------------------------------------------------------------
 dat <- tryCatch(
-  readRDS(file.path(paths$wrangled_dir, "cpads_pumf_wrangled.rds")),
+  readRDS(file.path(paths$wrangled_dir, "data_wrangled.rds")),
   error = function(e) {
-    stop("Could not load wrangled CPADS data: ", e$message)
+    stop("Could not load wrangled data data: ", e$message)
   }
 )
 

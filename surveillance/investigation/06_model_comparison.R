@@ -27,31 +27,31 @@ output_dir <- paths$output_private_dir
 cat("=== PHASE 6: NESTED MODEL COMPARISON ===\n\n")
 
 # --- Load wrangled data ---
-pumf <- readRDS(file.path(wrangled_dir, "cpads_pumf_wrangled.rds"))
-cat("Loaded CPADS PUMF:", nrow(pumf), "observations\n\n")
+df <- readRDS(file.path(wrangled_dir, "data_wrangled.rds"))
+cat("Loaded data dataset:", nrow(df), "observations\n\n")
 
 # --- Prepare complete-case subset (all variables across all models) ---
 model_vars <- c("heavy_drinking_30d", "age_group", "gender", "province_region",
-                 "mental_health", "cannabis_any_use", "physical_health", "wtpumf")
+                 "mental_health", "cannabis_any_use", "physical_health", "weight")
 
-pumf_cc <- pumf %>%
+df_cc <- df %>%
   dplyr::select(dplyr::all_of(model_vars)) %>%
   dplyr::filter(complete.cases(.))
 
-cat("Complete cases (all model variables):", nrow(pumf_cc), "of", nrow(pumf),
-    sprintf("(%.1f%%)\n", 100 * nrow(pumf_cc) / nrow(pumf)))
+cat("Complete cases (all model variables):", nrow(df_cc), "of", nrow(df),
+    sprintf("(%.1f%%)\n", 100 * nrow(df_cc) / nrow(df)))
 cat("Note: Using same complete-case sample for all models to ensure comparability.\n\n")
 
 # --- Outcome distribution ---
 cat("Outcome distribution (heavy_drinking_30d):\n")
-tab <- table(pumf_cc$heavy_drinking_30d, useNA = "ifany")
+tab <- table(df_cc$heavy_drinking_30d, useNA = "ifany")
 cat(sprintf("  0 (No heavy drinking):  %d (%.1f%%)\n",
             tab["0"], 100 * tab["0"] / sum(tab)))
 cat(sprintf("  1 (Heavy drinking):     %d (%.1f%%)\n\n",
             tab["1"], 100 * tab["1"] / sum(tab)))
 
 # --- Survey design ---
-svy_design <- svydesign(ids = ~1, weights = ~wtpumf, data = pumf_cc)
+svy_design <- svydesign(ids = ~1, weights = ~weight, data = df_cc)
 
 # =============================================================================
 # Fit Nested Models
@@ -302,6 +302,6 @@ write_csv(interaction_cmp, file.path(output_dir, "model_comparison_interaction.c
 cat("Saved: model_comparison_interaction.csv\n")
 
 cat(sprintf("\nAnalysis sample: %d complete cases of %d total (%.1f%%)\n",
-            nrow(pumf_cc), nrow(pumf), 100 * nrow(pumf_cc) / nrow(pumf)))
+            nrow(df_cc), nrow(df), 100 * nrow(df_cc) / nrow(df)))
 
 cat("\n=== MODEL COMPARISON COMPLETE ===\n")

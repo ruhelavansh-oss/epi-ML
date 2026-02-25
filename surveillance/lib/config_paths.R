@@ -1,4 +1,4 @@
-# Shared path and runtime configuration for CPADS study modules.
+# Shared path and runtime configuration for data study modules.
 
 `%||%` <- function(x, y) {
   if (is.null(x) || length(x) == 0 || is.na(x) || identical(x, "")) y else x
@@ -18,51 +18,81 @@ find_project_root <- function(start = getwd()) {
 }
 
 read_runtime_defaults <- function(project_root) {
-  cfg_file <- Sys.getenv("CPADS_RUNTIME_CONFIG", file.path(project_root, "config", "runtime.yml"))
+  cfg_file <- Sys.getenv("RUNTIME_CONFIG", file.path(project_root, "config", "runtime.yml"))
   if (!file.exists(cfg_file)) return(list())
   if (!requireNamespace("yaml", quietly = TRUE)) return(list())
 
-  raw <- tryCatch(yaml::read_yaml(cfg_file), error = function(e) list())
-  if (!is.list(raw)) return(list())
-  raw
+  cfg_vals <- tryCatch(yaml::read_yaml(cfg_file), error = function(e) list())
+  if (!is.list(cfg_vals)) return(list())
+  cfg_vals
+}
+
+is_abs_path <- function(path) {
+  grepl("^(/|[A-Za-z]:[/\\\\])", path)
+}
+
+to_abs_path <- function(path, project_root) {
+  if (is_abs_path(path)) return(path)
+  file.path(project_root, path)
+}
+
+discover_data_file <- function(data_dir, fallback_name = "data.csv") {
+  fallback <- file.path(data_dir, fallback_name)
+  if (!dir.exists(data_dir)) return(fallback)
+
+  csv_files <- list.files(data_dir, pattern = "[.]csv$", full.names = TRUE, ignore.case = TRUE)
+  if (length(csv_files) == 0) return(fallback)
+
+  base <- tolower(basename(csv_files))
+  keep <- !grepl("(info|manifest|output|log)", base)
+  candidate <- if (any(keep)) csv_files[keep] else csv_files
+  info <- file.info(candidate)
+  candidate[which.max(info$size)]
+}
+
+resolve_data_file <- function(data_file, data_dir) {
+  data_file_norm <- normalizePath(data_file, winslash = "/", mustWork = FALSE)
+  if (file.exists(data_file_norm)) return(data_file_norm)
+  discover_data_file(data_dir = data_dir)
 }
 
 get_paths <- function() {
-  project_root <- Sys.getenv("CPADS_PROJECT_ROOT", "")
+  project_root <- Sys.getenv("PROJECT_ROOT", "")
   if (identical(project_root, "")) {
     project_root <- find_project_root()
   }
   if (identical(project_root, "")) {
-    stop("Unable to resolve project root. Set CPADS_PROJECT_ROOT before running scripts.")
+    stop("Unable to resolve project root. Set PROJECT_ROOT before running scripts.")
   }
   project_root <- normalizePath(project_root, winslash = "/", mustWork = FALSE)
 
   cfg <- read_runtime_defaults(project_root)
 
   data_dir_default <- cfg$data_dir %||% file.path(project_root, "data", "private")
-  raw_default <- cfg$raw_pumf_file %||% file.path(data_dir_default, "CPADS_PUMF.csv")
+  data_file_default <- cfg$data_file %||% file.path(data_dir_default, "data.csv")
   out_private_default <- cfg$output_private_dir %||% file.path(project_root, "data", "private", "outputs")
   out_public_default <- cfg$output_public_dir %||% file.path(project_root, "reports", "public")
   reports_default <- cfg$reports_dir %||% file.path(project_root, "reports", "drafts")
 
-  data_dir <- Sys.getenv("CPADS_DATA_DIR", data_dir_default)
-  raw_pumf_file <- Sys.getenv("CPADS_RAW_PUMF_FILE", raw_default)
-  output_private_dir <- Sys.getenv("CPADS_OUTPUT_PRIVATE_DIR", out_private_default)
-  output_public_dir <- Sys.getenv("CPADS_OUTPUT_PUBLIC_DIR", out_public_default)
-  reports_dir <- Sys.getenv("CPADS_REPORTS_DIR", reports_default)
+  data_dir <- to_abs_path(Sys.getenv("DATA_DIR", data_dir_default), project_root)
+  data_file <- to_abs_path(Sys.getenv("DATA_FILE", data_file_default), project_root)
+  output_private_dir <- to_abs_path(Sys.getenv("OUTPUT_PRIVATE_DIR", out_private_default), project_root)
+  output_public_dir <- to_abs_path(Sys.getenv("OUTPUT_PUBLIC_DIR", out_public_default), project_root)
+  reports_dir <- to_abs_path(Sys.getenv("REPORTS_DIR", reports_default), project_root)
+  data_file <- resolve_data_file(data_file = data_file, data_dir = data_dir)
 
   list(
     project_root = project_root,
     data_dir = normalizePath(data_dir, winslash = "/", mustWork = FALSE),
     public_data_dir = normalizePath(file.path(project_root, "data", "public"), winslash = "/", mustWork = FALSE),
-    raw_pumf_file = normalizePath(raw_pumf_file, winslash = "/", mustWork = FALSE),
+    data_file = normalizePath(data_file, winslash = "/", mustWork = FALSE),
     output_private_dir = normalizePath(output_private_dir, winslash = "/", mustWork = FALSE),
     output_public_dir = normalizePath(output_public_dir, winslash = "/", mustWork = FALSE),
     reports_dir = normalizePath(reports_dir, winslash = "/", mustWork = FALSE),
     wrangled_dir = normalizePath(file.path(output_private_dir, "wrangled"), winslash = "/", mustWork = FALSE),
     figures_dir = normalizePath(file.path(output_private_dir, "figures"), winslash = "/", mustWork = FALSE),
     logs_dir = normalizePath(file.path(project_root, "logs"), winslash = "/", mustWork = FALSE),
-    secret_key = Sys.getenv("CPADS_SECRET_KEY", "")
+    secret_key = Sys.getenv("SECRET_KEY", "")
   )
 }
 
@@ -74,7 +104,7 @@ init_paths <- function(paths = get_paths(), dirs = c("output_private_dir", "wran
   invisible(paths)
 }
 
-assert_required_files <- function(paths = get_paths(), keys = c("raw_pumf_file")) {
+assert_required_files <- function(paths = get_paths(), keys = c("data_file")) {
   missing <- keys[!vapply(keys, function(k) file.exists(paths[[k]]), logical(1))]
   if (length(missing) > 0) {
     stop(

@@ -89,7 +89,7 @@ default_synthetic_name_map <- function(profile = c("generic", "epiml_legacy")) {
 
   c(
     id = "seqid",
-    weight = "wtpumf",
+    weight = "weight",
     sex = "dvdemq01",
     age_group = "age_groups",
     region = "region",

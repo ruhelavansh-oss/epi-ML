@@ -1,6 +1,6 @@
 # Runtime defaults. Environment variables always override these values.
 data_dir: data/private
-raw_pumf_file: data/private/CPADS_PUMF.csv
+data_file: data/private/data.csv
 output_private_dir: data/private/outputs
 output_public_dir: reports/public
 reports_dir: reports/drafts

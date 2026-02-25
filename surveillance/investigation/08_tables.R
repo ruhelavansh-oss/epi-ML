@@ -4,7 +4,7 @@
 # Epidemiological Study: Alcohol Use in Canada
 # =============================================================================
 # Generates formatted tables for the final report:
-#   Table 1: CPADS PUMF sample characteristics stratified by heavy drinking
+#   Table 1: data dataset sample characteristics stratified by heavy drinking
 #   Table 2: CADS national alcohol prevalence by question (Year=2023)
 # =============================================================================
 
@@ -30,19 +30,19 @@ if (!dir.exists(report_dir)) dir.create(report_dir, recursive = TRUE)
 cat("=== PHASE 8: PUBLICATION TABLES ===\n\n")
 
 # =============================================================================
-# TABLE 1: Sample Characteristics by Heavy Drinking Status (CPADS PUMF)
+# TABLE 1: Sample Characteristics by Heavy Drinking Status (data dataset)
 # =============================================================================
 cat(paste(rep("=", 62), collapse = ""), "\n")
-cat("TABLE 1: CPADS PUMF SAMPLE CHARACTERISTICS\n")
+cat("TABLE 1: data dataset SAMPLE CHARACTERISTICS\n")
 cat(paste(rep("=", 62), collapse = ""), "\n\n")
 
-# --- Load CPADS PUMF wrangled data ---
-pumf <- readRDS(file.path(wrangled_dir, "cpads_pumf_wrangled.rds"))
-cat("Loaded CPADS PUMF:", nrow(pumf), "observations,", ncol(pumf), "variables\n\n")
+# --- Load data dataset wrangled data ---
+df <- readRDS(file.path(wrangled_dir, "data_wrangled.rds"))
+cat("Loaded data dataset:", nrow(df), "observations,", ncol(df), "variables\n\n")
 
 # --- Prepare analysis subset ---
 # Convert integer 0/1 variables to labelled factors for gtsummary
-tbl_data <- pumf %>%
+tbl_data <- df %>%
   dplyr::select(age_group, gender, province_region, mental_health, physical_health,
          heavy_drinking_30d, cannabis_any_use) %>%
   dplyr::mutate(
@@ -87,7 +87,7 @@ tbl1 <- tbl_data %>%
   add_overall() %>%
   modify_header(label ~ "**Characteristic**") %>%
   modify_spanning_header(c("stat_1", "stat_2") ~ "**Heavy Drinking Status**") %>%
-  modify_caption("**Table 1. Sample Characteristics of CPADS PUMF Respondents (N = 40,931)**") %>%
+  modify_caption("**Table 1. Sample Characteristics of data dataset Respondents (N = 40,931)**") %>%
   bold_labels()
 
 # --- Print Table 1 summary to stdout ---
