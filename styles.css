@@ -444,12 +444,12 @@ main.content {
 .module-output-table-wrap th {
   font-size: 0.66rem;
   letter-spacing: 0.01em;
-  white-space: normal;
+  white-space: nowrap;
 }
 
 .module-output-table-wrap th:nth-child(1),
 .module-output-table-wrap td:nth-child(1) {
-  width: 60%;
+  width: 55%;
   text-align: left;
 }
 
@@ -479,7 +479,7 @@ main.content {
 
 .module-output-table-wrap th:nth-child(6),
 .module-output-table-wrap td:nth-child(6) {
-  width: 10%;
+  width: 15%;
   text-align: center;
 }
 
@@ -493,8 +493,9 @@ main.content {
 .module-file-name {
   flex: 1 1 auto;
   min-width: 0;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   text-align: left;
 }
 
@@ -505,10 +506,15 @@ main.content {
 
 .module-metadata-table-wrap code,
 .module-output-table-wrap code {
-  white-space: normal;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-size: 0.64rem;
+}
+
+.module-output-table-wrap td,
+.module-output-table-wrap th {
+  white-space: nowrap;
 }
 
 .module-script-details {

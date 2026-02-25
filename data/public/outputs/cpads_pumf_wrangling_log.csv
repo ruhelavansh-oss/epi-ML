@@ -1,4 +1,4 @@
 step,description,rows_before,rows_after,cols_affected
 1,clean_names(),40931,40931,all
 2,Recode 97/98/99/997/998/999 to NA,40931,40931,385 columns
-3,Create derived variables,40931,40931,"gender, age_group, province_region, alcohol_ever, alcohol_past12m, alcohol_frequency_30d, heavy_drinking_30d, cannabis_any_use, physical_health, mental_health"
+3,Create derived variables,40931,40931,"gender, age_group, province_region, alcohol_ever, alcohol_past12m, alcohol_frequency_30d, heavy_drinking_30d, cannabis_any_use, hd30d, cua, physical_health, mental_health"

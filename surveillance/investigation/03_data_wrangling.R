@@ -188,6 +188,9 @@ pumf_wrangled <- pumf_wrangled %>%
       can05 == 2 ~ 0L,
       TRUE ~ NA_integer_
     ),
+    # Short aliases for readability in downstream outputs (legacy names preserved)
+    hd30d = heavy_drinking_30d,
+    cua = cannabis_any_use,
     # Health (hwbq01, hwbq02)
     physical_health = factor(
       case_when(
@@ -223,6 +226,8 @@ derived_vars <- c(
   "alcohol_frequency_30d",
   "heavy_drinking_30d",
   "cannabis_any_use",
+  "hd30d",
+  "cua",
   "physical_health",
   "mental_health"
 )

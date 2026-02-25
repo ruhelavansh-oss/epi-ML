@@ -264,6 +264,7 @@ ahs_r,22.5
 alc12_30d_freq,22.5
 alc12_30d_prev_total,22.5
 heavy_drinking_30d,22.5
+hd30d,22.5
 alc08_e,22.4
 ahs_q,22.4
 ahs_e,22.2
@@ -353,6 +354,7 @@ dvstu02,1.1
 aho_h,1.1
 can05,1.1
 cannabis_any_use,1.1
+cua,1.1
 demq5,1
 hwbq02,1
 aho_a,1

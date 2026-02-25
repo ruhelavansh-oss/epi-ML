@@ -7,12 +7,13 @@ title: "Background"
 The study uses retrospective observational survey microdata from CPADS 2021-2022. There is no randomized treatment assignment; therefore, causal interpretations are conditional on identification assumptions and should be interpreted as model-based counterfactual contrasts.
 
 Prospective stratified block-randomization outputs in this project are trial-planning artifacts only. They are not used to re-label or reinterpret CPADS observational estimates.
+Within CPADS analyses, bias mitigation follows observational-design methods (matching, weighting, covariate adjustment, overlap diagnostics) rather than experimental assignment.
 
 ## Target Variables
 
 ::: {.callout-warning}
-- **Exposure/Treatment proxy**: `cannabis_any_use` (past-year cannabis use indicator).
-- **Primary outcome**: `heavy_drinking_30d` (past-30-day heavy drinking indicator).
+- **Exposure/Treatment proxy**: `cannabis_any_use` (alias `cua`; past-year cannabis use indicator).
+- **Primary outcome**: `heavy_drinking_30d` (alias `hd30d`; past-30-day heavy drinking indicator).
 - **eBAC outcomes**: `ebac_tot` (continuous) and `ebac_legal` (binary threshold indicator), using measured variables available in the wrangled analytic dataset.
 - **Adjustment covariates**: age group, gender (self-reported), region, self-rated mental health, and self-rated physical health.
 - **Gender variable**: analyses use CPADS gender (self-reported) categories (`Woman`, `Man`, `Transgender/Non-binary`) with Woman/Man as the primary planned contrast and Transgender/Non-binary retained where feasible.

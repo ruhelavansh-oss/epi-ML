@@ -86,12 +86,22 @@ if (!file.exists(wrangled_required)) {
 cat("Power-first execution: running", power_script, "before all other modules.\n")
 run_script(power_script, optional = FALSE)
 power_env <- build_power_env(paths)
-if (length(power_env) > 0) {
-  cat("Power runtime targets exported for downstream modules:\n")
-  for (e in power_env) cat("  ", e, "\n", sep = "")
-} else {
-  cat("Power runtime targets unavailable; downstream scripts will run without target env vars.\n")
+required_power_keys <- c("CPADS_POWER_TARGET_N_HEAVY", "CPADS_POWER_TARGET_N_EBAC")
+present_power_keys <- sub("=.*$", "", power_env)
+missing_power_keys <- setdiff(required_power_keys, present_power_keys)
+
+if (length(missing_power_keys) > 0) {
+  stop(
+    "Power-first gating failed: missing required runtime targets from ",
+    basename(power_script),
+    " -> ",
+    paste(missing_power_keys, collapse = ", "),
+    ". Aborting downstream modules."
+  )
 }
+
+cat("Power runtime targets exported for downstream modules:\n")
+for (e in power_env) cat("  ", e, "\n", sep = "")
 
 for (entry in module_scripts) {
   script <- entry$path
