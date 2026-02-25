@@ -35,13 +35,33 @@ cat("=== PHASE 5: POWER DESIGN (OFFICIAL-DOC ALIGNED) ===\n\n")
 df_path <- file.path(wrangled_dir, "data_wrangled.rds")
 svy_path <- file.path(wrangled_dir, "data_survey.rds")
 if (!file.exists(df_path)) stop("Missing file: ", df_path)
+
+if (file.exists(paths$data_file)) {
+  data_mtime <- as.numeric(file.info(paths$data_file)$mtime[[1]])
+  wrangled_mtime <- as.numeric(file.info(df_path)$mtime[[1]])
+  if (is.finite(data_mtime) && is.finite(wrangled_mtime) && wrangled_mtime < data_mtime) {
+    stop(
+      "Stale wrangled input detected: data_wrangled.rds is older than source data. ",
+      "Run surveillance/investigation/03_data_wrangling.R before power design."
+    )
+  }
+}
+
 df <- readRDS(df_path)
 
-if (file.exists(svy_path)) {
+reuse_svy <- file.exists(svy_path)
+if (reuse_svy) {
+  svy_mtime <- as.numeric(file.info(svy_path)$mtime[[1]])
+  df_mtime <- as.numeric(file.info(df_path)$mtime[[1]])
+  reuse_svy <- is.finite(svy_mtime) && is.finite(df_mtime) && svy_mtime >= df_mtime
+}
+
+if (reuse_svy) {
   df_svy <- readRDS(svy_path)
 } else {
   if (!("weight" %in% names(df))) stop("Cannot build survey design: missing weight")
   df_svy <- survey::svydesign(ids = ~1, weights = ~weight, data = df)
+  saveRDS(df_svy, svy_path)
 }
 
 required <- c("weight", "heavy_drinking_30d", "gender", "cannabis_any_use")

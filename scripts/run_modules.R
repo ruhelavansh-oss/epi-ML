@@ -45,6 +45,12 @@ run_script <- function(script, optional = FALSE, env_vars = character()) {
   invisible(TRUE)
 }
 
+file_stamp <- function(path) {
+  if (!file.exists(path)) return(NA_character_)
+  info <- file.info(path)
+  paste0(as.numeric(info$size[[1]]), ":", as.numeric(info$mtime[[1]]))
+}
+
 build_power_env <- function(paths) {
   out <- character()
   power_csv <- file.path(paths$output_private_dir, "power_interaction_sample_size_targets.csv")
@@ -77,6 +83,11 @@ build_power_env <- function(paths) {
 # -----------------------------------------------------------------------------
 # Power-first orchestration
 # -----------------------------------------------------------------------------
+if (!file.exists(paths$data_file)) {
+  stop("Power-first bootstrap failed: source data file not found: ", paths$data_file)
+}
+source_stamp_before <- file_stamp(paths$data_file)
+
 cat("Power-first bootstrap: recomputing", bootstrap_script, "to guarantee fresh inputs.\n")
 run_script(bootstrap_script, optional = FALSE)
 
@@ -86,9 +97,26 @@ if (!file.exists(wrangled_required)) {
     wrangled_required
   )
 }
+source_stamp_after <- file_stamp(paths$data_file)
+if (!identical(source_stamp_before, source_stamp_after)) {
+  stop(
+    "Power-first bootstrap aborted: source data changed during wrangling. ",
+    "Re-run scripts/run_modules.R to ensure a consistent snapshot."
+  )
+}
 
 cat("Power-first execution: running", power_script, "before all other modules.\n")
 run_script(power_script, optional = FALSE)
+
+power_targets <- file.path(paths$output_private_dir, "power_interaction_sample_size_targets.csv")
+if (file.exists(power_targets) && file.exists(wrangled_required)) {
+  if (as.numeric(file.info(power_targets)$mtime) < as.numeric(file.info(wrangled_required)$mtime)) {
+    stop(
+      "Power-first gating failed: power targets are older than wrangled inputs (stale power output)."
+    )
+  }
+}
+
 power_env <- build_power_env(paths)
 required_power_keys <- c("POWER_TARGET_N_HEAVY", "POWER_TARGET_N_EBAC")
 present_power_keys <- sub("=.*$", "", power_env)
