@@ -1,7 +1,7 @@
 metric,value,text_value,analysis_mode,power_scope
-Observed prevalence (unweighted),0.4795233141019578,NA,observational,descriptive_post_hoc
-Observed prevalence (survey-weighted),0.4580988313946399,NA,observational,descriptive_post_hoc
-DEFF (svymean; if available),1.4136580928207156,NA,observational,descriptive_post_hoc
-n_nonmissing,31719,NA,observational,descriptive_post_hoc
-n_eff (if available),22437.532923332332,NA,observational,descriptive_post_hoc
-Power design mode,NA,legacy_descriptive_post_hoc,observational,descriptive_post_hoc
+Observed prevalence (unweighted),0.479523314101958,n/a,observational,descriptive_post_hoc
+Observed prevalence (survey-weighted),0.45809883139464,n/a,observational,descriptive_post_hoc
+DEFF (svymean; if available),1.41365809282072,n/a,observational,descriptive_post_hoc
+n_nonmissing,31719,n/a,observational,descriptive_post_hoc
+n_eff (if available),22437.5329233323,n/a,observational,descriptive_post_hoc
+Power design mode,legacy_descriptive_post_hoc,legacy_descriptive_post_hoc,observational,descriptive_post_hoc
