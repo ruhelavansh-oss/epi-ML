@@ -18,7 +18,9 @@ document.querySelectorAll(".pymd span.co").forEach(el => {
 
 // Copy helper for module path buttons (quarto-web-main clipboard pattern).
 document.addEventListener("click", async (event) => {
-  const btn = event.target.closest(".copy-path-btn");
+  const target = event.target;
+  if (!(target instanceof Element)) return;
+  const btn = target.closest(".copy-path-btn");
   if (!btn) return;
   const value = btn.getAttribute("data-copy") || "";
   if (!value) return;
