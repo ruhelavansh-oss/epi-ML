@@ -118,6 +118,8 @@ cat("\nStep 3: Mapping derived variables\n")
 df_wrangled <- df_wrangled %>%
   mutate(
     # Gender (dvdemq01): (1) Female (2) Male (3) T/NB, (98) prefers to not say, (99) doesn't know
+    # Note: the survey collapses Transgender and Non-binary into one response category (code 3);
+    # disaggregation of these two groups is not possible from this measure.
     gender = factor(
       case_when(
         dvdemq01 == 1 ~ "Female",

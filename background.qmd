@@ -18,6 +18,7 @@ Within data analyses, bias mitigation follows observational-design methods (matc
 - **Adjustment covariates**: age group, gender, region, self-rated mental health, and self-rated physical health.
 - **Gender categories**: analyses use available gender categories (`Female`, `Male`, `Non-binary`) with Female/Male as the primary planned contrast and Non-binary retained where feasible.
 - **Sex-at-birth constraint**: this workflow does not include complete sex-at-birth fields. The gender variable (`dvdemq01`) captures gender identity including Non-binary respondents; it is not equivalent to sex assigned at birth.
+- **Within-gender variability limitation**: this dataset does not include hormonal cycle data, exogenous hormone use (e.g., hormonal contraceptives, gender-affirming hormones), or life-course hormonal variables. Within-gender variability from these sources cannot be controlled and represents a known limitation consistent with existing survey-based research.
 :::
 
 ## Analysis Boundary
