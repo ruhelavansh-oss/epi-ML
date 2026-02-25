@@ -4,14 +4,6 @@ paths <- get_paths()
 init_paths(paths)
 setwd(paths$project_root)
 
-# Quarto preview/single-page renders can run this hook repeatedly.
-# Avoid mutating tracked outputs unless this is an explicit full-project render.
-is_full_render <- identical(Sys.getenv("QUARTO_PROJECT_RENDER_ALL"), "1")
-if (!is_full_render) {
-  cat("Skipping publish_public_artifacts.R (non-full render/preview context).\n")
-  quit(status = 0)
-}
-
 src_root <- paths$output_private_dir
 dst_root <- file.path(paths$public_data_dir, "outputs")
 manifest_path <- file.path(paths$public_data_dir, "outputs_manifest.csv")
