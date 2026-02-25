@@ -1,0 +1,7 @@
+item,value
+formula_recompute_feasible,FALSE
+missing_formula_inputs,demq3;demq4
+available_formula_inputs,gender;alc13a;alc13b_a;alc13b_b;ebac_tot;ebac_legal
+n_woman_rows,24852
+n_man_rows,14448
+n_trans_nonbinary_rows,1359

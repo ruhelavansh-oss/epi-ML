@@ -1,4 +1,4 @@
-variable_name,user_guide_description,exists_in_cleaned_data,coding_note
+variable_name,user_guide_description,exists_in_wrangled_data,coding_note
 dvdemq6,What ethnicity are you?,TRUE,1=Black; 2=East/Southeast Asian; 3=Indigenous; 4=Latino; 5=Middle Eastern; 6=South Asian; 7=White; 8=Other/Multiple; special codes recoded to NA
 dvdemq02,What term best describes your sexual orientation?,TRUE,1=Heterosexual; 2=Other; special codes recoded to NA
 demq5,Are you an international student?,TRUE,1=Yes; 2=No; special codes recoded to NA

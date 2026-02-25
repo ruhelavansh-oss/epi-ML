@@ -3,3 +3,4 @@ Model 0,Null (intercept only),1,42619.23,30889,42619.23,0
 Model 1,Demographics (age + gender),6,42160.16,30884,42174.17,0.010771
 Model 2,+ Region + Mental Health,13,41558.8,30877,41590.87,0.024882
 Model 3,+ Cannabis + Physical Health,18,36606.44,30872,36652.17,0.141082
+Model 4,+ Cannabis x Gender interaction,20,36588.57,30870,36639.66,0.141501

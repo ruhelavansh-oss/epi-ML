@@ -32,6 +32,111 @@ if (file.exists(manifest)) {
 scan_code <- system2(file.path(R.home("bin"), "Rscript"), "scripts/security_scan.R")
 all_ok <- check("Security scan", identical(scan_code, 0L), "Rscript scripts/security_scan.R") && all_ok
 
+parity_code <- system2(file.path(R.home("bin"), "Rscript"), "scripts/check_output_parity.R")
+all_ok <- check("Output parity", identical(parity_code, 0L), "Rscript scripts/check_output_parity.R") && all_ok
+
+public_outputs_dir <- file.path(paths$public_data_dir, "outputs")
+required_outputs <- c(
+  "power_one_proportion_grid.csv",
+  "power_two_proportion_gender.csv",
+  "power_analysis_summary.csv",
+  "power_interaction_sample_size_targets.csv",
+  "power_interaction_assumptions.csv",
+  "power_interaction_group_allocations.csv",
+  "power_interaction_imbalance_penalty.csv",
+  "power_interaction_pairwise_details.csv",
+  "power_interaction_feasibility_flags.csv",
+  "power_gpower_reference_two_group.csv",
+  "power_ebac_endpoint_anchors.csv",
+  "randomization_block_blueprints.csv",
+  "randomization_schedule_example_heavy_drinking_30d.csv",
+  "randomization_schedule_example_ebac_legal.csv",
+  "randomization_schedule_example_ebac_tot.csv",
+  "official_doc_alignment_checklist.csv"
+)
+missing_required <- required_outputs[!file.exists(file.path(public_outputs_dir, required_outputs))]
+all_ok <- check(
+  "Required published outputs exist",
+  length(missing_required) == 0L,
+  if (length(missing_required) == 0L) {
+    paste0(length(required_outputs), " required outputs found")
+  } else {
+    paste("missing:", paste(utils::head(missing_required, 5), collapse = ", "))
+  }
+) && all_ok
+
+read_csv_safe <- function(path) {
+  if (!file.exists(path)) return(NULL)
+  tryCatch(read.csv(path, stringsAsFactors = FALSE, check.names = FALSE), error = function(e) NULL)
+}
+
+interaction_targets <- read_csv_safe(file.path(public_outputs_dir, "power_interaction_sample_size_targets.csv"))
+interaction_mode_ok <- !is.null(interaction_targets) &&
+  ("analysis_mode" %in% names(interaction_targets)) &&
+  all(unique(interaction_targets$analysis_mode) == "observational")
+all_ok <- check(
+  "Interaction power outputs use observational analysis mode",
+  interaction_mode_ok,
+  "power_interaction_sample_size_targets.csv"
+) && all_ok
+
+gpower_ref <- read_csv_safe(file.path(public_outputs_dir, "power_gpower_reference_two_group.csv"))
+gpower_mode_ok <- !is.null(gpower_ref) &&
+  all(c("analysis_mode", "design_mode") %in% names(gpower_ref)) &&
+  all(unique(gpower_ref$analysis_mode) == "observational") &&
+  all(unique(gpower_ref$design_mode) == "prospective_trial_planning")
+all_ok <- check(
+  "G*Power reference uses required mode flags",
+  gpower_mode_ok,
+  "power_gpower_reference_two_group.csv"
+) && all_ok
+
+rand_blueprint <- read_csv_safe(file.path(public_outputs_dir, "randomization_block_blueprints.csv"))
+rand_mode_ok <- !is.null(rand_blueprint) &&
+  all(c("analysis_mode", "design_mode", "block_sizes_allowed") %in% names(rand_blueprint)) &&
+  all(unique(rand_blueprint$analysis_mode) == "observational") &&
+  all(unique(rand_blueprint$design_mode) == "prospective_trial_planning") &&
+  all(rand_blueprint$block_sizes_allowed == "4,6,8")
+all_ok <- check(
+  "Randomization blueprint mode flags and block policy",
+  rand_mode_ok,
+  "randomization_block_blueprints.csv"
+) && all_ok
+
+schedule_files <- list.files(
+  public_outputs_dir,
+  pattern = "^randomization_schedule_example_.*[.]csv$",
+  full.names = TRUE
+)
+schedule_ok <- FALSE
+if (length(schedule_files) > 0) {
+  sched <- do.call(rbind, lapply(schedule_files, read_csv_safe))
+  if (!is.null(sched) && nrow(sched) > 0 && all(c("block_size", "assignment", "block_id") %in% names(sched))) {
+    block_counts <- aggregate(
+      assignment ~ block_id + block_size + assignment + gender + endpoint + target_power,
+      data = sched,
+      FUN = length
+    )
+    block_wide <- reshape(
+      block_counts,
+      idvar = c("block_id", "block_size", "gender", "endpoint", "target_power"),
+      timevar = "assignment",
+      direction = "wide"
+    )
+    if (!("assignment.Control" %in% names(block_wide))) block_wide$assignment.Control <- 0L
+    if (!("assignment.Treatment" %in% names(block_wide))) block_wide$assignment.Treatment <- 0L
+    size_ok <- (block_wide$assignment.Control + block_wide$assignment.Treatment) == block_wide$block_size
+    balance_ok <- block_wide$assignment.Control == block_wide$assignment.Treatment
+    allowed_ok <- block_wide$block_size %in% c(4, 6, 8)
+    schedule_ok <- all(size_ok) && all(balance_ok) && all(allowed_ok)
+  }
+}
+all_ok <- check(
+  "Randomization schedules have balanced allowed blocks",
+  schedule_ok,
+  "block sizes 4/6/8 and 1:1 assignment per block"
+) && all_ok
+
 tracked <- if (nzchar(Sys.which("git"))) {
   tryCatch(system2("git", "ls-files", stdout = TRUE, stderr = FALSE), error = function(e) character())
 } else character()

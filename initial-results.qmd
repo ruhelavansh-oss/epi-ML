@@ -2,14 +2,9 @@
 title: "Initial Results"
 ---
 
-## Reading the Main Outputs
+## Scope
 
-::: {.callout-warning}
-- **Weighted prevalence** represents design-based population burden in the CPADS target population.
-- **Logistic odds ratios** represent adjusted multiplicative associations on the odds scale.
-- **Interaction results** represent effect-modification tests for `cannabis_any_use * gender` and are the primary basis for gender-difference claims.
-- **IPW ATE** represents a model-based marginal risk-difference contrast under causal assumptions.
-:::
+This page presents point estimates and concise interpretation only. General workflow definitions and method taxonomy are centralized on the Home page.
 
 ## Preliminary Estimates
 

@@ -1,0 +1,2 @@
+model_base,model_interaction,delta_deviance,delta_aic,interaction_test_F,interaction_df_num,interaction_df_den,interaction_p_value
+Model 3,Model 4,17.876528901644633,-12.511919997807126,6.081746156670507,2,30870,0.0022869223960538896

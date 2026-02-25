@@ -1,15 +1,20 @@
 project:
   type: website
   output-dir: _site
+  pre-render:
+    - Rscript scripts/publish_public_artifacts.R
   post-render:
     - tools/algolia-add-custom-attribute.ts
   resources:
     - "/images/Posit-Logos-2024_horiz-full-color.svg"
     - "/images/Posit-Logos-2024_horiz-full-color-white-text.svg"
+    - "/data/public/outputs/**"
+    - "/data/public/outputs_manifest.csv"
     - "/_redirects"
     - "/netlify.toml"
     - "/robots.txt"
     - "/algolia-site-verification.html"
+    - "/google02e7d678c223b1e4.html"
   render:
     - "*.qmd"
     - "!R_libs/**"
@@ -102,12 +107,12 @@ website:
                   text: "Descriptive Statistics"
                 - href: code/distribution-tests.qmd
                   text: "Distribution Tests"
+                - href: code/power-design.qmd
+                  text: "Power Design"
                 - href: code/frequentist-inference.qmd
                   text: "Frequentist Inference"
                 - href: code/bayesian-inference.qmd
                   text: "Bayesian Inference"
-                - href: code/power-design.qmd
-                  text: "Power Design"
                 - href: code/logistic-models.qmd
                   text: "Logistic Models"
                 - href: code/model-comparison.qmd

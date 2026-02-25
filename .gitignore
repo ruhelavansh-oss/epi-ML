@@ -38,6 +38,10 @@ renv/library/
 renv/staging/
 .Rproj.user/
 instantsearch-app/
+.venv/
+code/*_cache/
+site_libs/
+process.txt
 
 # Keep public report artifacts tracked; keep private report drafts ignored
 !reports/

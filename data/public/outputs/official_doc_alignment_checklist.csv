@@ -1,0 +1,15 @@
+requirement_id,source_doc,requirement_text,implementation_evidence_path,status,analysis_mode,design_mode
+OFFICIAL-01,Sex-differences commentary,Use hypothesis-driven interaction-focused power planning,surveillance/investigation/05_power_design.R,satisfied,observational,observational
+OFFICIAL-02,Sex-differences commentary,Ensure adequate power for sex/gender interaction analyses,data/public/outputs/power_interaction_sample_size_targets.csv,satisfied,observational,observational
+OFFICIAL-03,Sex-differences commentary,Promote near-equal subgroup sample planning,data/public/outputs/power_interaction_group_allocations.csv,satisfied,observational,observational
+OFFICIAL-04,Sex-differences commentary,Power should be robust to unequal subgroup sizes,data/public/outputs/power_interaction_imbalance_penalty.csv,satisfied,observational,observational
+OFFICIAL-05,Sex-differences commentary,Include transgender/gender-diverse groups when available,data/public/outputs/power_interaction_feasibility_flags.csv,satisfied,observational,observational
+OFFICIAL-06,Sex-differences commentary,Operationalize analysis groups using available CPADS gender categories (Woman/Man/Transgender-Non-binary),surveillance/investigation/03_data_wrangling.R,satisfied,observational,observational
+OFFICIAL-07,Sex-differences commentary,Set primary interaction power on Woman vs Man and retain non-primary groups as explicit feasibility outputs,data/public/outputs/power_interaction_feasibility_flags.csv,satisfied,observational,observational
+OFFICIAL-08,Sex-differences commentary,"Capture within-group physiological variability (e.g., hormone-cycle/lifespan indicators) when available",surveillance/ebac/07_ebac_integrations.R,partial_data_constraint,observational,observational
+OFFICIAL-09,Sex-differences commentary,Report subgroup baseline summaries by gender/sex,data/public/outputs/frequentist_heavy_drinking_prevalence_ci.csv,satisfied,observational,observational
+OFFICIAL-10,CPADS PUMF guide pages 85-87,Use documented eBAC derivation context and legal-threshold mapping,surveillance/investigation/09_report.R,satisfied,observational,observational
+OFFICIAL-11,CPADS PUMF guide pages 85-87,Handle missing anthropometrics in public PUMF by using measured eBAC outputs,surveillance/ebac/07_ebac.R,satisfied,observational,observational
+OFFICIAL-12,CPADS PUMF guidance,Keep observational CPADS analyses clearly non-randomized,surveillance/investigation/09_report.R,satisfied,observational,observational
+OFFICIAL-13,Study design upgrade,Provide prospective stratified block randomization planning artifacts,data/public/outputs/randomization_block_blueprints.csv,not_applicable_observational,observational,prospective_trial_planning
+OFFICIAL-14,CPADS PUMF guide pages 85-87,Anchor eBAC power endpoints to documented Seidl/Widmark formula definitions,data/public/outputs/power_ebac_endpoint_anchors.csv,satisfied,observational,observational

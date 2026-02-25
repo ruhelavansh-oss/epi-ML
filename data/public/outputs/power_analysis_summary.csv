@@ -1,9 +1,7 @@
-metric,value
-Observed prevalence (unweighted),0.4795233141019578
-Observed prevalence (survey-weighted),0.4580988313946399
-DEFF (svymean; if available),1.4136580928207156
-n_nonmissing,31719
-n_eff (if available),22437.532923332332
-"MDE one-proportion h (SRS, 80%)",0.01575067113645884
-"MDE one-proportion h (DEFF, 80%)",0.018707934911490927
-"MDE chi-square w (SRS, 80%)",0.01741523269389542
+metric,value,text_value,analysis_mode,power_scope
+Observed prevalence (unweighted),0.4795233141019578,NA,observational,descriptive_post_hoc
+Observed prevalence (survey-weighted),0.4580988313946399,NA,observational,descriptive_post_hoc
+DEFF (svymean; if available),1.4136580928207156,NA,observational,descriptive_post_hoc
+n_nonmissing,31719,NA,observational,descriptive_post_hoc
+n_eff (if available),22437.532923332332,NA,observational,descriptive_post_hoc
+Power design mode,NA,legacy_descriptive_post_hoc,observational,descriptive_post_hoc

@@ -25,24 +25,8 @@ Rscript scripts/security_scan.R
 Rscript scripts/check_connect_publish_readiness.R
 ```
 
-## Companion Package
-
-The repository includes a reusable package at `packages/epiml` for manifest validation, output auditing, configurable pipeline execution, and synthetic-data testing.
-
-```r
-install.packages("packages/epiml", repos = NULL, type = "source")
-library(epiml)
-citation("epiml")
-```
-
 ## Publication Boundaries
 
 - Public website content is QMD-based and curated for disclosure safety.
 - Private microdata and row-level outputs are excluded from repository tracking.
 - Security scanning runs locally and in CI before deployment.
-
-## Deployment Targets
-
-- Primary: GitHub Pages (Actions-based static deploy).
-- Fallback: Posit Connect Cloud (manifest-based publish from repository).
-- GitHub Pages URL: <https://ruhelavansh-oss.github.io/epi-ML/>

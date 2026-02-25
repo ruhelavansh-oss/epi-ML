@@ -1,5 +1,5 @@
 item,value
-n_total_cleaned,40931
+n_total_wrangled,40931
 ebac_tot_exists,TRUE
 ebac_legal_exists,TRUE
 demq3_exists,FALSE

@@ -1,0 +1,6 @@
+gender,observed_prop,endpoint,scenario,status,note,analysis_mode,power_scope
+Transgender/Non-binary,0.027078065486669013,heavy_drinking_30d,pilot_observed,underpowered_flagged_non_primary,Primary interaction-power design targets Woman vs Man; non-primary groups are retained as feasibility flags.,observational,a_priori_interaction
+Transgender/Non-binary,0.027078065486669013,heavy_drinking_30d,conservative_benchmark,underpowered_flagged_non_primary,Primary interaction-power design targets Woman vs Man; non-primary groups are retained as feasibility flags.,observational,a_priori_interaction
+Transgender/Non-binary,0.029801324503311258,ebac_legal,pilot_observed,underpowered_flagged_non_primary,Primary interaction-power design targets Woman vs Man; non-primary groups are retained as feasibility flags.,observational,a_priori_interaction
+Transgender/Non-binary,0.029801324503311258,ebac_legal,conservative_benchmark,underpowered_flagged_non_primary,Primary interaction-power design targets Woman vs Man; non-primary groups are retained as feasibility flags.,observational,a_priori_interaction
+Transgender/Non-binary,0.029801324503311258,ebac_tot,pilot_observed,underpowered_flagged_non_primary,Primary interaction-power design targets Woman vs Man; non-primary groups are retained as feasibility flags.,observational,a_priori_interaction
