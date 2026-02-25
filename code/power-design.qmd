@@ -27,9 +27,7 @@ render_outputs_table("surveillance/investigation/05_power_design.R")
 
 ## Power Focus
 
-Power planning in EPI-ML is centered on survey-weighted cannabis use (`cua`) by gender category, with primary endpoints tied to heavy drinking (`hd30d`), `ebac_legal`, and continuous `ebac_tot`. The primary design target is Female-versus-Male interaction power with near-equal subgroup allocation, while Non-binary strata are retained explicitly as feasibility flags rather than used to set the primary trial-planning sample size. This workflow does not include complete sex-at-birth fields; the gender variable (`dvdemq01`) captures gender identity and is not equivalent to sex assigned at birth. Downstream modules are power-gated from these targets before observational model execution.
-
-**Note on continuous eBAC sample requirements:** Required N for `ebac_tot` (continuous outcome) is substantially larger than for binary endpoints — reflecting a very small standardised effect size derived from the pilot data, not a methodological error. These figures should be treated as planning bounds illustrating the precision demands of detecting a gender × cannabis interaction on a continuous scale, rather than as realistic recruitment targets for a single study.
+The gender variable (`dvdemq01`) captures gender identity categories used in this workflow, including Non-binary strata. Power planning in EPI-ML is centered on survey-weighted cannabis use (`cua`) by gender category, with primary endpoints tied to heavy drinking (`hd30d`), `ebac_legal`, and continuous `ebac_tot`. The primary design target is Female-versus-Male interaction power with near-equal subgroup allocation, while Non-binary strata are retained explicitly as feasibility flags rather than used to set the primary trial-planning sample size. Downstream modules are power-gated from these targets before observational model execution.
 
 ## Source Code
 
