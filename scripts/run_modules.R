@@ -9,7 +9,6 @@ bootstrap_script <- "surveillance/investigation/03_data_wrangling.R"
 wrangled_required <- file.path(paths$wrangled_dir, "data_wrangled.rds")
 
 module_scripts <- list(
-  list(path = "surveillance/investigation/03_data_wrangling.R", optional = FALSE),
   list(path = "surveillance/investigation/04_descriptive_stats.R", optional = FALSE),
   list(path = "surveillance/investigation/04_distributions.R", optional = FALSE),
   list(path = "surveillance/investigation/05_frequentist.R", optional = FALSE),
@@ -78,9 +77,14 @@ build_power_env <- function(paths) {
 # -----------------------------------------------------------------------------
 # Power-first orchestration
 # -----------------------------------------------------------------------------
+cat("Power-first bootstrap: recomputing", bootstrap_script, "to guarantee fresh inputs.\n")
+run_script(bootstrap_script, optional = FALSE)
+
 if (!file.exists(wrangled_required)) {
-  cat("Power-first bootstrap: wrangled data not found; running", bootstrap_script, "to prepare inputs.\n")
-  run_script(bootstrap_script, optional = FALSE)
+  stop(
+    "Power-first bootstrap failed: missing required wrangled artifact ",
+    wrangled_required
+  )
 }
 
 cat("Power-first execution: running", power_script, "before all other modules.\n")

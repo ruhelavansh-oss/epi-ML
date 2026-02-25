@@ -45,7 +45,6 @@ required_outputs <- c(
   "power_interaction_group_allocations.csv",
   "power_interaction_imbalance_penalty.csv",
   "power_interaction_pairwise_details.csv",
-  "power_interaction_feasibility_flags.csv",
   "power_gpower_reference_two_group.csv",
   "power_ebac_endpoint_anchors.csv",
   "randomization_block_blueprints.csv",
@@ -69,6 +68,23 @@ read_csv_safe <- function(path) {
   if (!file.exists(path)) return(NULL)
   tryCatch(read.csv(path, stringsAsFactors = FALSE, check.names = FALSE), error = function(e) NULL)
 }
+
+interaction_assumptions <- read_csv_safe(file.path(public_outputs_dir, "power_interaction_assumptions.csv"))
+feasibility_path <- file.path(public_outputs_dir, "power_interaction_feasibility_flags.csv")
+has_non_primary_strata <- !is.null(interaction_assumptions) &&
+  ("gender" %in% names(interaction_assumptions)) &&
+  any(!is.na(interaction_assumptions$gender) & !(interaction_assumptions$gender %in% c("Female", "Male")))
+feasibility_ok <- if (has_non_primary_strata) file.exists(feasibility_path) else TRUE
+feasibility_detail <- if (has_non_primary_strata) {
+  basename(feasibility_path)
+} else {
+  "not required (no non-primary gender strata detected)"
+}
+all_ok <- check(
+  "Interaction feasibility output presence",
+  feasibility_ok,
+  feasibility_detail
+) && all_ok
 
 interaction_targets <- read_csv_safe(file.path(public_outputs_dir, "power_interaction_sample_size_targets.csv"))
 interaction_mode_ok <- !is.null(interaction_targets) &&
