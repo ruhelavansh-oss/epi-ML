@@ -85,6 +85,14 @@ logit_model <- svyglm(
   family = quasibinomial()
 )
 
+# Interaction model (official-doc alignment: primary interaction inference)
+logit_model_int <- svyglm(
+  heavy_drinking_30d ~ age_group + gender + province_region + mental_health +
+    cannabis_any_use + cannabis_any_use:gender,
+  design = svy_design,
+  family = quasibinomial()
+)
+
 # =============================================================================
 # Model Summary
 # =============================================================================
@@ -200,6 +208,35 @@ cat(paste(rep("=", 62), collapse = ""), "\n\n")
 
 write_csv(or_table, file.path(output_dir, "logistic_odds_ratios.csv"))
 cat("Saved: logistic_odds_ratios.csv\n")
+
+int_summary <- summary(logit_model_int)
+int_ci <- confint(logit_model_int)
+int_or <- tibble(
+  model = "svy_interaction_cannabis_by_gender",
+  term = names(coef(logit_model_int)),
+  log_odds = as.numeric(coef(logit_model_int)),
+  se = as.numeric(SE(logit_model_int)),
+  or = exp(log_odds),
+  or_lower95 = exp(int_ci[, 1]),
+  or_upper95 = exp(int_ci[, 2]),
+  p_value = as.numeric(int_summary$coefficients[, "Pr(>|t|)"]),
+  significant = ifelse(p_value < 0.05, "*", "")
+)
+write_csv(int_or, file.path(output_dir, "logistic_interaction_odds_ratios.csv"))
+cat("Saved: logistic_interaction_odds_ratios.csv\n")
+
+int_test <- regTermTest(logit_model_int, ~ cannabis_any_use:gender, method = "Wald")
+int_test_tbl <- tibble(
+  test = "cannabis_any_use:gender (joint Wald)",
+  F_stat = as.numeric(int_test$Ftest),
+  df_num = as.numeric(int_test$df),
+  df_den = as.numeric(int_test$ddf),
+  p_value = as.numeric(int_test$p),
+  analysis_mode = "observational",
+  model = "heavy_drinking_interaction"
+)
+write_csv(int_test_tbl, file.path(output_dir, "logistic_interaction_tests.csv"))
+cat("Saved: logistic_interaction_tests.csv\n")
 
 cat(sprintf("\nAnalysis sample: %d complete cases of %d total (%.1f%%)\n",
             nrow(pumf_cc), nrow(pumf), 100 * nrow(pumf_cc) / nrow(pumf)))

@@ -4,13 +4,16 @@ paths <- get_paths()
 init_paths(paths)
 setwd(paths$project_root)
 
+power_script <- "surveillance/investigation/05_power_design.R"
+bootstrap_script <- "surveillance/investigation/03_data_wrangling.R"
+wrangled_required <- file.path(paths$wrangled_dir, "cpads_pumf_wrangled.rds")
+
 module_scripts <- list(
   list(path = "surveillance/investigation/03_data_wrangling.R", optional = FALSE),
   list(path = "surveillance/investigation/04_descriptive_stats.R", optional = FALSE),
   list(path = "surveillance/investigation/04_distributions.R", optional = FALSE),
   list(path = "surveillance/investigation/05_frequentist.R", optional = FALSE),
   list(path = "surveillance/investigation/05_bayesian.R", optional = FALSE),
-  list(path = "surveillance/investigation/05_power_design.R", optional = FALSE),
   list(path = "surveillance/investigation/06_logistic.R", optional = FALSE),
   list(path = "surveillance/investigation/06_model_comparison.R", optional = FALSE),
   list(path = "surveillance/investigation/06_regression.R", optional = FALSE),
@@ -29,18 +32,71 @@ module_scripts <- list(
 )
 
 rscript_bin <- file.path(R.home("bin"), "Rscript")
-for (entry in module_scripts) {
-  script <- entry$path
-  optional <- isTRUE(entry$optional)
+
+run_script <- function(script, optional = FALSE, env_vars = character()) {
   cat("Running:", script, if (optional) "(optional)" else "", "\n")
-  code <- system2(rscript_bin, script)
+  code <- system2(rscript_bin, script, env = env_vars)
   if (!identical(code, 0L)) {
     if (optional) {
       warning("Optional script failed and was skipped: ", script, " (exit code ", code, ")")
-      next
+      return(invisible(FALSE))
     }
     stop("Execution failed at ", script, " (exit code ", code, ")")
   }
+  invisible(TRUE)
+}
+
+build_power_env <- function(paths) {
+  out <- character()
+  power_csv <- file.path(paths$output_private_dir, "power_interaction_sample_size_targets.csv")
+  if (!file.exists(power_csv)) return(out)
+
+  p <- tryCatch(read.csv(power_csv, stringsAsFactors = FALSE), error = function(e) NULL)
+  if (is.null(p) || nrow(p) == 0) return(out)
+
+  req <- subset(
+    p,
+    scenario == "pilot_observed" &
+      allocation_strategy == "equal_strata" &
+      abs(target_power - 0.80) < 1e-9 &
+      status == "reached"
+  )
+  if (nrow(req) == 0) return(out)
+
+  heavy <- req$required_n[req$endpoint == "heavy_drinking_30d"][1]
+  ebac <- req$required_n[req$endpoint == "ebac_legal"][1]
+  if (!is.na(heavy) && length(heavy) == 1) {
+    out <- c(out, sprintf("CPADS_POWER_TARGET_N_HEAVY=%s", as.integer(heavy)))
+  }
+  if (!is.na(ebac) && length(ebac) == 1) {
+    out <- c(out, sprintf("CPADS_POWER_TARGET_N_EBAC=%s", as.integer(ebac)))
+  }
+
+  out
+}
+
+# -----------------------------------------------------------------------------
+# Power-first orchestration
+# -----------------------------------------------------------------------------
+if (!file.exists(wrangled_required)) {
+  cat("Power-first bootstrap: wrangled data not found; running", bootstrap_script, "to prepare inputs.\n")
+  run_script(bootstrap_script, optional = FALSE)
+}
+
+cat("Power-first execution: running", power_script, "before all other modules.\n")
+run_script(power_script, optional = FALSE)
+power_env <- build_power_env(paths)
+if (length(power_env) > 0) {
+  cat("Power runtime targets exported for downstream modules:\n")
+  for (e in power_env) cat("  ", e, "\n", sep = "")
+} else {
+  cat("Power runtime targets unavailable; downstream scripts will run without target env vars.\n")
+}
+
+for (entry in module_scripts) {
+  script <- entry$path
+  optional <- isTRUE(entry$optional)
+  run_script(script, optional = optional, env_vars = power_env)
 }
 
 publish_script <- file.path(paths$project_root, "scripts", "publish_public_artifacts.R")

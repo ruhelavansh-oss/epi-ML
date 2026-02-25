@@ -89,6 +89,14 @@ m3 <- svyglm(heavy_drinking_30d ~ age_group + gender + province_region + mental_
 print(summary(m3))
 cat(sprintf("  Deviance = %.2f, df = %d\n\n", m3$deviance, m3$df.residual))
 
+# Model 4: Interaction model
+cat("--- Model 4: Model 3 + cannabis_any_use:gender ---\n")
+m4 <- svyglm(heavy_drinking_30d ~ age_group + gender + province_region + mental_health +
+               cannabis_any_use + physical_health + cannabis_any_use:gender,
+             design = svy_design, family = quasibinomial())
+print(summary(m4))
+cat(sprintf("  Deviance = %.2f, df = %d\n\n", m4$deviance, m4$df.residual))
+
 # =============================================================================
 # ANOVA: Sequential Model Comparisons
 # =============================================================================
@@ -111,6 +119,10 @@ print(anova_23)
 cat("\n--- Model 0 vs Model 3 (null vs full) ---\n")
 anova_03 <- anova(m0, m3, method = "Wald")
 print(anova_03)
+
+cat("\n--- Model 3 vs Model 4 (adding cannabis_any_use:gender) ---\n")
+anova_34 <- anova(m3, m4, method = "Wald")
+print(anova_34)
 
 # =============================================================================
 # regTermTest for Added Predictors
@@ -165,16 +177,18 @@ aic_m0 <- extractAIC(m0)
 aic_m1 <- extractAIC(m1)
 aic_m2 <- extractAIC(m2)
 aic_m3 <- extractAIC(m3)
+aic_m4 <- extractAIC(m4)
 
 aic_table <- tibble(
   model = c("Model 0 (null)", "Model 1 (demographics)",
-            "Model 2 (+ region, MH)", "Model 3 (full)"),
+            "Model 2 (+ region, MH)", "Model 3 (full)", "Model 4 (+ cannabis x gender)"),
   formula = c("~ 1",
               "~ age_group + gender",
               "~ age_group + gender + province_region + mental_health",
-              "~ age_group + gender + province_region + mental_health + cannabis_any_use + physical_health"),
-  n_params = c(aic_m0[1], aic_m1[1], aic_m2[1], aic_m3[1]),
-  AIC = c(aic_m0[2], aic_m1[2], aic_m2[2], aic_m3[2])
+              "~ age_group + gender + province_region + mental_health + cannabis_any_use + physical_health",
+              "~ age_group + gender + province_region + mental_health + cannabis_any_use + physical_health + cannabis_any_use:gender"),
+  n_params = c(aic_m0[1], aic_m1[1], aic_m2[1], aic_m3[1], aic_m4[1]),
+  AIC = c(aic_m0[2], aic_m1[2], aic_m2[2], aic_m3[2], aic_m4[2])
 )
 
 aic_table <- aic_table %>%
@@ -195,22 +209,24 @@ cat("COMPREHENSIVE MODEL COMPARISON\n")
 cat(paste(rep("=", 62), collapse = ""), "\n\n")
 
 comparison_table <- tibble(
-  model = c("Model 0", "Model 1", "Model 2", "Model 3"),
+  model = c("Model 0", "Model 1", "Model 2", "Model 3", "Model 4"),
   description = c("Null (intercept only)",
                    "Demographics (age + gender)",
                    "+ Region + Mental Health",
-                   "+ Cannabis + Physical Health"),
+                   "+ Cannabis + Physical Health",
+                   "+ Cannabis x Gender interaction"),
   n_parameters = c(length(coef(m0)), length(coef(m1)),
-                    length(coef(m2)), length(coef(m3))),
-  deviance = round(c(m0$deviance, m1$deviance, m2$deviance, m3$deviance), 2),
+                    length(coef(m2)), length(coef(m3)), length(coef(m4))),
+  deviance = round(c(m0$deviance, m1$deviance, m2$deviance, m3$deviance, m4$deviance), 2),
   df_residual = c(m0$df.residual, m1$df.residual,
-                   m2$df.residual, m3$df.residual),
-  AIC_approx = round(c(aic_m0[2], aic_m1[2], aic_m2[2], aic_m3[2]), 2),
+                   m2$df.residual, m3$df.residual, m4$df.residual),
+  AIC_approx = round(c(aic_m0[2], aic_m1[2], aic_m2[2], aic_m3[2], aic_m4[2]), 2),
   pseudo_R2 = round(c(
     0,
     1 - m1$deviance / m0$deviance,
     1 - m2$deviance / m0$deviance,
-    1 - m3$deviance / m0$deviance
+    1 - m3$deviance / m0$deviance,
+    1 - m4$deviance / m0$deviance
   ), 6)
 )
 
@@ -219,7 +235,7 @@ print(comparison_table, n = Inf, width = Inf)
 
 # Deviance reductions
 cat("\nDeviance Reduction (vs null):\n")
-for (i in 2:4) {
+for (i in 2:5) {
   dev_red <- comparison_table$deviance[1] - comparison_table$deviance[i]
   pct_red <- 100 * dev_red / comparison_table$deviance[1]
   cat(sprintf("  %s: %.2f reduction (%.2f%% of null deviance)\n",
@@ -228,7 +244,7 @@ for (i in 2:4) {
 
 # Incremental deviance reductions
 cat("\nIncremental Deviance Reduction (each step):\n")
-for (i in 2:4) {
+for (i in 2:5) {
   dev_inc <- comparison_table$deviance[i - 1] - comparison_table$deviance[i]
   cat(sprintf("  %s -> %s: %.2f\n",
               comparison_table$model[i - 1],
@@ -271,6 +287,19 @@ m3_coefs <- tibble(
 
 write_csv(m3_coefs, file.path(output_dir, "model_comparison_full_coefs.csv"))
 cat("Saved: model_comparison_full_coefs.csv\n")
+
+interaction_cmp <- tibble(
+  model_base = "Model 3",
+  model_interaction = "Model 4",
+  delta_deviance = m3$deviance - m4$deviance,
+  delta_aic = aic_m4[2] - aic_m3[2],
+  interaction_test_F = as.numeric(regTermTest(m4, ~ cannabis_any_use:gender, method = "Wald")$Ftest),
+  interaction_df_num = as.numeric(regTermTest(m4, ~ cannabis_any_use:gender, method = "Wald")$df),
+  interaction_df_den = as.numeric(regTermTest(m4, ~ cannabis_any_use:gender, method = "Wald")$ddf),
+  interaction_p_value = as.numeric(regTermTest(m4, ~ cannabis_any_use:gender, method = "Wald")$p)
+)
+write_csv(interaction_cmp, file.path(output_dir, "model_comparison_interaction.csv"))
+cat("Saved: model_comparison_interaction.csv\n")
 
 cat(sprintf("\nAnalysis sample: %d complete cases of %d total (%.1f%%)\n",
             nrow(pumf_cc), nrow(pumf), 100 * nrow(pumf_cc) / nrow(pumf)))
