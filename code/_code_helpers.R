@@ -296,7 +296,7 @@ resolve_output <- function(name) {
     abs_path = fp,
     repo_rel = repo_rel,
     size_kb = sprintf("%.1f", as.numeric(info$size) / 1024),
-    modified = format(info$mtime, "%Y-%m")
+    modified = format(info$mtime, "%Y-%m-%d")
   )
 }
 

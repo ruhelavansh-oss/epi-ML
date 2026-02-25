@@ -110,23 +110,28 @@ schedule_files <- list.files(
 )
 schedule_ok <- FALSE
 if (length(schedule_files) > 0) {
-  sched <- do.call(rbind, lapply(schedule_files, read_csv_safe))
+  sched <- do.call(rbind, lapply(schedule_files, function(path) {
+    df <- read_csv_safe(path)
+    if (is.null(df)) return(NULL)
+    df$source_file <- basename(path)
+    df
+  }))
   if (!is.null(sched) && nrow(sched) > 0 && all(c("block_size", "assignment", "block_id") %in% names(sched))) {
     block_counts <- aggregate(
-      assignment ~ block_id + block_size + assignment + gender + endpoint + target_power,
+      unit_in_block ~ source_file + block_id + block_size + assignment + gender + endpoint + target_power,
       data = sched,
       FUN = length
     )
     block_wide <- reshape(
       block_counts,
-      idvar = c("block_id", "block_size", "gender", "endpoint", "target_power"),
+      idvar = c("source_file", "block_id", "block_size", "gender", "endpoint", "target_power"),
       timevar = "assignment",
       direction = "wide"
     )
-    if (!("assignment.Control" %in% names(block_wide))) block_wide$assignment.Control <- 0L
-    if (!("assignment.Treatment" %in% names(block_wide))) block_wide$assignment.Treatment <- 0L
-    size_ok <- (block_wide$assignment.Control + block_wide$assignment.Treatment) == block_wide$block_size
-    balance_ok <- block_wide$assignment.Control == block_wide$assignment.Treatment
+    if (!("unit_in_block.Control" %in% names(block_wide))) block_wide$unit_in_block.Control <- 0L
+    if (!("unit_in_block.Treatment" %in% names(block_wide))) block_wide$unit_in_block.Treatment <- 0L
+    size_ok <- (block_wide$unit_in_block.Control + block_wide$unit_in_block.Treatment) == block_wide$block_size
+    balance_ok <- block_wide$unit_in_block.Control == block_wide$unit_in_block.Treatment
     allowed_ok <- block_wide$block_size %in% c(4, 6, 8)
     schedule_ok <- all(size_ok) && all(balance_ok) && all(allowed_ok)
   }
