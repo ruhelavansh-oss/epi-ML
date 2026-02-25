@@ -7,6 +7,7 @@ title: "Initial Results"
 ::: {.callout-warning}
 - **Weighted prevalence** represents design-based population burden in the CPADS target population.
 - **Logistic odds ratios** represent adjusted multiplicative associations on the odds scale.
+- **Interaction results** represent effect-modification tests for `cannabis_any_use * gender` and are the primary basis for gender-difference claims.
 - **IPW ATE** represents a model-based marginal risk-difference contrast under causal assumptions.
 :::
 
@@ -44,4 +45,5 @@ title: "Initial Results"
 - Confidence intervals quantify statistical precision.
 - Agreement across naive, adjusted, IPW, and AIPW estimates supports directional robustness.
 - SMOTE and DoubleML outputs are interpreted as sensitivity diagnostics for model stability, not as primary survey-design estimands.
+- Prospective block-randomization schedules are design blueprints for future studies, not features of the CPADS observational sample.
 :::

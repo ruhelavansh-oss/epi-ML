@@ -67,8 +67,16 @@ hyp <- read_csv_safe(file.path(out_dir, "frequentist_hypothesis_tests.csv"))
 bayes_post <- read_csv_safe(file.path(out_dir, "bayesian_posterior_summaries.csv"))
 bayes_bf <- read_csv_safe(file.path(out_dir, "bayesian_bayes_factors.csv"))
 power <- read_csv_safe(file.path(out_dir, "power_analysis_summary.csv"))
+power_int_targets <- read_csv_safe(file.path(out_dir, "power_interaction_sample_size_targets.csv"))
+power_int_penalty <- read_csv_safe(file.path(out_dir, "power_interaction_imbalance_penalty.csv"))
+power_int_pairs <- read_csv_safe(file.path(out_dir, "power_interaction_pairwise_details.csv"))
+rand_blueprint <- read_csv_safe(file.path(out_dir, "randomization_block_blueprints.csv"))
+doc_align <- read_csv_safe(file.path(out_dir, "official_doc_alignment_checklist.csv"))
 log_or <- read_csv_safe(file.path(out_dir, "logistic_odds_ratios.csv"))
+log_or_int <- read_csv_safe(file.path(out_dir, "logistic_interaction_odds_ratios.csv"))
+log_test_int <- read_csv_safe(file.path(out_dir, "logistic_interaction_tests.csv"))
 mod_comp <- read_csv_safe(file.path(out_dir, "model_comparison_summary.csv"))
+mod_comp_int <- read_csv_safe(file.path(out_dir, "model_comparison_interaction.csv"))
 treat <- read_csv_safe(file.path(out_dir, "treatment_effects_summary.csv"))
 causal_comp <- read_csv_safe(file.path(out_dir, "causal_estimator_comparison.csv"))
 cate <- read_csv_safe(file.path(out_dir, "cate_subgroup_estimates.csv"))
@@ -170,10 +178,11 @@ html <- paste0(
       <ul>
         <li>Frequentist inference: survey-weighted prevalence estimates and hypothesis tests.</li>
         <li>Bayesian inference: posterior summaries and Bayes factors.</li>
-        <li>Power analysis: one-proportion, two-proportion, and chi-square power/MDE outputs.</li>
+        <li>Power analysis: legacy descriptive power outputs plus a priori interaction-term sample-size planning.</li>
         <li>Regression and model comparison: survey-weighted logistic and nested models.</li>
         <li>Causal estimation: naive, G-computation, IPW, AIPW (manual fallback), ATT/ATC/matching and CATE.</li>
       </ul>
+      <p><strong>Important boundary:</strong> CPADS analyses are observational and non-randomized. Any block-randomization tables below are prospective trial-planning blueprints, not retroactive assignment claims.</p>
     </div>
 
     <div class='card'>
@@ -257,14 +266,30 @@ html <- paste0(
     <div class='card'>
       <h2>Power Design</h2>
       ", table_html(power, digits = 4), "
+      <h3>A priori interaction sample-size targets (80% to 99.9%)</h3>
+      ", table_html(power_int_targets, digits = 4), "
+      <h3>Observed-imbalance penalty vs equal-strata allocation</h3>
+      ", table_html(power_int_penalty, digits = 4), "
+      <h3>Pairwise interaction planning details (fast analytic method)</h3>
+      ", table_html(power_int_pairs, digits = 4), "
+      <h3>Prospective stratified block-randomization blueprints</h3>
+      ", table_html(rand_blueprint, digits = 2), "
+      <h3>Official-document alignment checklist</h3>
+      ", table_html(doc_align, digits = 2), "
     </div>
 
     <div class='card'>
       <h2>Regression and Model Comparison</h2>
       <h3>Logistic odds ratios</h3>
       ", table_html(log_or, digits = 4), "
+      <h3>Interaction odds ratios (cannabis x gender)</h3>
+      ", table_html(log_or_int, digits = 4), "
+      <h3>Interaction joint Wald tests</h3>
+      ", table_html(log_test_int, digits = 4), "
       <h3>Nested model comparison</h3>
       ", table_html(mod_comp, digits = 4), "
+      <h3>Interaction model contrast (Model 3 vs Model 4)</h3>
+      ", table_html(mod_comp_int, digits = 4), "
     </div>
 
     <div class='card'>
