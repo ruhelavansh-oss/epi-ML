@@ -250,6 +250,126 @@ weighted_mean_by_group <- function(data, outcome, group_var, metric_name) {
 ess <- function(w) (sum(w)^2) / sum(w^2)
 
 # -----------------------------------------------------------------------------
+# 1a) eBAC formula audit (CPADS guide pp. 85-87)
+# -----------------------------------------------------------------------------
+cat("\n--- 1a) eBAC formula audit (Woman/Man coefficients) ---\n")
+
+formula_required_vars <- c("gender", "alc13a", "alc13b_a", "alc13b_b", "demq3", "demq4", "ebac_tot", "ebac_legal")
+formula_missing_vars <- setdiff(formula_required_vars, names(pumf))
+formula_available_vars <- intersect(formula_required_vars, names(pumf))
+formula_recompute_feasible <- length(formula_missing_vars) == 0
+
+formula_input_audit <- tibble(
+  item = c(
+    "formula_recompute_feasible",
+    "missing_formula_inputs",
+    "available_formula_inputs",
+    "n_woman_rows",
+    "n_man_rows",
+    "n_trans_nonbinary_rows"
+  ),
+  value = c(
+    formula_recompute_feasible,
+    ifelse(length(formula_missing_vars) == 0, "NONE", paste(formula_missing_vars, collapse = ";")),
+    ifelse(length(formula_available_vars) == 0, "NONE", paste(formula_available_vars, collapse = ";")),
+    sum(as.character(pumf$gender) == "Woman", na.rm = TRUE),
+    sum(as.character(pumf$gender) == "Man", na.rm = TRUE),
+    sum(as.character(pumf$gender) == "Transgender/Non-binary", na.rm = TRUE)
+  )
+)
+
+if (formula_recompute_feasible) {
+  ebac_formula_df <- pumf %>%
+    mutate(
+      gender_for_formula = case_when(
+        as.character(gender) == "Woman" ~ "Woman",
+        as.character(gender) == "Man" ~ "Man",
+        TRUE ~ NA_character_
+      ),
+      grams_alcohol = 13.6 * as.numeric(alc13a),
+      elapsed_hours = ((as.numeric(alc13b_a) * 60) + as.numeric(alc13b_b)) / 60,
+      body_weight_kg = as.numeric(demq4),
+      body_height_cm = as.numeric(demq3),
+      r = case_when(
+        gender_for_formula == "Woman" ~ 0.31223 - 0.006446 * body_weight_kg + 0.004466 * body_height_cm,
+        gender_for_formula == "Man" ~ 0.31608 - 0.004821 * body_weight_kg + 0.004632 * body_height_cm,
+        TRUE ~ NA_real_
+      ),
+      formula_inputs_complete = !is.na(gender_for_formula) &
+        is.finite(grams_alcohol) &
+        is.finite(elapsed_hours) &
+        is.finite(body_weight_kg) &
+        is.finite(body_height_cm) &
+        is.finite(r) &
+        grams_alcohol > 0 &
+        body_weight_kg > 0 &
+        body_height_cm > 0 &
+        r > 0 &
+        elapsed_hours >= 0,
+      ebac_tot_formula = ifelse(
+        formula_inputs_complete,
+        ((grams_alcohol / (r * body_weight_kg)) - (0.017 * elapsed_hours)) / 10,
+        NA_real_
+      ),
+      ebac_tot_formula = ifelse(ebac_tot_formula >= 0.5, NA_real_, ebac_tot_formula),
+      ebac_legal_formula = ifelse(
+        is.na(ebac_tot_formula),
+        NA_integer_,
+        as.integer(ebac_tot_formula > 0.08)
+      )
+    )
+
+  compare_tot <- ebac_formula_df %>%
+    filter(!is.na(ebac_tot_formula), !is.na(ebac_tot))
+  compare_legal <- ebac_formula_df %>%
+    filter(!is.na(ebac_legal_formula), !is.na(ebac_legal))
+  compare_legal_off_boundary <- compare_legal %>% filter(ebac_tot != 0.08)
+
+  formula_validation <- tibble(
+    metric = c(
+      "n_formula_inputs_complete",
+      "n_formula_ebac_tot_computed",
+      "n_compared_to_ebac_tot",
+      "mae_formula_vs_ebac_tot",
+      "rmse_formula_vs_ebac_tot",
+      "corr_formula_vs_ebac_tot",
+      "n_compared_to_ebac_legal",
+      "agreement_formula_vs_ebac_legal",
+      "n_compared_to_ebac_legal_off_boundary",
+      "agreement_formula_vs_ebac_legal_off_boundary",
+      "note"
+    ),
+    value = c(
+      sum(ebac_formula_df$formula_inputs_complete, na.rm = TRUE),
+      sum(!is.na(ebac_formula_df$ebac_tot_formula)),
+      nrow(compare_tot),
+      ifelse(nrow(compare_tot) > 0, mean(abs(compare_tot$ebac_tot_formula - compare_tot$ebac_tot)), NA_real_),
+      ifelse(nrow(compare_tot) > 0, sqrt(mean((compare_tot$ebac_tot_formula - compare_tot$ebac_tot)^2)), NA_real_),
+      ifelse(nrow(compare_tot) > 1, suppressWarnings(cor(compare_tot$ebac_tot_formula, compare_tot$ebac_tot)), NA_real_),
+      nrow(compare_legal),
+      ifelse(nrow(compare_legal) > 0, mean(compare_legal$ebac_legal_formula == compare_legal$ebac_legal), NA_real_),
+      nrow(compare_legal_off_boundary),
+      ifelse(nrow(compare_legal_off_boundary) > 0, mean(compare_legal_off_boundary$ebac_legal_formula == compare_legal_off_boundary$ebac_legal), NA_real_),
+      "Formula applies only to Woman/Man rows; non-binary rows are excluded from direct formula recomputation."
+    )
+  )
+} else {
+  formula_validation <- tibble(
+    metric = c("status", "missing_formula_inputs", "note"),
+    value = c(
+      "not_computable_missing_inputs",
+      paste(formula_missing_vars, collapse = ";"),
+      "Public wrangled PUMF includes ebac_tot/ebac_legal but lacks some direct formula inputs (typically demq3/demq4)."
+    )
+  )
+}
+
+print(formula_input_audit, n = Inf)
+print(formula_validation, n = Inf)
+write_csv(formula_input_audit, file.path(output_dir, "ebac_final_formula_input_audit.csv"))
+write_csv(formula_validation, file.path(output_dir, "ebac_final_formula_validation.csv"))
+
+# -----------------------------------------------------------------------------
 # 1) Domain/sample accounting and QA checks
 # -----------------------------------------------------------------------------
 cat("\n--- 1) Domain/sample accounting and QA checks ---\n")

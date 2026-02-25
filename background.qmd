@@ -14,36 +14,14 @@ Prospective stratified block-randomization outputs in this project are trial-pla
 - **Exposure/Treatment proxy**: `cannabis_any_use` (past-year cannabis use indicator).
 - **Primary outcome**: `heavy_drinking_30d` (past-30-day heavy drinking indicator).
 - **eBAC outcomes**: `ebac_tot` (continuous) and `ebac_legal` (binary threshold indicator), using measured variables available in the wrangled analytic dataset.
-- **Adjustment covariates**: age group, gender, region, self-rated mental health, and self-rated physical health.
-- **Gender variable**: self-reported gender available in CPADS analytic data; sex-at-birth is not fully available as a two-step measure in this pipeline.
+- **Adjustment covariates**: age group, gender (self-reported), region, self-rated mental health, and self-rated physical health.
+- **Gender variable**: analyses use CPADS gender (self-reported) categories (`Woman`, `Man`, `Transgender/Non-binary`) with Woman/Man as the primary planned contrast and Transgender/Non-binary retained where feasible.
+- **Sex-at-birth constraint**: CPADS PUMF in this workflow does not provide complete sex-at-birth fields, so subgrouping is based on gender (self-reported).
 :::
 
-## Estimation Framework
+## Analysis Boundary
 
-::: {.callout-tip}
-### Regression and Association Layers
-
-- Logistic regression for adjusted odds-ratio estimation.
-- Logistic interaction modeling (`cannabis_any_use * gender`) for effect-modification inference.
-- Regression model comparison and Wald testing for nested-term evaluation.
-- SMOTE-based sensitivity models treated as robustness diagnostics, not as replacements for primary weighted estimates.
-:::
-
-::: {.callout-note}
-### Causal Estimators
-
-- Naive risk-difference contrasts.
-- G-computation (model-based standardization).
-- Inverse probability weighting (IPW), with trimming rules as implemented in scripts.
-- Augmented IPW (AIPW) with stabilized fallback logic where package-level calls are not available.
-- Matching/subclassification contrasts and subgroup heterogeneity summaries.
-:::
-
-### Semiparametric Learning
-
-::: {.callout-warning}
-Primary burden estimates are design-based and weighted where specified, including prevalence and confidence intervals. DoubleML random-forest models provide additional robustness checks for treatment-effect targets in the eBAC track.
-:::
+The full modeling stack is documented on the Home page. This page is intentionally restricted to design context and identification boundaries so those concepts are not duplicated across Project Info pages.
 
 ## Assumptions
 

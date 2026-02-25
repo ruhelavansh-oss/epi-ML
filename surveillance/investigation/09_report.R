@@ -68,8 +68,11 @@ bayes_post <- read_csv_safe(file.path(out_dir, "bayesian_posterior_summaries.csv
 bayes_bf <- read_csv_safe(file.path(out_dir, "bayesian_bayes_factors.csv"))
 power <- read_csv_safe(file.path(out_dir, "power_analysis_summary.csv"))
 power_int_targets <- read_csv_safe(file.path(out_dir, "power_interaction_sample_size_targets.csv"))
+power_int_alloc <- read_csv_safe(file.path(out_dir, "power_interaction_group_allocations.csv"))
 power_int_penalty <- read_csv_safe(file.path(out_dir, "power_interaction_imbalance_penalty.csv"))
 power_int_pairs <- read_csv_safe(file.path(out_dir, "power_interaction_pairwise_details.csv"))
+power_gpower_ref <- read_csv_safe(file.path(out_dir, "power_gpower_reference_two_group.csv"))
+power_ebac_anchor <- read_csv_safe(file.path(out_dir, "power_ebac_endpoint_anchors.csv"))
 rand_blueprint <- read_csv_safe(file.path(out_dir, "randomization_block_blueprints.csv"))
 doc_align <- read_csv_safe(file.path(out_dir, "official_doc_alignment_checklist.csv"))
 log_or <- read_csv_safe(file.path(out_dir, "logistic_odds_ratios.csv"))
@@ -80,6 +83,8 @@ mod_comp_int <- read_csv_safe(file.path(out_dir, "model_comparison_interaction.c
 treat <- read_csv_safe(file.path(out_dir, "treatment_effects_summary.csv"))
 causal_comp <- read_csv_safe(file.path(out_dir, "causal_estimator_comparison.csv"))
 cate <- read_csv_safe(file.path(out_dir, "cate_subgroup_estimates.csv"))
+ebac_formula_input_audit <- read_csv_safe(file.path(out_dir, "ebac_final_formula_input_audit.csv"))
+ebac_formula_validation <- read_csv_safe(file.path(out_dir, "ebac_final_formula_validation.csv"))
 
 overall_prev <- prev[prev$variable == "Overall" & prev$level == "All", ]
 if (nrow(overall_prev) == 0) overall_prev <- prev[1, ]
@@ -176,13 +181,34 @@ html <- paste0(
       <h2>Background</h2>
       <p>Analyses were run from the current workflow outputs:</p>
       <ul>
+        <li>Power analysis: a priori interaction-term sample-size planning for gender (self-reported) subgroup contrasts, plus compatibility outputs.</li>
         <li>Frequentist inference: survey-weighted prevalence estimates and hypothesis tests.</li>
         <li>Bayesian inference: posterior summaries and Bayes factors.</li>
-        <li>Power analysis: legacy descriptive power outputs plus a priori interaction-term sample-size planning.</li>
         <li>Regression and model comparison: survey-weighted logistic and nested models.</li>
         <li>Causal estimation: naive, G-computation, IPW, AIPW (manual fallback), ATT/ATC/matching and CATE.</li>
       </ul>
       <p><strong>Important boundary:</strong> CPADS analyses are observational and non-randomized. Any block-randomization tables below are prospective trial-planning blueprints, not retroactive assignment claims.</p>
+    </div>
+
+    <div class='card'>
+      <h2>Power Design (Primary Step)</h2>
+      ", table_html(power, digits = 4), "
+      <h3>A priori interaction sample-size targets (80% to 99.9%)</h3>
+      ", table_html(power_int_targets, digits = 4), "
+      <h3>Required people by group (Woman/Man), equal vs observed allocation</h3>
+      ", table_html(power_int_alloc, digits = 0), "
+      <h3>Observed-imbalance penalty vs equal-strata allocation</h3>
+      ", table_html(power_int_penalty, digits = 4), "
+      <h3>Pairwise interaction planning details (fast analytic method)</h3>
+      ", table_html(power_int_pairs, digits = 4), "
+      <h3>G*Power-style two-group reference table (d/h)</h3>
+      ", table_html(power_gpower_ref, digits = 3), "
+      <h3>eBAC endpoint source anchors for power planning</h3>
+      ", table_html(power_ebac_anchor, digits = 3), "
+      <h3>Prospective stratified block-randomization blueprints</h3>
+      ", table_html(rand_blueprint, digits = 2), "
+      <h3>Official-document alignment checklist</h3>
+      ", table_html(doc_align, digits = 2), "
     </div>
 
     <div class='card'>
@@ -191,17 +217,18 @@ html <- paste0(
       <p>\\[
       \\mathrm{eBAC} = \\frac{G}{r\\,W} - \\beta\\,t,
       \\]</p>
-      <p>where \\(G\\) is grams of ethanol consumed, \\(r\\) is the sex-specific distribution factor, \\(W\\) is body weight (kg), \\(\\beta\\) is the ethanol elimination rate, and \\(t\\) is elapsed time since first drink (hours).</p>
+      <p>where \\(G\\) is grams of ethanol consumed, \\(r\\) is the distribution factor, \\(W\\) is body weight (kg), \\(\\beta\\) is the ethanol elimination rate, and \\(t\\) is elapsed time since first drink (hours).</p>
+      <p><strong>CPADS mapping note:</strong> CPADS PUMF provides gender (self-reported) categories (<code>Woman</code>, <code>Man</code>, <code>Transgender/Non-binary</code>). This workflow uses Woman/Man as the primary interaction-planning contrast and retains Transgender/Non-binary as explicit feasibility outputs where possible. CPADS PUMF in this workflow does not provide complete sex-at-birth fields, so subgrouping is based on gender (self-reported). eBAC analyses use the provided measured outcomes (<code>ebac_tot</code>, <code>ebac_legal</code>); the woman/man constants below retain the documented Widmark coefficients.</p>
       <p><strong>CPADS inputs and unit conversions.</strong> Let \\(D\\) be the maximum number of standard drinks on the heaviest drinking day in the past 30 days (<code>alc13a</code>); \\(H\\) be hours to consume \\(D\\) (<code>alc13b_a</code>); \\(M\\) be minutes to consume \\(D\\) (<code>alc13b_b</code>); \\(W\\) be body weight in kg (<code>demq4</code>); \\(h\\) be height in cm (<code>demq3</code>).</p>
       <p>\\[
       G = 13.6\\,D, \\qquad
       t = H + \\frac{M}{60} = \\frac{60H+M}{60}.
       \\]</p>
-      <p><strong>Sex-specific distribution factor.</strong></p>
+      <p><strong>Woman/Man distribution factor.</strong></p>
       <p>\\[
       \\begin{aligned}
-      r_{\\mathrm{female}} &= 0.31223 - 0.006446\\,W + 0.004466\\,h, \\\\
-      r_{\\mathrm{male}}   &= 0.31608 - 0.004821\\,W + 0.004632\\,h.
+      r_{\\mathrm{woman}} &= 0.31223 - 0.006446\\,W + 0.004466\\,h, \\\\
+      r_{\\mathrm{man}}   &= 0.31608 - 0.004821\\,W + 0.004632\\,h.
       \\end{aligned}
       \\]</p>
       <p><strong>Elimination rate.</strong> \\(\\beta = 0.017\\;\\mathrm{g/dL/hour}\\).</p>
@@ -212,7 +239,7 @@ html <- paste0(
       \\frac{1}{10}\\left(\\frac{G}{r\\,W} - 0.017\\,t\\right).
       \\]</p>
       <p><strong>Expanded formulas (g/dL).</strong></p>
-      <p>Females:</p>
+      <p>Women:</p>
       <p>\\[
       \\mathrm{eBAC}_{(\\mathrm{g/dL})}
       =
@@ -221,7 +248,7 @@ html <- paste0(
       - 0.017\\,t
       \\right).
       \\]</p>
-      <p>Males:</p>
+      <p>Men:</p>
       <p>\\[
       \\mathrm{eBAC}_{(\\mathrm{g/dL})}
       =
@@ -239,6 +266,10 @@ html <- paste0(
       \\end{cases}
       \\]</p>
       <p><strong>Domain.</strong> eBAC computations are defined for respondents in-domain for past-30-day alcohol use (<code>alc13a</code>).</p>
+      <h3>Formula input audit (public PUMF)</h3>
+      ", table_html(ebac_formula_input_audit, digits = 4), "
+      <h3>Formula validation summary (Woman/Man equations)</h3>
+      ", table_html(ebac_formula_validation, digits = 4), "
     </div>
 
     <div class='card'>
@@ -261,21 +292,6 @@ html <- paste0(
       ", table_html(bayes_post, digits = 4), "
       <h3>Bayes factors</h3>
       ", table_html(bayes_bf, digits = 4), "
-    </div>
-
-    <div class='card'>
-      <h2>Power Design</h2>
-      ", table_html(power, digits = 4), "
-      <h3>A priori interaction sample-size targets (80% to 99.9%)</h3>
-      ", table_html(power_int_targets, digits = 4), "
-      <h3>Observed-imbalance penalty vs equal-strata allocation</h3>
-      ", table_html(power_int_penalty, digits = 4), "
-      <h3>Pairwise interaction planning details (fast analytic method)</h3>
-      ", table_html(power_int_pairs, digits = 4), "
-      <h3>Prospective stratified block-randomization blueprints</h3>
-      ", table_html(rand_blueprint, digits = 2), "
-      <h3>Official-document alignment checklist</h3>
-      ", table_html(doc_align, digits = 2), "
     </div>
 
     <div class='card'>

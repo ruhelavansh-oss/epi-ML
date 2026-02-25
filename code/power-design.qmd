@@ -25,6 +25,10 @@ render_script_metadata("surveillance/investigation/05_power_design.R")
 render_outputs_table("surveillance/investigation/05_power_design.R")
 ```
 
+## Power Focus
+
+Power planning in EPI-ML is centered on survey-weighted `cannabis_any_use × gender (self-reported)` interaction targets from CPADS, with primary endpoints tied to alcohol outcomes (`heavy_drinking_30d`, `ebac_legal`, and continuous `ebac_tot`). The primary design target is Woman-versus-Man interaction power with near-equal subgroup allocation, while Transgender/Non-binary strata are retained explicitly as feasibility flags rather than used to set the primary trial-planning sample size. CPADS PUMF does not provide complete sex-at-birth fields in this workflow, so subgroup planning is anchored to gender (self-reported).
+
 ## Source Code
 
 ```{r}

@@ -1,0 +1,2 @@
+test,F_stat,df_num,df_den,p_value,analysis_mode,model
+cannabis_any_use:gender (joint Wald),6.352320180702514,2,30973,0.0017449703312129345,observational,heavy_drinking_interaction

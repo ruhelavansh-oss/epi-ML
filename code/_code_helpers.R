@@ -97,6 +97,31 @@ safe_paths <- function() {
 
 paths <- safe_paths()
 
+detect_git_branch <- function(project_root, default = "main") {
+  branch <- tryCatch(
+    system2(
+      "git",
+      c("-C", project_root, "rev-parse", "--abbrev-ref", "HEAD"),
+      stdout = TRUE,
+      stderr = FALSE
+    ),
+    error = function(e) character(0)
+  )
+  branch <- trimws(branch[1] %||% "")
+  if (!nzchar(branch) || identical(branch, "HEAD")) {
+    return(default)
+  }
+  branch
+}
+
+repo_owner <- Sys.getenv("EPIML_GITHUB_OWNER", "ruhelavansh-oss")
+repo_name <- Sys.getenv("EPIML_GITHUB_REPO", "epi-ML")
+repo_branch <- Sys.getenv("EPIML_GITHUB_BRANCH", "")
+if (!nzchar(repo_branch)) {
+  repo_branch <- detect_git_branch(paths$project_root, default = "main")
+}
+github_repo_base <- paste0("https://github.com/", repo_owner, "/", repo_name)
+github_blob_base <- paste0(github_repo_base, "/blob/", repo_branch, "/")
 script_catalog <- data.frame(
   label = c(
     "Data Wrangling",
@@ -187,19 +212,27 @@ extract_declared_outputs <- function(lines) {
   # Internal row-level artifacts (RDS) are intentionally excluded from public module tables.
   vals <- vals[!grepl("\\.rds$", tolower(vals))]
   vals <- vals[!grepl("^https?://", vals)]
-  vals
+  # Canonicalize to basename for stable module tables and deduplication.
+  unique(basename(vals))
 }
 
 candidate_paths <- function(name) {
   nm <- gsub("^\\./", "", name)
   unique(c(
-    file.path(paths$project_root, nm),
+    # Prefer public artifact locations so Site/Repo links resolve when published.
     file.path(paths$public_data_dir, "outputs", nm),
     file.path(paths$public_data_dir, "outputs", "figures", nm),
     file.path(paths$public_data_dir, "outputs", "wrangled", nm),
     file.path(paths$public_data_dir, "outputs", basename(nm)),
     file.path(paths$public_data_dir, "outputs", "figures", basename(nm)),
     file.path(paths$public_data_dir, "outputs", "wrangled", basename(nm)),
+    file.path(paths$project_root, nm),
+    file.path(paths$output_private_dir, nm),
+    file.path(paths$output_private_dir, "figures", nm),
+    file.path(paths$output_private_dir, "wrangled", nm),
+    file.path(paths$output_private_dir, basename(nm)),
+    file.path(paths$output_private_dir, "figures", basename(nm)),
+    file.path(paths$output_private_dir, "wrangled", basename(nm)),
     file.path(paths$output_public_dir, nm),
     file.path(paths$output_public_dir, basename(nm)),
     file.path(paths$reports_dir, nm),
@@ -280,10 +313,7 @@ render_script_metadata <- function(script_rel) {
   }
   n_lines <- if (exists_flag) length(readLines(abs, warn = FALSE, encoding = "UTF-8")) else 0L
   script_alias <- basename(script_rel)
-  script_url <- paste0(
-    "https://github.com/ruhelavansh-oss/epi-ML/blob/main/",
-    script_rel
-  )
+  script_url <- paste0(github_blob_base, script_rel)
 
   cat_row <- which(script_catalog$script_rel == script_rel)
   page_value <- "\u2014"
@@ -344,14 +374,6 @@ render_outputs_table <- function(script_rel) {
   }
   outputs <- sort(unique(outputs))
   resolved <- lapply(outputs, resolve_output)
-  tracked_files <- character()
-  if (nzchar(Sys.which("git")) && dir.exists(file.path(paths$project_root, ".git"))) {
-    tracked_files <- tryCatch(
-      system2("git", c("-C", paths$project_root, "ls-files"), stdout = TRUE, stderr = FALSE),
-      error = function(e) character()
-    )
-  }
-
   table_rows <- lapply(seq_along(outputs), function(i) {
     r <- resolved[[i]]
     declared <- outputs[[i]]
@@ -361,12 +383,14 @@ render_outputs_table <- function(script_rel) {
 
     repo_rel <- r$repo_rel %||% NA_character_
 
+    is_public_artifact <- !is.na(repo_rel) && starts_with_path(r$abs_path, paths$public_data_dir)
     site_value <- "\u2014"
-    if (!is.na(repo_rel) && repo_rel %in% tracked_files) {
+    if (is_public_artifact) {
+      # Use site-relative href so links work in localhost preview and published site.
+      site_href <- paste0("../", repo_rel)
       site_value <- paste0(
         "<a href=\"",
-        "https://raw.githubusercontent.com/ruhelavansh-oss/epi-ML/main/",
-        repo_rel,
+        site_href,
         "\" title=\"",
         ext,
         " URL\">",
@@ -376,10 +400,10 @@ render_outputs_table <- function(script_rel) {
     }
 
     repo_value <- "\u2014"
-    if (!is.na(repo_rel) && repo_rel %in% tracked_files) {
+    if (is_public_artifact) {
       repo_value <- paste0(
         "<a href=\"",
-        "https://github.com/ruhelavansh-oss/epi-ML/blob/main/",
+        github_blob_base,
         repo_rel,
         "\" title=\"",
         ext,
@@ -475,7 +499,7 @@ render_code_index <- function() {
     script_rel <- resolve_script_rel(script_catalog$script_rel[i])
     script_abs <- normalizePath(file.path(paths$project_root, script_rel), winslash = "/", mustWork = FALSE)
     script_label <- basename(script_rel)
-    script_url <- paste0("https://github.com/ruhelavansh-oss/epi-ML/blob/main/", script_rel)
+    script_url <- paste0(github_blob_base, script_rel)
     copy_value <- if (exists("safe_label_path")) safe_label_path(script_abs, paths) else script_rel
 
     data.frame(
@@ -492,13 +516,13 @@ render_code_index <- function() {
 
   manifest_rel <- "data/public/outputs_manifest.csv"
   manifest_abs <- normalizePath(file.path(paths$project_root, manifest_rel), winslash = "/", mustWork = FALSE)
-  manifest_repo <- paste0("https://github.com/ruhelavansh-oss/epi-ML/blob/main/", manifest_rel)
-  manifest_raw <- paste0("https://raw.githubusercontent.com/ruhelavansh-oss/epi-ML/main/", manifest_rel)
+  manifest_repo <- paste0(github_blob_base, manifest_rel)
+  manifest_site <- paste0("../", manifest_rel)
   manifest_copy <- if (exists("safe_label_path")) safe_label_path(manifest_abs, paths) else manifest_rel
 
   rows[[length(rows) + 1]] <- data.frame(
     Module = paste0("<a href=\"", manifest_repo, "\">Outputs Manifest</a>"),
-    Source = paste0("<a href=\"", manifest_raw, "\">outputs_manifest.csv</a>"),
+    Source = paste0("<a href=\"", manifest_site, "\">outputs_manifest.csv</a>"),
     Path = paste0(
       "<button type=\"button\" class=\"copy-path-btn\" data-copy=\"",
       escape_html_attr(manifest_copy),
