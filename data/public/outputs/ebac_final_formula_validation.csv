@@ -1,4 +1,4 @@
 metric,value
 status,not_computable_missing_inputs
 missing_formula_inputs,demq3;demq4
-note,Public wrangled PUMF includes ebac_tot/ebac_legal but lacks some direct formula inputs (typically demq3/demq4).
+note,Public wrangled dataset includes ebac_tot/ebac_legal but lacks some direct formula inputs (typically demq3/demq4).

@@ -7,13 +7,13 @@
 #   observation weighting (IPW) among eligible drinkers.
 #
 # Why:
-#   In CPADS PUMF, eBAC is missing by design for many non-drinkers and still
+#   In data dataset, eBAC is missing by design for many non-drinkers and still
 #   partially missing among drinkers. Standard complete-case eBAC models estimate
 #   associations in the observed domain. IPW targets the eligible-drinker domain
 #   under MAR-type assumptions conditional on modeled covariates.
 #
 # Inputs:
-#   PROJECT_ROOT/data/private/outputs/wrangled/cpads_pumf_wrangled.rds
+#   PROJECT_ROOT/data/private/outputs/wrangled/data_wrangled.rds
 #
 # Outputs:
 #   PROJECT_ROOT/data/private/outputs/ebac_ipw_observation_model_or.csv
@@ -38,21 +38,21 @@ init_paths(paths)
 
 # ---- Paths ----
 output_dir <- paths$output_private_dir
-wrangled_path <- file.path(paths$wrangled_dir, "cpads_pumf_wrangled.rds")
+wrangled_path <- file.path(paths$wrangled_dir, "data_wrangled.rds")
 if (!file.exists(wrangled_path)) {
   stop("Missing wrangled data: ", wrangled_path)
 }
-pumf <- readRDS(wrangled_path)
+df <- readRDS(wrangled_path)
 
 cat("=== PHASE 7c: eBAC SELECTION-ADJUSTED ANALYSIS (IPW) ===\n\n")
 
 # ---- Required variables ----
 required <- c(
-  "wtpumf", "alcohol_past12m", "ebac_tot", "ebac_legal",
+  "weight", "alcohol_past12m", "ebac_tot", "ebac_legal",
   "cannabis_any_use", "age_group", "gender",
   "province_region", "mental_health", "physical_health"
 )
-missing <- setdiff(required, names(pumf))
+missing <- setdiff(required, names(df))
 if (length(missing) > 0) {
   stop("Missing required variables: ", paste(missing, collapse = ", "))
 }
@@ -108,18 +108,18 @@ ess <- function(w) (sum(w)^2) / sum(w^2)
 cat("--- 1) Define target (eligible drinkers) and observation process ---\n")
 
 # Target domain for transport: respondents eligible for eBAC computation field
-# in CPADS instrument flow (alcohol_past12m == 1).
-target <- pumf %>%
+# in data instrument flow (alcohol_past12m == 1).
+target <- df %>%
   filter(alcohol_past12m == 1) %>%
   mutate(
     R = as.integer(!is.na(ebac_tot))
   ) %>%
   select(
-    R, wtpumf, ebac_tot, ebac_legal, cannabis_any_use,
+    R, weight, ebac_tot, ebac_legal, cannabis_any_use,
     age_group, gender, province_region, mental_health, physical_health
   ) %>%
   tidyr::drop_na(
-    wtpumf, cannabis_any_use, age_group, gender,
+    weight, cannabis_any_use, age_group, gender,
     province_region, mental_health, physical_health
   )
 
@@ -155,8 +155,8 @@ q99 <- quantile(target$sw[target$R == 1], 0.99, na.rm = TRUE)
 target <- target %>%
   mutate(
     sw_trim = ifelse(R == 1, pmin(pmax(sw, q01), q99), NA_real_),
-    w_combined = ifelse(R == 1, wtpumf * sw, NA_real_),
-    w_combined_trim = ifelse(R == 1, wtpumf * sw_trim, NA_real_)
+    w_combined = ifelse(R == 1, weight * sw, NA_real_),
+    w_combined_trim = ifelse(R == 1, weight * sw_trim, NA_real_)
   )
 
 obs_only <- target %>% filter(R == 1)
@@ -187,7 +187,7 @@ diag_tbl <- tibble(
     max(obs_only$sw),
     q01,
     q99,
-    ess(obs_only$wtpumf),
+    ess(obs_only$weight),
     ess(obs_only$w_combined),
     ess(obs_only$w_combined_trim)
   )
@@ -207,10 +207,10 @@ balance_vars <- c(
 )
 
 target_base <- target %>%
-  mutate(weight = wtpumf, sample = "eligible_target")
+  mutate(weight = weight, sample = "eligible_target")
 obs_unadj <- target %>%
   filter(R == 1) %>%
-  mutate(weight = wtpumf, sample = "observed_unadjusted")
+  mutate(weight = weight, sample = "observed_unadjusted")
 obs_ipw <- target %>%
   filter(R == 1) %>%
   mutate(weight = w_combined_trim, sample = "observed_ipw_adjusted")
@@ -249,7 +249,7 @@ cat("Saved: ebac_ipw_covariate_balance.csv\n\n")
 # =============================================================================
 cat("--- 4) Outcome model comparison ---\n")
 
-des_obs <- svydesign(ids = ~1, weights = ~wtpumf, data = obs_only)
+des_obs <- svydesign(ids = ~1, weights = ~weight, data = obs_only)
 des_ipw <- svydesign(ids = ~1, weights = ~w_combined_trim, data = obs_only)
 
 f_bin <- ebac_legal ~ cannabis_any_use + age_group + gender +

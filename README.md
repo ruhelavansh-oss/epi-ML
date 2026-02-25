@@ -2,7 +2,7 @@
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18752220.svg)](https://doi.org/10.5281/zenodo.18752220)
 
-This repository hosts the study and publication framework for a retrospective observational cohort of alcohol and cannabis use in the Canadian Postsecondary Education Alcohol and Drug Use Survey public use microdata file (CPADS 2021-2022 PUMF). The repository also includes a reusable reproducibility package under `packages/epiml` for manifest auditing, workflow orchestration, and synthetic-data testing workflows.
+This repository hosts the study and publication framework for a retrospective observational cohort of alcohol and cannabis use in the Canadian Postsecondary Education Alcohol and Drug Use Survey public use microdata file (data 2021-2022 dataset). The repository also includes a reusable reproducibility package under `packages/epiml` for manifest auditing, workflow orchestration, and synthetic-data testing workflows.
 
 ## Research Focus
 
@@ -30,7 +30,7 @@ Implemented methods include:
 ```text
 surveillance/
   lib/           # shared configuration helpers
-  investigation/ # core CPADS study phases
+  investigation/ # core data study phases
   ebac/          # eBAC-focused scripts
 scripts/         # orchestration, rendering, and checks
 reports/
@@ -84,7 +84,7 @@ Optional dependency bootstrap (local/CI parity):
 Rscript scripts/install_deps.R
 ```
 
-For full analysis-module dependencies (not only render/deploy):
+For full module dependencies (not only render/deploy):
 
 ```bash
 Rscript scripts/install_deps.R --full

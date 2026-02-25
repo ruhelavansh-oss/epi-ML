@@ -13,7 +13,7 @@
 #   - If smotefamily is unavailable, script records a transparent "not run" status.
 #
 # Inputs:
-#   PROJECT_ROOT/data/private/outputs/wrangled/cpads_pumf_wrangled.rds
+#   PROJECT_ROOT/data/private/outputs/wrangled/data_wrangled.rds
 #
 # Outputs:
 #   PROJECT_ROOT/data/private/outputs/ebac_gender_interaction_svy_or.csv
@@ -37,17 +37,17 @@ init_paths(paths)
 
 
 output_dir <- paths$output_private_dir
-wrangled_path <- file.path(paths$wrangled_dir, "cpads_pumf_wrangled.rds")
+wrangled_path <- file.path(paths$wrangled_dir, "data_wrangled.rds")
 if (!file.exists(wrangled_path)) {
   stop("Missing wrangled file: ", wrangled_path)
 }
-pumf <- readRDS(wrangled_path)
+df <- readRDS(wrangled_path)
 
 required <- c(
-  "wtpumf", "ebac_legal", "cannabis_any_use", "gender",
+  "weight", "ebac_legal", "cannabis_any_use", "gender",
   "age_group", "province_region", "mental_health", "physical_health"
 )
-missing <- setdiff(required, names(pumf))
+missing <- setdiff(required, names(df))
 if (length(missing) > 0) {
   stop("Missing required fields: ", paste(missing, collapse = ", "))
 }
@@ -90,10 +90,10 @@ extract_or <- function(model_obj, model_name) {
 # =============================================================================
 cat("--- 1) Survey-weighted interaction analysis ---\n")
 
-df_svy <- pumf %>%
+df_svy <- df %>%
   select(
     ebac_legal, cannabis_any_use, gender, age_group, province_region,
-    mental_health, physical_health, wtpumf
+    mental_health, physical_health, weight
   ) %>%
   drop_na()
 
@@ -103,7 +103,7 @@ print(prop.table(table(df_svy$ebac_legal)))
 cat("\nBy gender:\n")
 print(prop.table(table(df_svy$ebac_legal, df_svy$gender), 2))
 
-des <- svydesign(ids = ~1, weights = ~wtpumf, data = df_svy)
+des <- svydesign(ids = ~1, weights = ~weight, data = df_svy)
 
 fit_int <- svyglm(
   ebac_legal ~ cannabis_any_use * gender + age_group + province_region +

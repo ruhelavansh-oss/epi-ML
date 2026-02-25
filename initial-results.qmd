@@ -40,5 +40,5 @@ This page presents point estimates and concise interpretation only. General work
 - Confidence intervals quantify statistical precision.
 - Agreement across naive, adjusted, IPW, and AIPW estimates supports directional robustness.
 - SMOTE and DoubleML outputs are interpreted as sensitivity diagnostics for model stability, not as primary survey-design estimands.
-- Prospective block-randomization schedules are design blueprints for future studies, not features of the CPADS observational sample.
+- Prospective block-randomization schedules are design blueprints for future studies, not features of the data observational sample.
 :::

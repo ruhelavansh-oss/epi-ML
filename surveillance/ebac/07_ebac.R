@@ -1,16 +1,16 @@
 #!/usr/bin/env Rscript
 # =============================================================================
-# 07_ebac.R — Phase 7b: eBAC Analysis Using PUMF-Measured Variables
+# 07_ebac.R — Phase 7b: eBAC Analysis Using dataset-Measured Variables
 # =============================================================================
 # Purpose:
 #   1) Use provided eBAC variables (ebac_tot, ebac_legal) directly.
-#   2) Do NOT recompute eBAC from anthropometrics (demq3/demq4 are absent in PUMF).
+#   2) Do NOT recompute eBAC from anthropometrics (demq3/demq4 are absent in dataset).
 #   3) Run survey-weighted descriptive + regression analyses.
 #   4) Run critical QA checks so code can be syntactically correct but still
 #      flagged if design/procedure assumptions are weak.
 #
 # Input:
-#   PROJECT_ROOT/data/private/outputs/wrangled/cpads_pumf_wrangled.rds
+#   PROJECT_ROOT/data/private/outputs/wrangled/data_wrangled.rds
 #
 # Outputs (new files; no old script is modified):
 #   PROJECT_ROOT/data/private/outputs/ebac_data_quality_checks.csv
@@ -40,18 +40,18 @@ init_paths(paths)
 # ---- Runtime paths ----
 output_dir <- paths$output_private_dir
 wrangled_dir <- paths$wrangled_dir
-cat("=== PHASE 7b: eBAC ANALYSIS (PUMF-MEASURED VARIABLES) ===\n\n")
+cat("=== PHASE 7b: eBAC ANALYSIS (dataset-MEASURED VARIABLES) ===\n\n")
 
 # ---- Load data ----
-pumf_path <- file.path(wrangled_dir, "cpads_pumf_wrangled.rds")
-if (!file.exists(pumf_path)) {
-  stop("Missing file: ", pumf_path)
+df_path <- file.path(wrangled_dir, "data_wrangled.rds")
+if (!file.exists(df_path)) {
+  stop("Missing file: ", df_path)
 }
-pumf <- readRDS(pumf_path)
+df <- readRDS(df_path)
 
 # ---- Required variables ----
 required <- c(
-  "wtpumf",
+  "weight",
   "ebac_tot",
   "ebac_legal",
   "alc13_lrdg",
@@ -64,9 +64,9 @@ required <- c(
   "mental_health",
   "physical_health"
 )
-missing <- setdiff(required, names(pumf))
+missing <- setdiff(required, names(df))
 if (length(missing) > 0) {
-  stop("Missing required variables in cpads_pumf_wrangled.rds: ",
+  stop("Missing required variables in data_wrangled.rds: ",
        paste(missing, collapse = ", "))
 }
 
@@ -114,11 +114,11 @@ extract_linear <- function(model_obj, model_name) {
 }
 
 weighted_mean_overall <- function(data, outcome, metric_name) {
-  d <- data %>% filter(!is.na(.data[[outcome]]), !is.na(wtpumf))
+  d <- data %>% filter(!is.na(.data[[outcome]]), !is.na(weight))
   if (nrow(d) == 0) {
     return(tibble())
   }
-  des <- svydesign(ids = ~1, weights = ~wtpumf, data = d)
+  des <- svydesign(ids = ~1, weights = ~weight, data = d)
   est <- svymean(as.formula(paste0("~", outcome)), des, na.rm = TRUE)
   ci <- confint(est)
   tibble(
@@ -135,13 +135,13 @@ weighted_mean_overall <- function(data, outcome, metric_name) {
 
 weighted_mean_by_group <- function(data, outcome, group_var, metric_name) {
   d <- data %>%
-    filter(!is.na(.data[[outcome]]), !is.na(.data[[group_var]]), !is.na(wtpumf))
+    filter(!is.na(.data[[outcome]]), !is.na(.data[[group_var]]), !is.na(weight))
 
   if (nrow(d) == 0) {
     return(tibble())
   }
 
-  des <- svydesign(ids = ~1, weights = ~wtpumf, data = d)
+  des <- svydesign(ids = ~1, weights = ~weight, data = d)
   by_obj <- svyby(
     as.formula(paste0("~", outcome)),
     as.formula(paste0("~", group_var)),
@@ -195,18 +195,18 @@ add_qa <- function(name, value, pass, note) {
   )
 }
 
-# Check A: anthropometric variables absent in PUMF (expected limitation)
-has_demq3 <- "demq3" %in% names(pumf)
-has_demq4 <- "demq4" %in% names(pumf)
+# Check A: anthropometric variables absent in dataset (expected limitation)
+has_demq3 <- "demq3" %in% names(df)
+has_demq4 <- "demq4" %in% names(df)
 add_qa(
   "anthropometric_vars_present",
   paste0("demq3=", has_demq3, "; demq4=", has_demq4),
   !(has_demq3 || has_demq4),
-  "Expected in public PUMF: unavailable; do not recompute eBAC from Widmark inputs."
+  "Expected in public dataset: unavailable; do not recompute eBAC from Widmark inputs."
 )
 
 # Check B: ebac_tot numeric and plausible range
-ebac_nonmiss <- pumf$ebac_tot[!is.na(pumf$ebac_tot)]
+ebac_nonmiss <- df$ebac_tot[!is.na(df$ebac_tot)]
 range_ok <- all(ebac_nonmiss >= 0 & ebac_nonmiss <= 0.8)
 add_qa(
   "ebac_tot_range_plausible",
@@ -218,7 +218,7 @@ add_qa(
 # Check C: ebac_legal consistency with ebac_tot threshold rule
 # IMPORTANT: ebac_tot appears rounded (e.g., two decimals), so exact 0.08 values
 # can be boundary-ambiguous if ebac_legal was defined from higher-precision values.
-rule_df <- pumf %>% filter(!is.na(ebac_tot), !is.na(ebac_legal))
+rule_df <- df %>% filter(!is.na(ebac_tot), !is.na(ebac_legal))
 rule_expected <- as.integer(rule_df$ebac_tot > 0.08)
 rule_agreement <- mean(rule_expected == rule_df$ebac_legal)
 rule_mismatch <- sum(rule_expected != rule_df$ebac_legal)
@@ -244,7 +244,7 @@ add_qa(
 )
 
 # Check D: ebac_legal concordance with alc13_lrdg (related but not guaranteed identical)
-lrdg_df <- pumf %>% filter(!is.na(ebac_legal), !is.na(alc13_lrdg))
+lrdg_df <- df %>% filter(!is.na(ebac_legal), !is.na(alc13_lrdg))
 lrdg_agreement <- mean(lrdg_df$ebac_legal == lrdg_df$alc13_lrdg)
 lrdg_mismatch <- sum(lrdg_df$ebac_legal != lrdg_df$alc13_lrdg)
 add_qa(
@@ -255,7 +255,7 @@ add_qa(
 )
 
 # Check E: missingness burden
-miss_rate <- mean(is.na(pumf$ebac_tot))
+miss_rate <- mean(is.na(df$ebac_tot))
 add_qa(
   "ebac_tot_missingness_rate",
   sprintf("%.4f", miss_rate),
@@ -264,7 +264,7 @@ add_qa(
 )
 
 # Check E2: structural missingness by alcohol eligibility
-miss_by_alc <- pumf %>%
+miss_by_alc <- df %>%
   filter(!is.na(alcohol_past12m)) %>%
   group_by(alcohol_past12m) %>%
   summarise(miss_rate = mean(is.na(ebac_tot)), n = n(), .groups = "drop")
@@ -282,7 +282,7 @@ add_qa(
 )
 
 # Check F: positivity for cannabis in eBAC observed domain
-dom <- pumf %>% filter(!is.na(ebac_tot), !is.na(cannabis_any_use))
+dom <- df %>% filter(!is.na(ebac_tot), !is.na(cannabis_any_use))
 p_treated <- mean(dom$cannabis_any_use == 1)
 p_control <- mean(dom$cannabis_any_use == 0)
 add_qa(
@@ -293,7 +293,7 @@ add_qa(
 )
 
 # Check G: weights positive
-pos_w <- all(pumf$wtpumf[!is.na(pumf$wtpumf)] > 0)
+pos_w <- all(df$weight[!is.na(df$weight)] > 0)
 add_qa(
   "survey_weights_positive",
   as.character(pos_w),
@@ -315,11 +315,11 @@ sample_accounting <- tibble(
     "Past-12m alcohol users with eBAC non-missing"
   ),
   n = c(
-    nrow(pumf),
-    sum(!is.na(pumf$ebac_tot)),
-    sum(!is.na(pumf$ebac_legal)),
-    sum(pumf$alcohol_past12m == 1, na.rm = TRUE),
-    sum(pumf$alcohol_past12m == 1 & !is.na(pumf$ebac_tot), na.rm = TRUE)
+    nrow(df),
+    sum(!is.na(df$ebac_tot)),
+    sum(!is.na(df$ebac_legal)),
+    sum(df$alcohol_past12m == 1, na.rm = TRUE),
+    sum(df$alcohol_past12m == 1 & !is.na(df$ebac_tot), na.rm = TRUE)
   )
 )
 print(sample_accounting, n = Inf)
@@ -343,17 +343,17 @@ group_vars <- c(
 
 # ebac_legal prevalence
 ebac_legal_summary <- bind_rows(
-  weighted_mean_overall(pumf, "ebac_legal", "ebac_legal_prevalence"),
+  weighted_mean_overall(df, "ebac_legal", "ebac_legal_prevalence"),
   map_dfr(group_vars, ~ weighted_mean_by_group(
-    pumf, "ebac_legal", .x, "ebac_legal_prevalence"
+    df, "ebac_legal", .x, "ebac_legal_prevalence"
   ))
 )
 
 # ebac_tot mean
 ebac_tot_summary <- bind_rows(
-  weighted_mean_overall(pumf, "ebac_tot", "ebac_tot_mean"),
+  weighted_mean_overall(df, "ebac_tot", "ebac_tot_mean"),
   map_dfr(group_vars, ~ weighted_mean_by_group(
-    pumf, "ebac_tot", .x, "ebac_tot_mean"
+    df, "ebac_tot", .x, "ebac_tot_mean"
   ))
 )
 
@@ -364,16 +364,16 @@ cat("Saved: ebac_weighted_summaries.csv\n\n")
 
 # Unweighted distribution checkpoints for ebac_tot
 dist_tbl <- tibble(
-  n_nonmissing = sum(!is.na(pumf$ebac_tot)),
-  mean = mean(pumf$ebac_tot, na.rm = TRUE),
-  sd = sd(pumf$ebac_tot, na.rm = TRUE),
-  min = min(pumf$ebac_tot, na.rm = TRUE),
-  p25 = quantile(pumf$ebac_tot, 0.25, na.rm = TRUE),
-  median = median(pumf$ebac_tot, na.rm = TRUE),
-  p75 = quantile(pumf$ebac_tot, 0.75, na.rm = TRUE),
-  p90 = quantile(pumf$ebac_tot, 0.90, na.rm = TRUE),
-  p95 = quantile(pumf$ebac_tot, 0.95, na.rm = TRUE),
-  max = max(pumf$ebac_tot, na.rm = TRUE)
+  n_nonmissing = sum(!is.na(df$ebac_tot)),
+  mean = mean(df$ebac_tot, na.rm = TRUE),
+  sd = sd(df$ebac_tot, na.rm = TRUE),
+  min = min(df$ebac_tot, na.rm = TRUE),
+  p25 = quantile(df$ebac_tot, 0.25, na.rm = TRUE),
+  median = median(df$ebac_tot, na.rm = TRUE),
+  p75 = quantile(df$ebac_tot, 0.75, na.rm = TRUE),
+  p90 = quantile(df$ebac_tot, 0.90, na.rm = TRUE),
+  p95 = quantile(df$ebac_tot, 0.95, na.rm = TRUE),
+  max = max(df$ebac_tot, na.rm = TRUE)
 )
 print(dist_tbl)
 write_csv(dist_tbl, file.path(output_dir, "ebac_distribution_unweighted.csv"))
@@ -394,10 +394,10 @@ covars <- c(
 )
 
 # 3a) Primary model: ebac_legal (binary outcome)
-df_bin <- pumf %>%
-  select(ebac_legal, wtpumf, all_of(covars)) %>%
+df_bin <- df %>%
+  select(ebac_legal, weight, all_of(covars)) %>%
   drop_na()
-des_bin <- svydesign(ids = ~1, weights = ~wtpumf, data = df_bin)
+des_bin <- svydesign(ids = ~1, weights = ~weight, data = df_bin)
 
 fit_bin <- svyglm(
   ebac_legal ~ cannabis_any_use + age_group + gender +
@@ -413,10 +413,10 @@ cat("Saved: ebac_logistic_or_primary.csv\n")
 
 # 3b) Sensitivity model: add heavy_drinking_30d
 # NOTE: This may over-adjust because heavy_drinking_30d overlaps with alcohol intensity.
-df_bin_sens <- pumf %>%
-  select(ebac_legal, heavy_drinking_30d, wtpumf, all_of(covars)) %>%
+df_bin_sens <- df %>%
+  select(ebac_legal, heavy_drinking_30d, weight, all_of(covars)) %>%
   drop_na()
-des_bin_sens <- svydesign(ids = ~1, weights = ~wtpumf, data = df_bin_sens)
+des_bin_sens <- svydesign(ids = ~1, weights = ~weight, data = df_bin_sens)
 
 fit_bin_sens <- svyglm(
   ebac_legal ~ cannabis_any_use + age_group + gender +
@@ -435,10 +435,10 @@ write_csv(or_sens, file.path(output_dir, "ebac_logistic_or_sensitivity_with_heav
 cat("Saved: ebac_logistic_or_sensitivity_with_heavy.csv\n\n")
 
 # 3c) Primary model: ebac_tot (continuous outcome)
-df_lin <- pumf %>%
-  select(ebac_tot, wtpumf, all_of(covars)) %>%
+df_lin <- df %>%
+  select(ebac_tot, weight, all_of(covars)) %>%
   drop_na()
-des_lin <- svydesign(ids = ~1, weights = ~wtpumf, data = df_lin)
+des_lin <- svydesign(ids = ~1, weights = ~weight, data = df_lin)
 
 fit_lin <- svyglm(
   ebac_tot ~ cannabis_any_use + age_group + gender +
@@ -452,10 +452,10 @@ write_csv(lin_primary, file.path(output_dir, "ebac_linear_coefficients_primary.c
 cat("Saved: ebac_linear_coefficients_primary.csv\n")
 
 # 3d) Sensitivity linear model: add heavy_drinking_30d
-df_lin_sens <- pumf %>%
-  select(ebac_tot, heavy_drinking_30d, wtpumf, all_of(covars)) %>%
+df_lin_sens <- df %>%
+  select(ebac_tot, heavy_drinking_30d, weight, all_of(covars)) %>%
   drop_na()
-des_lin_sens <- svydesign(ids = ~1, weights = ~wtpumf, data = df_lin_sens)
+des_lin_sens <- svydesign(ids = ~1, weights = ~weight, data = df_lin_sens)
 
 fit_lin_sens <- svyglm(
   ebac_tot ~ cannabis_any_use + age_group + gender +
@@ -480,26 +480,26 @@ cat("Saved: ebac_linear_coefficients_sensitivity_with_heavy.csv\n\n")
 # =============================================================================
 cat("--- 4) Missingness diagnostics for eBAC domain selection ---\n")
 
-pumf_miss <- pumf %>%
+df_miss <- df %>%
   mutate(ebac_missing = as.integer(is.na(ebac_tot)))
 
 miss_summary <- bind_rows(
-  weighted_mean_overall(pumf_miss, "ebac_missing", "ebac_missing_rate"),
-  weighted_mean_by_group(pumf_miss, "ebac_missing", "alcohol_past12m", "ebac_missing_rate"),
-  weighted_mean_by_group(pumf_miss, "ebac_missing", "cannabis_any_use", "ebac_missing_rate"),
-  weighted_mean_by_group(pumf_miss, "ebac_missing", "heavy_drinking_30d", "ebac_missing_rate")
+  weighted_mean_overall(df_miss, "ebac_missing", "ebac_missing_rate"),
+  weighted_mean_by_group(df_miss, "ebac_missing", "alcohol_past12m", "ebac_missing_rate"),
+  weighted_mean_by_group(df_miss, "ebac_missing", "cannabis_any_use", "ebac_missing_rate"),
+  weighted_mean_by_group(df_miss, "ebac_missing", "heavy_drinking_30d", "ebac_missing_rate")
 )
 print(miss_summary, n = Inf, width = Inf)
 write_csv(miss_summary, file.path(output_dir, "ebac_missingness_weighted.csv"))
 cat("Saved: ebac_missingness_weighted.csv\n")
 
-df_miss_model <- pumf_miss %>%
+df_miss_model <- df_miss %>%
   select(
-    ebac_missing, wtpumf, alcohol_past12m, cannabis_any_use,
+    ebac_missing, weight, alcohol_past12m, cannabis_any_use,
     age_group, gender, province_region, mental_health, physical_health
   ) %>%
   drop_na()
-des_miss <- svydesign(ids = ~1, weights = ~wtpumf, data = df_miss_model)
+des_miss <- svydesign(ids = ~1, weights = ~weight, data = df_miss_model)
 
 fit_miss <- svyglm(
   ebac_missing ~ alcohol_past12m + cannabis_any_use + age_group + gender +
@@ -514,14 +514,14 @@ write_csv(miss_or, file.path(output_dir, "ebac_missingness_or.csv"))
 cat("Saved: ebac_missingness_or.csv\n\n")
 
 # Missingness among eligible drinkers only (removes structural skip-pattern effect)
-eligible <- pumf_miss %>%
+eligible <- df_miss %>%
   filter(alcohol_past12m == 1) %>%
   select(
-    ebac_missing, wtpumf, cannabis_any_use,
+    ebac_missing, weight, cannabis_any_use,
     age_group, gender, province_region, mental_health, physical_health
   ) %>%
   drop_na()
-des_miss_eligible <- svydesign(ids = ~1, weights = ~wtpumf, data = eligible)
+des_miss_eligible <- svydesign(ids = ~1, weights = ~weight, data = eligible)
 fit_miss_eligible <- svyglm(
   ebac_missing ~ cannabis_any_use + age_group + gender +
     province_region + mental_health + physical_health,

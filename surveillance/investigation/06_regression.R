@@ -25,19 +25,19 @@ fig_dir <- paths$figures_dir
 cat("=== PHASE 6: REGRESSION ANALYSIS (Seeing Theory Ch.6) ===\n\n")
 
 # --- Load wrangled data ---
-pumf <- readRDS(file.path(wrangled_dir, "cpads_pumf_wrangled.rds"))
-cat("Loaded CPADS PUMF:", nrow(pumf), "observations,", ncol(pumf), "variables\n\n")
+df <- readRDS(file.path(wrangled_dir, "data_wrangled.rds"))
+cat("Loaded data dataset:", nrow(df), "observations,", ncol(df), "variables\n\n")
 
 # --- Prepare analysis subset (complete cases for model variables) ---
 model_vars <- c("heavy_drinking_30d", "age_group", "gender", "province_region",
-                 "mental_health", "wtpumf")
+                 "mental_health", "weight")
 
-pumf_cc <- pumf %>%
+df_cc <- df %>%
   dplyr::select(dplyr::all_of(model_vars), alc03, alc06) %>%
   dplyr::filter(complete.cases(dplyr::across(dplyr::all_of(model_vars))))
 
-cat("Complete cases for regression:", nrow(pumf_cc), "of", nrow(pumf),
-    sprintf("(%.1f%%)\n\n", 100 * nrow(pumf_cc) / nrow(pumf)))
+cat("Complete cases for regression:", nrow(df_cc), "of", nrow(df),
+    sprintf("(%.1f%%)\n\n", 100 * nrow(df_cc) / nrow(df)))
 
 # =============================================================================
 # 6.1 — Correlation Matrix for Numeric Alcohol Variables
@@ -47,7 +47,7 @@ cat("6.1 CORRELATION MATRIX: NUMERIC ALCOHOL VARIABLES\n")
 cat(paste(rep("=", 62), collapse = ""), "\n\n")
 
 # Filter to valid ranges: alc03 <= 7 (frequency code), alc06 <= 30 (drinks)
-pumf_corr <- pumf %>%
+df_corr <- df %>%
   dplyr::mutate(
     alc03_valid = dplyr::if_else(alc03 <= 7, alc03, NA_real_),
     alc06_valid = dplyr::if_else(alc06 <= 30, alc06, NA_real_)
@@ -56,17 +56,17 @@ pumf_corr <- pumf %>%
   dplyr::filter(complete.cases(.))
 
 cat("Observations with valid alc03 (<= 7) and alc06 (<= 30) and heavy_drinking_30d:",
-    nrow(pumf_corr), "\n\n")
+    nrow(df_corr), "\n\n")
 
-if (nrow(pumf_corr) > 2) {
-  var_sd <- vapply(pumf_corr, stats::sd, numeric(1), na.rm = TRUE)
+if (nrow(df_corr) > 2) {
+  var_sd <- vapply(df_corr, stats::sd, numeric(1), na.rm = TRUE)
   corr_vars <- names(var_sd)[is.finite(var_sd) & var_sd > 0]
 
   if (length(corr_vars) < 2) {
     cat("Insufficient variable variability for correlation matrix.\n")
     corr_matrix <- NULL
   } else {
-    corr_matrix <- stats::cor(pumf_corr[, corr_vars, drop = FALSE], use = "complete.obs")
+    corr_matrix <- stats::cor(df_corr[, corr_vars, drop = FALSE], use = "complete.obs")
   cat("Pearson Correlation Matrix:\n")
   print(round(corr_matrix, 4))
 
@@ -78,7 +78,7 @@ if (nrow(pumf_corr) > 2) {
   )
   for (pr in pairs) {
     if (!(pr[1] %in% corr_vars) || !(pr[2] %in% corr_vars)) next
-    ct <- stats::cor.test(pumf_corr[[pr[1]]], pumf_corr[[pr[2]]])
+    ct <- stats::cor.test(df_corr[[pr[1]]], df_corr[[pr[2]]])
     cat(sprintf("  %s vs %s: r = %.4f, p = %s\n",
                 pr[1], pr[2], ct$estimate,
                 formatC(ct$p.value, format = "e", digits = 3)))
@@ -101,7 +101,7 @@ cat("Model: heavy_drinking_30d ~ age_group + gender + province_region + mental_h
 cat("Note: OLS on binary outcome = linear probability model (LPM) for baseline\n\n")
 
 ols_model <- lm(heavy_drinking_30d ~ age_group + gender + province_region + mental_health,
-                data = pumf_cc)
+                data = df_cc)
 
 cat("--- OLS Summary ---\n")
 print(summary(ols_model))
@@ -138,7 +138,7 @@ cat("Model: svyglm(heavy_drinking_30d ~ age_group + gender + province_region + m
 cat("              family = quasibinomial(), design = svy_design)\n\n")
 
 # Create survey design on complete-case data
-svy_design <- svydesign(ids = ~1, weights = ~wtpumf, data = pumf_cc)
+svy_design <- svydesign(ids = ~1, weights = ~weight, data = df_cc)
 
 svy_model <- svyglm(
   heavy_drinking_30d ~ age_group + gender + province_region + mental_health,
@@ -255,5 +255,5 @@ write_csv(comparison_df, file.path(output_dir, "regression_model_comparison.csv"
 cat("Saved: regression_model_comparison.csv\n")
 
 cat(sprintf("\nComplete cases used: %d of %d (%.1f%%)\n",
-            nrow(pumf_cc), nrow(pumf), 100 * nrow(pumf_cc) / nrow(pumf)))
+            nrow(df_cc), nrow(df), 100 * nrow(df_cc) / nrow(df)))
 cat("\n=== REGRESSION ANALYSIS COMPLETE ===\n")

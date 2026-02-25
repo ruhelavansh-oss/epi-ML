@@ -13,13 +13,13 @@ title: "About"
 
 ## Project Description
 
-This website accompanies the study **Epidemiological Semiparametric Machine Learning: Retrospective Alcohol and Drug Use Cohort Study**. The project evaluates alcohol and cannabis use relationships in CPADS 2021-2022 with design-based and causal-inference methodologies.
+This website hosts the study **Epidemiological Semiparametric Machine Learning: Retrospective Alcohol and Drug Use Cohort Study**. The project evaluates alcohol and cannabis use relationships in data 2021-2022 with design-based and causal-inference methodologies.
 
 ## Data and Governance
 
 - The study is performed on de-identified public-use microdata.
 - Public outputs are curated to preserve privacy and prevent disclosure of sensitive artifacts.
-- Raw source files and private intermediate outputs are retained outside published site content.
+- Source files and private intermediate outputs are retained outside published site content.
 
 ## Technical Framework
 

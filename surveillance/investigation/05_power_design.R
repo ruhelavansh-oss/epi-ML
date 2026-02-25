@@ -7,7 +7,7 @@
 # Secondary objective:
 #   Preserve legacy post hoc outputs for backward compatibility.
 #
-# This module keeps CPADS analyses observational and generates prospective
+# This module keeps data analyses observational and generates prospective
 # trial-planning artifacts separately (stratified block randomization).
 # =============================================================================
 
@@ -32,20 +32,20 @@ dir.create(fig_dir, recursive = TRUE, showWarnings = FALSE)
 
 cat("=== PHASE 5: POWER DESIGN (OFFICIAL-DOC ALIGNED) ===\n\n")
 
-pumf_path <- file.path(wrangled_dir, "cpads_pumf_wrangled.rds")
-svy_path <- file.path(wrangled_dir, "cpads_pumf_survey.rds")
-if (!file.exists(pumf_path)) stop("Missing file: ", pumf_path)
-pumf <- readRDS(pumf_path)
+df_path <- file.path(wrangled_dir, "data_wrangled.rds")
+svy_path <- file.path(wrangled_dir, "data_survey.rds")
+if (!file.exists(df_path)) stop("Missing file: ", df_path)
+df <- readRDS(df_path)
 
 if (file.exists(svy_path)) {
-  pumf_svy <- readRDS(svy_path)
+  df_svy <- readRDS(svy_path)
 } else {
-  if (!("wtpumf" %in% names(pumf))) stop("Cannot build survey design: missing wtpumf")
-  pumf_svy <- survey::svydesign(ids = ~1, weights = ~wtpumf, data = pumf)
+  if (!("weight" %in% names(df))) stop("Cannot build survey design: missing weight")
+  df_svy <- survey::svydesign(ids = ~1, weights = ~weight, data = df)
 }
 
-required <- c("wtpumf", "heavy_drinking_30d", "gender", "cannabis_any_use")
-missing <- setdiff(required, names(pumf))
+required <- c("weight", "heavy_drinking_30d", "gender", "cannabis_any_use")
+missing <- setdiff(required, names(df))
 if (length(missing) > 0) stop("Missing required variables: ", paste(missing, collapse = ", "))
 
 fmt_or_na <- function(x, digits = 4) ifelse(is.na(x), "NA", formatC(x, format = "f", digits = digits))
@@ -78,11 +78,11 @@ weighted_var <- function(x, w) {
 # ----------------------------------------------------------------------------
 cat("--- Legacy descriptive/post hoc power outputs (compatibility) ---\n")
 
-n_total <- sum(!is.na(pumf$heavy_drinking_30d))
-y_total <- sum(pumf$heavy_drinking_30d == 1, na.rm = TRUE)
+n_total <- sum(!is.na(df$heavy_drinking_30d))
+y_total <- sum(df$heavy_drinking_30d == 1, na.rm = TRUE)
 p_unw <- y_total / n_total
 
-svy_est <- survey::svymean(~heavy_drinking_30d, pumf_svy, na.rm = TRUE, deff = "replace")
+svy_est <- survey::svymean(~heavy_drinking_30d, df_svy, na.rm = TRUE, deff = "replace")
 svy_ci <- confint(svy_est)
 p_wt <- as.numeric(coef(svy_est)[1])
 deff_val <- safe_deff(svy_est)
@@ -105,13 +105,13 @@ oneprop_tbl <- tibble(p0 = p0_grid) %>%
     power_scope = "descriptive_post_hoc"
   )
 
-prev_by_gender <- survey::svyby(~heavy_drinking_30d, ~gender, pumf_svy, survey::svymean, na.rm = TRUE)
+prev_by_gender <- survey::svyby(~heavy_drinking_30d, ~gender, df_svy, survey::svymean, na.rm = TRUE)
 df_g <- as.data.frame(prev_by_gender)
 prev_col <- if ("heavy_drinking_30d" %in% names(df_g)) "heavy_drinking_30d" else setdiff(names(df_g), "gender")[1]
 gender_levels <- as.character(df_g$gender)
 p_gender <- setNames(as.numeric(df_g[[prev_col]]), gender_levels)
-ok_g <- !is.na(pumf$heavy_drinking_30d) & !is.na(pumf$gender)
-n_by_gender <- table(pumf$gender[ok_g])
+ok_g <- !is.na(df$heavy_drinking_30d) & !is.na(df$gender)
+n_by_gender <- table(df$gender[ok_g])
 n_by_gender <- n_by_gender[names(p_gender)]
 
 two_prop_rows <- list()
@@ -166,7 +166,7 @@ write_csv(oneprop_tbl, file.path(output_dir, "power_one_proportion_grid.csv"))
 if (nrow(two_prop_tbl) > 0) {
   write_csv(two_prop_tbl, file.path(output_dir, "power_two_proportion_gender.csv"))
 }
-write_csv(power_summary, file.path(output_dir, "power_analysis_summary.csv"))
+write_csv(power_summary, file.path(output_dir, "power_summary.csv"))
 
 # ----------------------------------------------------------------------------
 # Interaction-first a priori power planning
@@ -183,21 +183,21 @@ endpoint_defs <- tribble(
   "ebac_tot", "ebac_tot", "continuous"
 )
 
-endpoint_defs <- endpoint_defs %>% filter(outcome_var %in% names(pumf))
+endpoint_defs <- endpoint_defs %>% filter(outcome_var %in% names(df))
 
 ebac_formula_inputs <- c("alc13a", "alc13b_a", "alc13b_b", "demq3", "demq4", "gender")
-ebac_formula_missing <- setdiff(ebac_formula_inputs, names(pumf))
+ebac_formula_missing <- setdiff(ebac_formula_inputs, names(df))
 ebac_endpoint_anchors <- tibble(
   endpoint = c("ebac_tot", "ebac_legal"),
   endpoint_definition = c(
-    "CPADS derived eBAC (g/dL) on heaviest drinking day (Seidl/Widmark-based)",
+    "data derived eBAC (g/dL) on heaviest drinking day (Seidl/Widmark-based)",
     "Derived legal-threshold indicator: ebac_tot > 0.08"
   ),
-  source_doc = "CPADS 2021-22 PUMF User Guide pp.85-87",
+  source_doc = "data 2021-22 dataset User Guide pp.85-87",
   formula_inputs_required_for_recompute = paste(ebac_formula_inputs, collapse = ";"),
-  formula_recompute_feasible_in_public_pumf = length(ebac_formula_missing) == 0,
+  formula_recompute_feasible_in_public_df = length(ebac_formula_missing) == 0,
   missing_formula_inputs = ifelse(length(ebac_formula_missing) == 0, "NONE", paste(ebac_formula_missing, collapse = ";")),
-  power_endpoint_usage = "Power planning uses CPADS-derived measured endpoints (ebac_tot, ebac_legal).",
+  power_endpoint_usage = "Power planning uses data-derived measured endpoints (ebac_tot, ebac_legal).",
   analysis_mode = "observational",
   power_scope = "a_priori_interaction"
 )
@@ -205,7 +205,7 @@ write_csv(ebac_endpoint_anchors, file.path(output_dir, "power_ebac_endpoint_anch
 
 build_cell_assumptions <- function(df, outcome_var, outcome_type) {
   d <- df %>%
-    select(all_of(c(outcome_var, "cannabis_any_use", "gender", "wtpumf"))) %>%
+    select(all_of(c(outcome_var, "cannabis_any_use", "gender", "weight"))) %>%
     mutate(cannabis_any_use = suppressWarnings(as.integer(as.character(cannabis_any_use)))) %>%
     filter(cannabis_any_use %in% c(0L, 1L)) %>%
     drop_na()
@@ -220,8 +220,8 @@ build_cell_assumptions <- function(df, outcome_var, outcome_type) {
   cell_stats <- d %>%
     group_by(gender, cannabis_any_use) %>%
     summarise(
-      mean_y = weighted.mean(.data[[outcome_var]], wtpumf, na.rm = TRUE),
-      var_y = weighted_var(.data[[outcome_var]], wtpumf),
+      mean_y = weighted.mean(.data[[outcome_var]], weight, na.rm = TRUE),
+      var_y = weighted_var(.data[[outcome_var]], weight),
       n_cell = n(),
       .groups = "drop"
     )
@@ -305,11 +305,11 @@ allocate_by_strategy <- function(total_n, levels_gender, observed_props, strateg
   props[is.na(props)] <- 0
   if (sum(props) <= 0) props <- rep(1 / k, k)
   props <- props / sum(props)
-  raw <- total_n * props
-  n_vec <- floor(raw)
+  fractional_target <- total_n * props
+  n_vec <- floor(fractional_target)
   rem <- total_n - sum(n_vec)
   if (rem > 0) {
-    add_idx <- order(raw - n_vec, decreasing = TRUE)[seq_len(rem)]
+    add_idx <- order(fractional_target - n_vec, decreasing = TRUE)[seq_len(rem)]
     n_vec[add_idx] <- n_vec[add_idx] + 1
   }
   names(n_vec) <- levels_gender
@@ -381,7 +381,7 @@ fast_interaction_plan <- function(assump_df, target_power, strategy, alpha = 0.0
     return(list(required_n = NA_integer_, estimated_power = NA_real_, status = "not_reached"))
   }
 
-  ref_gender <- if ("Woman" %in% genders) "Woman" else genders[1]
+  ref_gender <- if ("Female" %in% genders) "Female" else genders[1]
   non_ref <- setdiff(genders, ref_gender)
   m_tests <- length(non_ref)
   alpha_adj <- alpha / max(1, m_tests) # Bonferroni control across interaction terms
@@ -453,7 +453,7 @@ power_target_rows <- list()
 assumption_rows <- list()
 detail_rows <- list()
 feasibility_rows <- list()
-primary_levels <- c("Woman", "Man")
+primary_levels <- c("Female", "Male")
 
 for (e in seq_len(nrow(endpoint_defs))) {
   endpoint <- endpoint_defs$endpoint[e]
@@ -461,18 +461,18 @@ for (e in seq_len(nrow(endpoint_defs))) {
   outcome_type <- endpoint_defs$outcome_type[e]
   cat(sprintf("Planning endpoint: %s\n", endpoint))
 
-  built <- build_cell_assumptions(pumf, outcome_var, outcome_type)
+  built <- build_cell_assumptions(df, outcome_var, outcome_type)
   assumptions <- built$assumptions
   if (nrow(assumptions) == 0) next
 
   assumption_rows[[length(assumption_rows) + 1]] <- assumptions %>%
     mutate(endpoint = endpoint, outcome = outcome_var, outcome_type = outcome_type)
 
-  # Primary interaction target: Woman vs Man.
+  # Primary interaction target: Female vs Male.
   # Other gender categories are retained as explicit feasibility flags.
   has_primary <- all(primary_levels %in% assumptions$gender)
   if (!has_primary) {
-    warning("Primary levels Woman/Man not available for endpoint: ", endpoint)
+    warning("Primary levels Female/Male not available for endpoint: ", endpoint)
     next
   }
 
@@ -532,7 +532,7 @@ for (e in seq_len(nrow(endpoint_defs))) {
           endpoint = endpoint,
           scenario = scenario_name,
           status = "underpowered_flagged_non_primary",
-          note = "Primary interaction-power design targets Woman vs Man; non-primary groups are retained as feasibility flags.",
+          note = "Primary interaction-power design targets Female vs Male; non-primary groups are retained as feasibility flags.",
           analysis_mode = "observational",
           power_scope = "a_priori_interaction"
         )
@@ -580,7 +580,7 @@ if (nrow(interaction_feasibility) > 0) {
 write_csv(imbalance_penalty, file.path(output_dir, "power_interaction_imbalance_penalty.csv"))
 
 # Explicit integer allocation table (no fractional participants):
-# Woman/Man n1/n2 for each endpoint x scenario x strategy x target power.
+# Female/Male n1/n2 for each endpoint x scenario x strategy x target power.
 interaction_group_alloc <- map_dfr(seq_len(nrow(interaction_targets)), function(i) {
   r <- interaction_targets[i, ]
   if (is.na(r$required_n)) return(tibble())
@@ -597,8 +597,8 @@ interaction_group_alloc <- map_dfr(seq_len(nrow(interaction_targets)), function(
     strategy = as.character(r$allocation_strategy)
   )
 
-  n_woman <- if ("Woman" %in% names(n_g)) as.integer(n_g[["Woman"]]) else NA_integer_
-  n_man <- if ("Man" %in% names(n_g)) as.integer(n_g[["Man"]]) else NA_integer_
+  n_female <- if ("Female" %in% names(n_g)) as.integer(n_g[["Female"]]) else NA_integer_
+  n_male <- if ("Male" %in% names(n_g)) as.integer(n_g[["Male"]]) else NA_integer_
 
   tibble(
     endpoint = r$endpoint,
@@ -609,15 +609,15 @@ interaction_group_alloc <- map_dfr(seq_len(nrow(interaction_targets)), function(
     target_power = r$target_power,
     alpha = r$alpha,
     total_n = as.integer(r$required_n),
-    group1 = "Woman",
-    n1 = n_woman,
-    group2 = "Man",
-    n2 = n_man,
-    n_sum_check = as.integer(n_woman + n_man),
+    group1 = "Female",
+    n1 = n_female,
+    group2 = "Male",
+    n2 = n_male,
+    n_sum_check = as.integer(n_female + n_male),
     integer_n_check = ifelse(
-      is.na(n_woman) | is.na(n_man),
+      is.na(n_female) | is.na(n_male),
       FALSE,
-      (n_woman %% 1L == 0L) & (n_man %% 1L == 0L) & (as.integer(r$required_n) %% 1L == 0L)
+      (n_female %% 1L == 0L) & (n_male %% 1L == 0L) & (as.integer(r$required_n) %% 1L == 0L)
     ),
     status = r$status,
     compute_method = r$compute_method,
@@ -845,7 +845,7 @@ for (endpoint in unique(interaction_targets$endpoint)) {
 }
 
 # ----------------------------------------------------------------------------
-# Quality gates (required by AGENTS.md)
+# Quality gates (required by guardrail.md)
 # ----------------------------------------------------------------------------
 cat("--- Quality gate checks ---\n")
 
@@ -917,16 +917,16 @@ alignment_check <- tribble(
   "OFFICIAL-02", "Sex-differences commentary", "Ensure adequate power for predefined interaction analyses", "data/public/outputs/power_interaction_sample_size_targets.csv", "satisfied",
   "OFFICIAL-03", "Sex-differences commentary", "Promote near-equal subgroup sample planning", "data/public/outputs/power_interaction_group_allocations.csv", "satisfied",
   "OFFICIAL-04", "Sex-differences commentary", "Power should be robust to unequal subgroup sizes", "data/public/outputs/power_interaction_imbalance_penalty.csv", "satisfied",
-  "OFFICIAL-05", "Sex-differences commentary", "Include transgender/gender-diverse groups when available", "data/public/outputs/power_interaction_feasibility_flags.csv", "satisfied",
-  "OFFICIAL-06", "Sex-differences commentary", "Operationalize analysis groups using available CPADS gender (self-reported) categories (Woman/Man/Transgender-Non-binary)", "surveillance/investigation/03_data_wrangling.R", "satisfied",
-  "OFFICIAL-07", "Sex-differences commentary", "Set primary interaction power on Woman vs Man and retain non-primary groups as explicit feasibility outputs", "data/public/outputs/power_interaction_feasibility_flags.csv", "satisfied",
+  "OFFICIAL-05", "Sex-differences commentary", "Include non-binary groups when available", "data/public/outputs/power_interaction_feasibility_flags.csv", "satisfied",
+  "OFFICIAL-06", "Sex-differences commentary", "Operationalize groups using available sex categories (Female/Male/Non-binary)", "surveillance/investigation/03_data_wrangling.R", "satisfied",
+  "OFFICIAL-07", "Sex-differences commentary", "Set primary interaction power on Female vs Male and retain non-primary groups as explicit feasibility outputs", "data/public/outputs/power_interaction_feasibility_flags.csv", "satisfied",
   "OFFICIAL-08", "Sex-differences commentary", "Capture within-group physiological variability (e.g., hormone-cycle/lifespan indicators) when available", "surveillance/ebac/07_ebac_integrations.R", "partial_data_constraint",
   "OFFICIAL-09", "Sex-differences commentary", "Report subgroup baseline summaries by gender (self-reported)", "data/public/outputs/frequentist_heavy_drinking_prevalence_ci.csv", "satisfied",
-  "OFFICIAL-10", "CPADS PUMF guide pages 85-87", "Use documented eBAC derivation context and legal-threshold mapping", "surveillance/investigation/09_report.R", "satisfied",
-  "OFFICIAL-11", "CPADS PUMF guide pages 85-87", "Handle missing anthropometrics in public PUMF by using measured eBAC outputs", "surveillance/ebac/07_ebac.R", "satisfied",
-  "OFFICIAL-12", "CPADS PUMF guidance", "Keep observational CPADS analyses clearly non-randomized", "surveillance/investigation/09_report.R", "satisfied",
+  "OFFICIAL-10", "data dataset guide pages 85-87", "Use documented eBAC derivation context and legal-threshold mapping", "surveillance/investigation/09_report.R", "satisfied",
+  "OFFICIAL-11", "data dataset guide pages 85-87", "Handle missing anthropometrics in public dataset by using measured eBAC outputs", "surveillance/ebac/07_ebac.R", "satisfied",
+  "OFFICIAL-12", "data dataset guidance", "Keep observational data analyses clearly non-randomized", "surveillance/investigation/09_report.R", "satisfied",
   "OFFICIAL-13", "Study design upgrade", "Provide prospective stratified block randomization planning artifacts", "data/public/outputs/randomization_block_blueprints.csv", "not_applicable_observational",
-  "OFFICIAL-14", "CPADS PUMF guide pages 85-87", "Anchor eBAC power endpoints to documented Seidl/Widmark formula definitions", "data/public/outputs/power_ebac_endpoint_anchors.csv", "satisfied"
+  "OFFICIAL-14", "data dataset guide pages 85-87", "Anchor eBAC power endpoints to documented Seidl/Widmark formula definitions", "data/public/outputs/power_ebac_endpoint_anchors.csv", "satisfied"
 ) %>%
   mutate(
     analysis_mode = "observational",
@@ -935,34 +935,5 @@ alignment_check <- tribble(
 
 write_csv(alignment_check, file.path(output_dir, "official_doc_alignment_checklist.csv"))
 
-# ----------------------------------------------------------------------------
-# Keep existing power curves figure for continuity
-# ----------------------------------------------------------------------------
-effect_grid <- seq(0.01, 0.30, by = 0.005)
-df_gender <- max(1, (length(unique(na.omit(pumf$gender))) - 1))
-power_curves <- tibble(
-  effect_size = effect_grid,
-  power_1p_srs = map_dbl(effect_grid, ~ pwr.p.test(h = .x, n = n_total, sig.level = 0.05)$power),
-  power_2p_srs = map_dbl(effect_grid, ~ pwr.2p.test(h = .x, n = floor(n_total / 2), sig.level = 0.05)$power),
-  power_chi_srs = map_dbl(effect_grid, ~ pwr.chisq.test(w = .x, N = n_total, df = df_gender, sig.level = 0.05)$power)
-)
-
-pdf(file.path(fig_dir, "power_curves.pdf"), width = 10, height = 6)
-plot_df <- power_curves %>%
-  pivot_longer(-effect_size, names_to = "curve", values_to = "power")
-ggplot(plot_df, aes(x = effect_size, y = power, color = curve)) +
-  geom_line(linewidth = 1) +
-  geom_hline(yintercept = 0.80, linetype = "dashed", alpha = 0.5) +
-  labs(
-    title = sprintf("Power Curves: CPADS heavy_drinking_30d (n_nonmissing=%d)", n_total),
-    subtitle = "Legacy descriptive curves retained for compatibility",
-    x = "Effect size (Cohen's h or w)",
-    y = "Power",
-    color = "Curve"
-  ) +
-  theme_minimal() +
-  scale_y_continuous(limits = c(0, 1))
-dev.off()
-
-cat("Saved legacy + interaction power outputs.\n")
+cat("Saved interaction power and planning outputs.\n")
 cat("=== POWER DESIGN COMPLETE ===\n")

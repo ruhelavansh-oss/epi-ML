@@ -24,23 +24,23 @@ output_dir <- paths$output_private_dir
 cat("=== PHASE 6: SURVEY-WEIGHTED LOGISTIC REGRESSION ===\n\n")
 
 # --- Load wrangled data ---
-pumf <- readRDS(file.path(wrangled_dir, "cpads_pumf_wrangled.rds"))
-cat("Loaded CPADS PUMF:", nrow(pumf), "observations\n\n")
+df <- readRDS(file.path(wrangled_dir, "data_wrangled.rds"))
+cat("Loaded data dataset:", nrow(df), "observations\n\n")
 
 # --- Prepare complete-case subset ---
 model_vars <- c("heavy_drinking_30d", "age_group", "gender", "province_region",
-                 "mental_health", "cannabis_any_use", "wtpumf")
+                 "mental_health", "cannabis_any_use", "weight")
 
-pumf_cc <- pumf %>%
+df_cc <- df %>%
   dplyr::select(dplyr::all_of(model_vars)) %>%
   dplyr::filter(complete.cases(.))
 
-cat("Complete cases for logistic model:", nrow(pumf_cc), "of", nrow(pumf),
-    sprintf("(%.1f%%)\n", 100 * nrow(pumf_cc) / nrow(pumf)))
+cat("Complete cases for logistic model:", nrow(df_cc), "of", nrow(df),
+    sprintf("(%.1f%%)\n", 100 * nrow(df_cc) / nrow(df)))
 
 # --- Outcome distribution ---
 cat("\nOutcome distribution (heavy_drinking_30d) in analysis sample:\n")
-tab_binge <- table(pumf_cc$heavy_drinking_30d, useNA = "ifany")
+tab_binge <- table(df_cc$heavy_drinking_30d, useNA = "ifany")
 cat(sprintf("  0 (No heavy drinking):  %d (%.1f%%)\n",
             tab_binge["0"], 100 * tab_binge["0"] / sum(tab_binge)))
 cat(sprintf("  1 (Heavy drinking):     %d (%.1f%%)\n",
@@ -50,16 +50,16 @@ cat(sprintf("  1 (Heavy drinking):     %d (%.1f%%)\n",
 cat("\nPredictor distributions:\n")
 for (v in c("age_group", "gender", "province_region", "mental_health", "cannabis_any_use")) {
   cat(sprintf("\n  %s:\n", v))
-  if (is.factor(pumf_cc[[v]])) {
-    tab <- table(pumf_cc[[v]])
+  if (is.factor(df_cc[[v]])) {
+    tab <- table(df_cc[[v]])
     pct <- round(100 * prop.table(tab), 1)
     for (i in seq_along(tab)) {
       cat(sprintf("    %s: %d (%.1f%%)\n", names(tab)[i], tab[i], pct[i]))
     }
   } else {
     cat(sprintf("    0: %d (%.1f%%), 1: %d (%.1f%%)\n",
-                sum(pumf_cc[[v]] == 0), 100 * mean(pumf_cc[[v]] == 0),
-                sum(pumf_cc[[v]] == 1), 100 * mean(pumf_cc[[v]] == 1)))
+                sum(df_cc[[v]] == 0), 100 * mean(df_cc[[v]] == 0),
+                sum(df_cc[[v]] == 1), 100 * mean(df_cc[[v]] == 1)))
   }
 }
 
@@ -76,7 +76,7 @@ cat("                              + mental_health + cannabis_any_use,\n")
 cat("              family = quasibinomial(), design = svy_design)\n\n")
 
 # Create survey design
-svy_design <- svydesign(ids = ~1, weights = ~wtpumf, data = pumf_cc)
+svy_design <- svydesign(ids = ~1, weights = ~weight, data = df_cc)
 
 # Fit model
 logit_model <- svyglm(
@@ -147,7 +147,7 @@ cat(paste(rep("-", 62), collapse = ""), "\n\n")
 # Reference categories
 cat("Reference categories:\n")
 cat("  age_group:       16-19\n")
-cat("  gender:          Woman\n")
+cat("  gender:          Female\n")
 cat("  province_region: Atlantic\n")
 cat("  mental_health:   Excellent\n")
 cat("  cannabis_any_use: 0 (non-user)\n\n")
@@ -239,7 +239,7 @@ write_csv(int_test_tbl, file.path(output_dir, "logistic_interaction_tests.csv"))
 cat("Saved: logistic_interaction_tests.csv\n")
 
 cat(sprintf("\nAnalysis sample: %d complete cases of %d total (%.1f%%)\n",
-            nrow(pumf_cc), nrow(pumf), 100 * nrow(pumf_cc) / nrow(pumf)))
+            nrow(df_cc), nrow(df), 100 * nrow(df_cc) / nrow(df)))
 
 # =============================================================================
 # SMOTE Sensitivity Analysis for Class Imbalance
@@ -249,8 +249,8 @@ cat(paste(rep("=", 62), collapse = ""), "\n")
 cat("SMOTE SENSITIVITY ANALYSIS (CLASS IMBALANCE)\n")
 cat(paste(rep("=", 62), collapse = ""), "\n\n")
 
-class_pct_1 <- 100 * mean(pumf_cc$heavy_drinking_30d == 1)
-class_pct_0 <- 100 * mean(pumf_cc$heavy_drinking_30d == 0)
+class_pct_1 <- 100 * mean(df_cc$heavy_drinking_30d == 1)
+class_pct_0 <- 100 * mean(df_cc$heavy_drinking_30d == 0)
 cat(sprintf("Class distribution: heavy=1: %.1f%%, heavy=0: %.1f%%\n",
             class_pct_1, class_pct_0))
 minority_class <- if (class_pct_1 <= class_pct_0) 1L else 0L
@@ -297,7 +297,7 @@ smote_or_table <- tibble()
 comparison <- tibble()
 
 tryCatch({
-  design_mat <- build_smote_matrix(pumf_cc)
+  design_mat <- build_smote_matrix(df_cc)
   base_data <- design_mat$x %>% mutate(heavy_drinking_30d = design_mat$y)
 
   class_counts <- table(base_data$heavy_drinking_30d)

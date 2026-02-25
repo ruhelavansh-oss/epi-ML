@@ -1,8 +1,8 @@
 test_name,comparison,statistic,df,p_value,method,p_bonferroni,p_fdr_bh,sig_nominal,sig_bonf,sig_fdr
 gender_overall,Heavy drinking prevalence differs by gender,9.675396760622885,2,6.299649954555332e-5,Wald F-test (svyglm),0.0018268984868210463,7.94303689922194e-5,*,*,*
-gender_Woman_vs_Man,Gender : Woman vs Man,-3.10652470954693,30708,0.001894729934943298,svyttest,0.05494716811335564,0.002113352619744448,*,,*
-gender_Woman_vs_Transgender/Non-binary,Gender : Woman vs Transgender/Non-binary,-3.5454231390071023,20181,3.928703524032677e-4,svyttest,0.011393240219694765,4.557296087877905e-4,*,*,*
-gender_Man_vs_Transgender/Non-binary,Gender : Man vs Transgender/Non-binary,-2.456138312374488,12223,0.014057719029749366,svyttest,0.40767385186273164,0.014057719029749366,*,,*
+gender_Female_vs_Male,Gender : Female vs Male,-3.10652470954693,30708,0.001894729934943298,svyttest,0.05494716811335564,0.002113352619744448,*,,*
+gender_Female_vs_Non-binary,Gender : Female vs Non-binary,-3.5454231390071023,20181,3.928703524032677e-4,svyttest,0.011393240219694765,4.557296087877905e-4,*,*,*
+gender_Male_vs_Non-binary,Gender : Male vs Non-binary,-2.456138312374488,12223,0.014057719029749366,svyttest,0.40767385186273164,0.014057719029749366,*,,*
 age_group_overall,Heavy drinking prevalence differs by age group,101.4674713557905,3,2.2807446688877173e-65,Wald F-test (svyglm),6.61415953977438e-64,1.653539884943595e-64,*,*,*
 age_group_16-19_vs_20-22,Age group : 16-19 vs 20-22,8.574322410558363,19259,1.0709980767993335e-17,svyttest,3.1058944227180673e-16,2.0705962818120447e-17,*,*,*
 age_group_16-19_vs_23-25,Age group : 16-19 vs 23-25,2.7259017676577106,13642,0.006420792130925981,svyttest,0.18620297179685344,0.006650106135601909,*,,*

@@ -7,7 +7,7 @@ This repository publishes a Quarto website and reproducible research workflow fo
 ## Supported Publication Model
 
 - Public content: source code, curated narrative pages, and sanitized outputs.
-- Private content: raw microdata, row-level intermediates, and secret material remain outside git.
+- Private content: source microdata, row-level intermediates, and secret material remain outside git.
 
 ## Security Controls
 

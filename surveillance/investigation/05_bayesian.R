@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 # =============================================================================
 # 05_bayesian.R — Phase 5b: Bayesian Inference (Seeing Theory Ch.5 style)
-# CPADS 2021–2022 PUMF (Cleaned)
+# data 2021–2022 dataset (Cleaned)
 # =============================================================================
 # Beta-Binomial conjugacy for a binary prevalence indicator.
 # NOTE:
@@ -35,22 +35,22 @@ dir.create(fig_dir, recursive = TRUE, showWarnings = FALSE)
 cat("=== PHASE 5b: BAYESIAN INFERENCE (Seeing Theory Ch.5) ===\n\n")
 
 # --- Load wrangled data ---
-pumf_path <- file.path(wrangled_dir, "cpads_pumf_wrangled.rds")
-svy_path <- file.path(wrangled_dir, "cpads_pumf_survey.rds")
+df_path <- file.path(wrangled_dir, "data_wrangled.rds")
+svy_path <- file.path(wrangled_dir, "data_survey.rds")
 
-if (!file.exists(pumf_path)) {
-  stop("Missing file: ", pumf_path)
+if (!file.exists(df_path)) {
+  stop("Missing file: ", df_path)
 }
-pumf <- readRDS(pumf_path)
+df <- readRDS(df_path)
 
 # Prefer saved survey design object; otherwise build
 if (file.exists(svy_path)) {
-  pumf_svy <- readRDS(svy_path)
+  df_svy <- readRDS(svy_path)
 } else {
-  if (!("wtpumf" %in% names(pumf))) {
-    stop("Cannot build survey design: missing wtpumf")
+  if (!("weight" %in% names(df))) {
+    stop("Cannot build survey design: missing weight")
   }
-  pumf_svy <- survey::svydesign(ids = ~1, weights = ~wtpumf, data = pumf)
+  df_svy <- survey::svydesign(ids = ~1, weights = ~weight, data = df)
 }
 
 # ---- Safety checks ----
@@ -60,18 +60,18 @@ required <- c(
   "age_group",
   "province_region",
   "mental_health",
-  "wtpumf"
+  "weight"
 )
-missing <- setdiff(required, names(pumf))
+missing <- setdiff(required, names(df))
 if (length(missing) > 0) {
-  stop("Missing required variables in pumf: ", paste(missing, collapse = ", "))
+  stop("Missing required variables in df: ", paste(missing, collapse = ", "))
 }
 
 # =============================================================================
 # Data target for Bayesian update
 # Using heavy_drinking_30d as the binary prevalence target
 # =============================================================================
-binge_data <- dplyr::filter(pumf, !is.na(heavy_drinking_30d))
+binge_data <- dplyr::filter(df, !is.na(heavy_drinking_30d))
 n_total <- nrow(binge_data)
 if (n_total == 0) {
   stop("No non-missing heavy_drinking_30d observations; cannot proceed.")
@@ -102,7 +102,7 @@ cat(sprintf(
 cat(sprintf("  Observed proportion = %.4f\n\n", p_obs))
 
 # Survey-weighted prevalence comparison
-svy_est <- survey::svymean(~heavy_drinking_30d, pumf_svy, na.rm = TRUE)
+svy_est <- survey::svymean(~heavy_drinking_30d, df_svy, na.rm = TRUE)
 svy_ci <- confint(svy_est)
 
 cat("Survey-weighted prevalence comparison:\n")
@@ -462,32 +462,32 @@ run_bf_ct <- function(x, y, test_name, comparison_label) {
 
 cat("--- 5.1 Heavy drinking by Gender (BayesFactor) ---\n")
 run_bf_ct(
-  pumf$heavy_drinking_30d,
-  pumf$gender,
+  df$heavy_drinking_30d,
+  df$gender,
   "heavy_x_gender",
   "Heavy30d ~ Gender"
 )
 
 cat("--- 5.2 Heavy drinking by Age Group (BayesFactor) ---\n")
 run_bf_ct(
-  pumf$heavy_drinking_30d,
-  pumf$age_group,
+  df$heavy_drinking_30d,
+  df$age_group,
   "heavy_x_age",
   "Heavy30d ~ Age Group"
 )
 
 cat("--- 5.3 Heavy drinking by Region (BayesFactor) ---\n")
 run_bf_ct(
-  pumf$heavy_drinking_30d,
-  pumf$province_region,
+  df$heavy_drinking_30d,
+  df$province_region,
   "heavy_x_region",
   "Heavy30d ~ Region"
 )
 
 cat("--- 5.4 Heavy drinking by Mental Health (BayesFactor) ---\n")
 run_bf_ct(
-  pumf$heavy_drinking_30d,
-  pumf$mental_health,
+  df$heavy_drinking_30d,
+  df$mental_health,
   "heavy_x_mh",
   "Heavy30d ~ Mental Health"
 )

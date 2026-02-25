@@ -4,20 +4,20 @@ title: "Background"
 
 ## Design
 
-The study uses retrospective observational survey microdata from CPADS 2021-2022. There is no randomized treatment assignment; therefore, causal interpretations are conditional on identification assumptions and should be interpreted as model-based counterfactual contrasts.
+The study uses retrospective observational survey microdata from data 2021-2022. There is no randomized treatment assignment; therefore, causal interpretations are conditional on identification assumptions and should be interpreted as model-based counterfactual contrasts.
 
-Prospective stratified block-randomization outputs in this project are trial-planning artifacts only. They are not used to re-label or reinterpret CPADS observational estimates.
-Within CPADS analyses, bias mitigation follows observational-design methods (matching, weighting, covariate adjustment, overlap diagnostics) rather than experimental assignment.
+Prospective stratified block-randomization outputs in this project are trial-planning artifacts only. They are not used to re-label or reinterpret data observational estimates.
+Within data analyses, bias mitigation follows observational-design methods (matching, weighting, covariate adjustment, overlap diagnostics) rather than experimental assignment.
 
 ## Target Variables
 
 ::: {.callout-warning}
-- **Exposure/Treatment proxy**: `cannabis_any_use` (alias `cua`; past-year cannabis use indicator).
-- **Primary outcome**: `heavy_drinking_30d` (alias `hd30d`; past-30-day heavy drinking indicator).
+- **Exposure/Treatment proxy**: survey-weighted cannabis use (`cua`; past-year cannabis-use indicator).
+- **Primary outcome**: heavy drinking (`hd30d`; past-30-day heavy-drinking indicator).
 - **eBAC outcomes**: `ebac_tot` (continuous) and `ebac_legal` (binary threshold indicator), using measured variables available in the wrangled analytic dataset.
-- **Adjustment covariates**: age group, gender (self-reported), region, self-rated mental health, and self-rated physical health.
-- **Gender variable**: analyses use CPADS gender (self-reported) categories (`Woman`, `Man`, `Transgender/Non-binary`) with Woman/Man as the primary planned contrast and Transgender/Non-binary retained where feasible.
-- **Sex-at-birth constraint**: CPADS PUMF in this workflow does not provide complete sex-at-birth fields, so subgrouping is based on gender (self-reported).
+- **Adjustment covariates**: age group, gender, region, self-rated mental health, and self-rated physical health.
+- **Gender categories**: analyses use available gender categories (`Female`, `Male`, `Non-binary`) with Female/Male as the primary planned contrast and Non-binary retained where feasible.
+- **Sex-at-birth constraint**: this workflow does not include complete sex-at-birth fields. The gender variable (`dvdemq01`) captures gender identity including Non-binary respondents; it is not equivalent to sex assigned at birth.
 :::
 
 ## Analysis Boundary

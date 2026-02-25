@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 # =============================================================================
 # 07_treatment_effects.R - Phase 7: Treatment Effect Estimation
-# Epidemiological Study: Alcohol Use in Canada (CPADS PUMF)
+# Epidemiological Study: Alcohol Use in Canada (data dataset)
 # =============================================================================
 # Estimates:
 #   - ATE  (Average Treatment Effect)
@@ -33,11 +33,11 @@ dir.create(fig_dir, showWarnings = FALSE, recursive = TRUE)
 cat("=== PHASE 7: TREATMENT EFFECT ESTIMATION ===\n\n")
 
 # --- Load data ---
-pumf <- readRDS(file.path(wrangled_dir, "cpads_pumf_wrangled.rds"))
+df <- readRDS(file.path(wrangled_dir, "data_wrangled.rds"))
 
 covars <- c("age_group", "gender", "province_region", "mental_health", "physical_health")
-analysis_vars <- c("cannabis_any_use", "heavy_drinking_30d", covars, "wtpumf")
-df <- pumf %>%
+analysis_vars <- c("cannabis_any_use", "heavy_drinking_30d", covars, "weight")
+df <- df %>%
   dplyr::select(dplyr::all_of(analysis_vars)) %>%
   tidyr::drop_na()
 cat("Analysis sample (complete cases):", nrow(df), "observations\n")

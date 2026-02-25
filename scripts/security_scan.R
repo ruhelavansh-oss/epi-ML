@@ -48,7 +48,7 @@ is_text_target <- function(x) {
 patterns <- list(
   absolute_path = "(^|[[:space:]'\\\"])(/Users/[^[:space:]'\\\"]+|[A-Za-z]:\\\\\\\\[^[:space:]'\\\"]+)",
   secret_literal = "(?i)(api[_-]?key|secret|token|password)\\s*[:=]\\s*['\"][^'\"]{8,}",
-  secret_export = "(?i)^\\s*CPADS_SECRET_KEY\\s*=\\s*[^\\s#]+",
+  secret_export = "(?i)^\\s*SECRET_KEY\\s*=\\s*(?![\\w.]+\\()[^\\s#]+",
   algolia_admin_write_key = "(?i)(algolia).*(admin|write).*(api[_-]?key)"
 )
 

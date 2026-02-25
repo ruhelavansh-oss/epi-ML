@@ -18,11 +18,11 @@ wrangled_dir <- paths$wrangled_dir
 output_dir <- paths$output_private_dir
 cat("=== PHASE 7: CAUSAL ESTIMATOR COMPARISON ===\n\n")
 
-pumf <- readRDS(file.path(wrangled_dir, "cpads_pumf_wrangled.rds"))
+df <- readRDS(file.path(wrangled_dir, "data_wrangled.rds"))
 
 covars <- c("age_group", "gender", "province_region", "mental_health", "physical_health")
-df <- pumf %>%
-  dplyr::select(cannabis_any_use, heavy_drinking_30d, dplyr::all_of(covars), wtpumf) %>%
+df <- df %>%
+  dplyr::select(cannabis_any_use, heavy_drinking_30d, dplyr::all_of(covars), weight) %>%
   tidyr::drop_na()
 cat("Analysis sample:", nrow(df), "\n\n")
 
@@ -129,7 +129,7 @@ results <- results %>% add_row(
 # Optional package cross-check (only when dependencies are available).
 has_aipw_pkg <- requireNamespace("AIPW", quietly = TRUE)
 has_sl_pkg <- requireNamespace("SuperLearner", quietly = TRUE) || requireNamespace("sl3", quietly = TRUE)
-run_pkg_crosscheck <- tolower(Sys.getenv("CPADS_ENABLE_AIPW_PACKAGE_CROSSCHECK", "false")) %in% c("1", "true", "yes")
+run_pkg_crosscheck <- tolower(Sys.getenv("ENABLE_AIPW_PACKAGE_CROSSCHECK", "false")) %in% c("1", "true", "yes")
 
 if (run_pkg_crosscheck && has_aipw_pkg && has_sl_pkg) {
   cat("  Attempting AIPW package cross-check...\n")
@@ -185,7 +185,7 @@ if (run_pkg_crosscheck && has_aipw_pkg && has_sl_pkg) {
   })
 } else {
   if (!run_pkg_crosscheck) {
-    cat("  Package AIPW cross-check skipped (default). Set CPADS_ENABLE_AIPW_PACKAGE_CROSSCHECK=true to enable.\n")
+    cat("  Package AIPW cross-check skipped (default). Set ENABLE_AIPW_PACKAGE_CROSSCHECK=true to enable.\n")
   } else {
     cat("  Package AIPW cross-check skipped: requires AIPW + (SuperLearner or sl3).\n")
   }

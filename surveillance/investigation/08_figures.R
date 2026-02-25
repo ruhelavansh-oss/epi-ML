@@ -82,22 +82,22 @@ if (!file.exists(cads_summary_path)) {
 # --- 3. Heavy Drinking by Demographics ---
 cat("\n--- 3. Heavy Drinking by Demographics ---\n")
 tryCatch({
-  pumf <- readRDS(file.path(wrangled_dir, "cpads_pumf_wrangled.rds"))
+  df <- readRDS(file.path(wrangled_dir, "data_wrangled.rds"))
 
   # Survey-weighted proportions
-  demo_data <- pumf %>%
+  demo_data <- df %>%
     dplyr::filter(!is.na(heavy_drinking_30d), !is.na(age_group), !is.na(gender)) %>%
     dplyr::group_by(age_group, gender) %>%
     dplyr::summarise(
       n = n(),
-      heavy_pct = 100 * weighted.mean(heavy_drinking_30d, wtpumf, na.rm = TRUE),
+      heavy_pct = 100 * weighted.mean(heavy_drinking_30d, weight, na.rm = TRUE),
       .groups = "drop"
     )
 
   p3 <- ggplot(demo_data, aes(x = age_group, y = heavy_pct, fill = gender)) +
     geom_col(position = position_dodge(width = 0.8), width = 0.7) +
     labs(title = "Heavy Drinking Prevalence by Age and Gender",
-         subtitle = "CPADS PUMF - Survey-weighted estimates",
+         subtitle = "data dataset - Survey-weighted estimates",
          x = "Age Group", y = "Heavy Drinking (%)", fill = "Gender") +
     theme_minimal()
 
@@ -139,13 +139,13 @@ if (!file.exists(phac_path)) {
 # --- 5. Mental Health x Heavy Drinking ---
 cat("\n--- 5. Mental Health x Heavy Drinking ---\n")
 tryCatch({
-  pumf <- readRDS(file.path(wrangled_dir, "cpads_pumf_wrangled.rds"))
+  df <- readRDS(file.path(wrangled_dir, "data_wrangled.rds"))
 
-  mh_data <- pumf %>%
+  mh_data <- df %>%
     dplyr::filter(!is.na(heavy_drinking_30d), !is.na(mental_health)) %>%
     dplyr::group_by(mental_health) %>%
     dplyr::summarise(
-      heavy_pct = 100 * weighted.mean(heavy_drinking_30d, wtpumf, na.rm = TRUE),
+      heavy_pct = 100 * weighted.mean(heavy_drinking_30d, weight, na.rm = TRUE),
       n = n(),
       .groups = "drop"
     )
@@ -153,7 +153,7 @@ tryCatch({
   p5 <- ggplot(mh_data, aes(x = mental_health, y = heavy_pct)) +
     geom_col(fill = "steelblue", alpha = 0.8, width = 0.6) +
     labs(title = "Heavy Drinking by Self-Rated Mental Health",
-         subtitle = "CPADS PUMF - Survey-weighted",
+         subtitle = "data dataset - Survey-weighted",
          x = "Mental Health Rating", y = "Heavy Drinking (%)") +
     theme_minimal()
 
