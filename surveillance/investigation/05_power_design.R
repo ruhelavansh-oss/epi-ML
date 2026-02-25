@@ -48,7 +48,7 @@ required <- c("weight", "heavy_drinking_30d", "gender", "cannabis_any_use")
 missing <- setdiff(required, names(df))
 if (length(missing) > 0) stop("Missing required variables: ", paste(missing, collapse = ", "))
 
-fmt_or_na <- function(x, digits = 4) ifelse(is.na(x), "NA", formatC(x, format = "f", digits = digits))
+fmt_or_na <- function(x, digits = 4) ifelse(is.na(x), "n/a", formatC(x, format = "f", digits = digits))
 
 cohens_h <- function(p1, p2) {
   2 * asin(sqrt(p1)) - 2 * asin(sqrt(p2))
@@ -156,7 +156,14 @@ power_summary <- tibble(
     "n_eff (if available)",
     "Power design mode"
   ),
-  value = c(as.character(p_unw), as.character(p_wt), as.character(deff_val), as.character(n_total), as.character(n_eff_total), "legacy_descriptive_post_hoc"),
+  value = c(
+    fmt_or_na(p_unw),
+    fmt_or_na(p_wt),
+    fmt_or_na(deff_val),
+    as.character(n_total),
+    fmt_or_na(n_eff_total),
+    "legacy_descriptive_post_hoc"
+  ),
   text_value = c("n/a", "n/a", "n/a", "n/a", "n/a", "legacy_descriptive_post_hoc"),
   analysis_mode = "observational",
   power_scope = "descriptive_post_hoc"
