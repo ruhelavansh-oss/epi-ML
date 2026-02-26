@@ -24,8 +24,40 @@ jobs:
       - name: Setup R
         uses: r-lib/actions/setup-r@v2
 
-      - name: Setup Quarto
+      - name: Setup Quarto (primary)
+        id: setup_quarto
+        continue-on-error: true
         uses: quarto-dev/quarto-actions/setup@v2
+
+      - name: Setup Quarto (fallback with retry)
+        if: steps.setup_quarto.outcome != 'success'
+        run: |
+          set -euo pipefail
+          arch="$(dpkg --print-architecture)"
+          case "$arch" in
+            amd64) pkg_arch="amd64" ;;
+            arm64) pkg_arch="arm64" ;;
+            *)
+              echo "Unsupported architecture for Quarto fallback install: ${arch}"
+              exit 1
+              ;;
+          esac
+          url="https://quarto.org/download/latest/quarto-linux-${pkg_arch}.deb"
+          for attempt in 1 2 3; do
+            echo "Fallback Quarto install attempt ${attempt}: ${url}"
+            if curl -fsSL -o quarto.deb "${url}"; then
+              if ! sudo dpkg -i quarto.deb; then
+                sudo apt-get update
+                sudo apt-get install -f -y
+                sudo dpkg -i quarto.deb
+              fi
+              quarto --version
+              exit 0
+            fi
+            sleep $((attempt * 10))
+          done
+          echo "Failed to install Quarto via fallback after retries."
+          exit 1
 
       - name: Install R dependencies
         run: Rscript scripts/install_deps.R
