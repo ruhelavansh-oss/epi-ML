@@ -1,6 +1,6 @@
 {
   "name": "epi-ML",
-  "image": "mcr.microsoft.com/devcontainers/r:1-4-bookworm",
+  "image": "mcr.microsoft.com/devcontainers/r:1-4-bullseye",
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {},
     "ghcr.io/devcontainers/features/python:1": {
