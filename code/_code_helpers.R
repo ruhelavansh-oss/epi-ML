@@ -314,14 +314,13 @@ render_script_metadata <- function(script_rel) {
   }
   n_lines <- if (exists_flag) length(readLines(abs, warn = FALSE, encoding = "UTF-8")) else 0L
   script_alias <- basename(script_rel)
-  script_url <- paste0(github_raw_base, script_rel)
+  script_url <- paste0(github_blob_base, script_rel)
 
   cat_row <- which(script_catalog$script_rel == script_rel)
   page_value <- "\u2014"
   if (length(cat_row) > 0) {
     page_href <- script_catalog$page_href[cat_row[1]]
-    page_html <- sub("\\.qmd$", ".html", page_href)
-    page_url <- paste0("https://ruhelavansh-oss.github.io/epi-ML/", page_html)
+    page_url <- paste0(github_blob_base, page_href)
     page_value <- paste0("[", script_catalog$label[cat_row[1]], "](", page_url, ")")
   }
 
@@ -404,7 +403,7 @@ render_outputs_table <- function(script_rel) {
     if (is_public_artifact) {
       repo_value <- paste0(
         "<a href=\"",
-        github_raw_base,
+        github_blob_base,
         repo_rel,
         "\" title=\"",
         ext,
@@ -500,7 +499,7 @@ render_code_index <- function() {
     script_rel <- resolve_script_rel(script_catalog$script_rel[i])
     script_abs <- normalizePath(file.path(paths$project_root, script_rel), winslash = "/", mustWork = FALSE)
     script_label <- basename(script_rel)
-    script_url <- paste0(github_raw_base, script_rel)
+    script_url <- paste0(github_blob_base, script_rel)
     copy_value <- if (exists("safe_label_path")) safe_label_path(script_abs, paths) else script_rel
 
     data.frame(
@@ -517,7 +516,7 @@ render_code_index <- function() {
 
   manifest_rel <- "data/public/outputs_manifest.csv"
   manifest_abs <- normalizePath(file.path(paths$project_root, manifest_rel), winslash = "/", mustWork = FALSE)
-  manifest_repo <- paste0(github_raw_base, manifest_rel)
+  manifest_repo <- paste0(github_blob_base, manifest_rel)
   manifest_site <- paste0("../", manifest_rel)
   manifest_copy <- if (exists("safe_label_path")) safe_label_path(manifest_abs, paths) else manifest_rel
 
