@@ -70,7 +70,7 @@ website:
     show-item-context: true
     type: overlay
     algolia:
-      index-name: epi_ml
+      index-name: ruhelavansh_oss_github_io_f5vcfzlaf3_pages
       application-id: F5VCFZLAF3
       search-only-api-key: 6ebd97492d9446ac46804b1e9be413c0
       analytics-events: true
