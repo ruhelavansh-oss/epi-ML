@@ -41,8 +41,14 @@ jobs:
       - name: Run path/secret scanner
         run: Rscript scripts/security_scan.R
 
+      - name: Clean Quarto freeze cache
+        run: rm -rf _freeze .quarto/_freeze
+
       - name: Render site for artifact scan
-        run: quarto render
+        run: quarto render --cache-refresh
+
+      - name: Validate Power Design page
+        run: Rscript scripts/check_power_design_render.R
 
       - name: Run post-render path/secret scanner
         run: Rscript scripts/security_scan.R --include-rendered

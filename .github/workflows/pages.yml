@@ -33,8 +33,14 @@ jobs:
       - name: Security scan
         run: Rscript scripts/security_scan.R
 
+      - name: Clean Quarto freeze cache
+        run: rm -rf _freeze .quarto/_freeze
+
       - name: Render site
-        run: quarto render
+        run: quarto render --cache-refresh
+
+      - name: Validate Power Design page
+        run: Rscript scripts/check_power_design_render.R
 
       - name: Post-render security scan
         run: Rscript scripts/security_scan.R --include-rendered
