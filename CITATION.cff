@@ -8,6 +8,6 @@ license: "Apache-2.0"
 authors:
   - family-names: "Ruhela"
     given-names: "Vansh"
-    orcid: "https://orcid.org/0009-0004-1750-3592"
+    orcid: "0009-0004-1750-3592"
 repository-code: "https://github.com/ruhelavansh-oss/epi-ML"
 url: "https://ruhelavansh-oss.github.io/epi-ML/"
