@@ -150,9 +150,8 @@ epi-ML/
 - Public pages: `index.qmd`, `background.qmd`, `initial-results.qmd`, `reproducibility.qmd`, `about.qmd`
 - Primary deployment: GitHub Pages (Actions)
 - Fallback deployment: Posit Connect Cloud (manifest-based)
-- GitHub Pages URL: <https://ruhelavansh-oss.github.io/epi-ML/>
-
-Repository URL: [https://github.com/ruhelavansh-oss/epi-ML](https://github.com/ruhelavansh-oss/epi-ML)
+- GitHub Pages URL (ACTIVE): <https://ruhelavansh-oss.github.io/epi-ML/>
+- Repository URL: [https://github.com/ruhelavansh-oss/epi-ML](https://github.com/ruhelavansh-oss/epi-ML)
 
 ## Reproducibility Workflow
 
