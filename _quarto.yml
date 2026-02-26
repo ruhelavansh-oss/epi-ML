@@ -75,7 +75,11 @@ website:
       search-only-api-key: 6ebd97492d9446ac46804b1e9be413c0
       analytics-events: true
       show-logo: true
-
+      index-fields:
+        href: url
+        section: title
+        title: title
+        text: content
   sidebar:
     - id: project-info
       style: "floating"
@@ -200,7 +204,7 @@ format:
       sidebar-width: 250px
       body-width: 900px
       margin-width: 300px
-
+      
 filters:
   - filters/tools-tabset.lua
   - filters/color-box.lua
