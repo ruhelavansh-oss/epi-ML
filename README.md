@@ -29,33 +29,119 @@ Implemented methods include:
 
 ```text
 epi-ML/
-├── .devcontainer/      # Development container configuration
-├── .github/            # GitHub workflows and templates
-├── .githooks/          # Git hooks (pre-commit, etc.)
-├── code/               # Experimental/utility code
-├── config/             # Configuration files and settings
-├── data/               # Data directory
-│   ├── private/        # Local initial outputs (gitignored)
-│   └── public/         # Publishable aggregate artifacts (tracked)
-├── filters/            # Quarto/Pandoc filters
-├── images/             # Image assets
-├── logs/               # Log outputs
-├── packages/           # Curated R functions
-│   └── epiml/          # Reusable reproducibility/audit package
-├── reports/            # Report generation
-│   ├── drafts/         # Manuscript/report source files
-│   └── public/         # Rendered report artifacts (gitignored)
-├── scripts/            # Orchestration, rendering, and checks
-├── surveillance/       # Core data study phases
-│   ├── lib/            # Shared configuration helpers
-│   ├── investigation/  # Core analysis modules
-│   └── ebac/           # eBAC-focused scripts
-├── tools/              # Utility scripts and tools
-├── _quarto.yml         # Quarto configuration
-├── README.md           # Main documentation
-├── DESCRIPTION         # Package description
-├── LICENSE             # Apache-2.0 license
-└── [root onfiguration files...]
+├── [root configuration files]
+├── code/
+│   ├── _code_helpers.R
+│   ├── bayesian-inference.qmd
+│   ├── causal-estimators.qmd
+│   ├── dag-specification.qmd
+│   ├── data-wrangling.qmd
+│   ├── descriptive-statistics.qmd
+│   ├── distribution-tests.qmd
+│   ├── ebac-core.qmd
+│   ├── ebac-gender-smote-sensitivity.qmd
+│   ├── ebac-integrations.qmd
+│   ├── ebac-selection-adjustment-ipw.qmd
+│   ├── figures.qmd
+│   ├── final-report.qmd
+│   ├── frequentist-inference.qmd
+│   ├── index.qmd
+│   ├── logistic-models.qmd
+│   ├── meta-synthesis.qmd
+│   ├── model-comparison.qmd
+│   ├── power-design.qmd
+│   ├── propensity-scores.qmd
+│   ├── regression-models.qmd
+│   ├── tables.qmd
+│   └── treatment-effects.qmd
+├── config/
+│   └── runtime.yml
+├── data/
+│   ├── private/        
+│   └── public/
+│       ├── outputs/
+│       └── outputs_manifest.csv
+├── filters/
+│   ├── color-box.lua
+│   ├── include-dark.lua
+│   └── tools-tabset.lua
+├── images/
+│   ├── Posit-Logos-2024_horiz-full-color-white-text.svg
+│   └── Posit-Logos-2024_horiz-full-color.svg
+├── logs/
+├── packages/
+│   └── epiml/
+│       ├── DESCRIPTION
+│       ├── NAMESPACE
+│       ├── README.md
+│       ├── R/
+│       ├── inst/
+│       ├── man/
+│       └── tests/
+├── reports/
+│   ├── drafts/        
+│   └── public/              
+├── scripts/
+│   ├── check_connect_publish_readiness.R
+│   ├── check_output_parity.R
+│   ├── check_power_design_render.R
+│   ├── deploy_connect_cloud.R
+│   ├── generate_manifest.R
+│   ├── install_deps.R
+│   ├── install_git_hooks.sh
+│   ├── publish_public_artifacts.R
+│   ├── render_site.R
+│   ├── run_modules.R
+│   ├── security_scan.R
+│   ├── unlock_data_local.sh
+│   └── entrypoints/
+│       ├── 03_data_wrangling.R
+│       ├── 04_descriptive_stats.R
+│       ├── 04_distributions.R
+│       ├── 05_bayesian.R
+│       ├── 05_frequentist.R
+│       ├── 05_power_design.R
+│       ├── 06_logistic.R
+│       ├── 06_model_comparison.R
+│       ├── 06_regression.R
+│       ├── 07_causal_estimators.R
+│       ├── 07_dag.R
+│       ├── 07_ebac.R
+│       ├── 07_ebac_gender_smote_sensitivity.R
+│       ├── 07_ebac_integrations.R
+│       ├── 07_ebac_ipw.R
+│       ├── 07_meta_synthesis.R
+│       ├── 07_propensity.R
+│       ├── 07_treatment_effects.R
+│       ├── 08_figures.R
+│       ├── 08_tables.R
+│       └── 09_report.R
+└── surveillance/
+    ├── lib/
+    │   └── config_paths.R
+    ├── investigation/
+    │   ├── 03_data_wrangling.R
+    │   ├── 04_descriptive_stats.R
+    │   ├── 04_distributions.R
+    │   ├── 05_bayesian.R
+    │   ├── 05_frequentist.R
+    │   ├── 05_power_design.R
+    │   ├── 06_logistic.R
+    │   ├── 06_model_comparison.R
+    │   ├── 06_regression.R
+    │   ├── 07_causal_estimators.R
+    │   ├── 07_dag.R
+    │   ├── 07_meta_synthesis.R
+    │   ├── 07_propensity.R
+    │   ├── 07_treatment_effects.R
+    │   ├── 08_figures.R
+    │   ├── 08_tables.R
+    │   └── 09_report.R
+    └── ebac/
+        ├── 07_ebac.R
+        ├── 07_ebac_gender_smote_sensitivity.R
+        ├── 07_ebac_integrations.R
+        └── 07_ebac_ipw.R
 ```
 
 ## Website and Publication
@@ -130,7 +216,7 @@ summarize_output_audit(audit)
 
 ## Citations
 
-`epi-ML` DOI records for `v1.1.1`:
+`epi-ML` DOI records for `1.1.1.1`:
 
 - Current DOI: <https://doi.org/10.5281/zenodo.18752220>
 - Legacy DOI record: <https://doi.org/10.5281/zenodo.18750663>
@@ -144,7 +230,7 @@ summarize_output_audit(audit)
   month        = feb,
   year         = 2026,
   publisher    = {Zenodo},
-  version      = {1.1.1},
+  version      = {1.1.1.1},
   doi          = {10.5281/zenodo.18752220},
   url          = {https://doi.org/10.5281/zenodo.18752220},
 }
@@ -155,7 +241,7 @@ summarize_output_audit(audit)
 ```bibtex
 @Manual{ruhela_epiml_2026,
   title   = {epiml: Reproducibility Utilities for Epidemiological ML Workflows},
-  author  = {Ruhela, Vansh Singh},
+  author  = {Ruhela, Vansh},
   year    = {2026},
   note    = {R package version 0.1.0},
   doi     = {10.5281/zenodo.18752220},
