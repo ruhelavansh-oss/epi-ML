@@ -1,0 +1,22 @@
+{
+  "name": "epi-ML",
+  "image": "mcr.microsoft.com/devcontainers/r:1-4-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {},
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.11"
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "20"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "quarto.quarto",
+        "REditorSupport.r",
+        "ms-python.python"
+      ]
+    }
+  }
+}
