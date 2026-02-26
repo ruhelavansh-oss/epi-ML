@@ -28,19 +28,34 @@ Implemented methods include:
 ## Repository Structure
 
 ```text
-surveillance/
-  lib/           # shared configuration helpers
-  investigation/ # core data study phases
-  ebac/          # eBAC-focused scripts
-scripts/         # orchestration, rendering, and checks
-reports/
-  drafts/        # manuscript/report source files
-  public/        # rendered report artifacts (gitignored)
-data/
-  private/       # local initial outputs (gitignored)
-  public/        # publishable aggregate artifacts (tracked)
-packages/
-  epiml/         # reusable reproducibility/audit package
+epi-ML/
+├── .devcontainer/      # Development container configuration
+├── .github/            # GitHub workflows and templates
+├── .githooks/          # Git hooks (pre-commit, etc.)
+├── code/               # Experimental/utility code
+├── config/             # Configuration files and settings
+├── data/               # Data directory
+│   ├── private/        # Local initial outputs (gitignored)
+│   └── public/         # Publishable aggregate artifacts (tracked)
+├── filters/            # Quarto/Pandoc filters
+├── images/             # Image assets
+├── logs/               # Log outputs
+├── packages/           # Curated R functions
+│   └── epiml/          # Reusable reproducibility/audit package
+├── reports/            # Report generation
+│   ├── drafts/         # Manuscript/report source files
+│   └── public/         # Rendered report artifacts (gitignored)
+├── scripts/            # Orchestration, rendering, and checks
+├── surveillance/       # Core data study phases
+│   ├── lib/            # Shared configuration helpers
+│   ├── investigation/  # Core analysis modules
+│   └── ebac/           # eBAC-focused scripts
+├── tools/              # Utility scripts and tools
+├── _quarto.yml         # Quarto configuration
+├── README.md           # Main documentation
+├── DESCRIPTION         # Package description
+├── LICENSE             # Apache-2.0 license
+└── [root onfiguration files...]
 ```
 
 ## Website and Publication
