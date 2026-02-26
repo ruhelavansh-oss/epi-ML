@@ -6,7 +6,7 @@ date: last-modified
 
 ## Introduction
 
-This project presents a retrospective epidemiologic study of alcohol and cannabis use among postsecondary students via the Canadian Alcohol and Drug Use Post-secondary Students Survey 2021-2022 public use microdata file. The objective is to estimate population burden, associational structure, and causal-effect targets under explicit assumptions. The project ships with a reusable companion package, `epiml`, for manifest validation, output auditing, pipeline execution, and synthetic-data development workflows.
+This project presents a retrospective epidemiologic study of alcohol and cannabis use *via* utilizing the *Canadian Post-secondary Students Alcohol and Drug Use Survey 2021-2022 public use microdata file (pumf). The objective is to estimate population burden, associational structure, and causal-effect targets under explicit assumptions. The project ships with a reusable companion package, `epiml`, for manifest validation, output auditing, pipeline execution, and synthetic-data development workflows.
 
 <a href="https://doi.org/10.5281/zenodo.18752220"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.18752220.svg" alt="DOI"></a>
 
