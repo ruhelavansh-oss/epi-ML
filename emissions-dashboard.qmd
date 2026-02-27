@@ -1,0 +1,279 @@
+---
+title: "Compute Emissions Dashboard"
+freeze: false
+---
+
+## Purpose
+
+This page summarizes tracked compute emissions for epi-ML runs and modules.
+
+```{r}
+#| echo: false
+read_csv_safe <- function(path) {
+  if (!file.exists(path)) return(data.frame())
+  tryCatch(read.csv(path, stringsAsFactors = FALSE), error = function(e) data.frame())
+}
+
+events_path <- file.path("data", "public", "outputs", "emissions", "emissions_module_events.csv")
+runs_path <- file.path("data", "public", "outputs", "emissions", "emissions_run_summary.csv")
+modules_path <- file.path("data", "public", "outputs", "emissions", "emissions_module_summary.csv")
+reco_path <- file.path("data", "public", "outputs", "emissions", "emissions_recommendations.csv")
+
+events <- read_csv_safe(events_path)
+runs <- read_csv_safe(runs_path)
+modules <- read_csv_safe(modules_path)
+recommendations <- read_csv_safe(reco_path)
+
+has_data <- nrow(events) > 0 && nrow(modules) > 0 && nrow(runs) > 0
+if (has_data) {
+  events$timestamp_utc <- as.POSIXct(events$timestamp_utc, format = "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
+  runs$start_time_utc <- as.POSIXct(runs$start_time_utc, format = "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
+  runs$end_time_utc <- as.POSIXct(runs$end_time_utc, format = "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
+  events <- events[order(events$run_id, events$elapsed_minutes_run), , drop = FALSE]
+  modules <- modules[order(modules$total_emissions_kg, decreasing = TRUE), , drop = FALSE]
+}
+```
+
+```{r}
+#| echo: false
+#| results: asis
+if (!has_data) {
+  cat(
+    "No emissions data is available yet.\n\n",
+    "Run `Rscript scripts/run_modules.R --track-emissions` locally, then render the site again.",
+    sep = ""
+  )
+} else {
+  total_emissions_kg <- sum(events$emissions_kg, na.rm = TRUE)
+  total_energy_kwh <- sum(events$energy_kwh, na.rm = TRUE)
+  total_hours <- sum(events$duration_seconds, na.rm = TRUE) / 3600
+  total_runs <- length(unique(events$run_id))
+  total_modules <- length(unique(events$module))
+  total_exec <- nrow(events)
+  mean_module_emissions_g <- mean(events$emissions_kg, na.rm = TRUE) * 1000
+
+  cat(sprintf("<strong>Tracked runs:</strong> %d<br/>", total_runs))
+  cat(sprintf("<strong>Total modules:</strong> %d<br/>", total_modules))
+  cat(sprintf("<strong>Module executions:</strong> %d<br/>", total_exec))
+  cat(sprintf("<strong>Total emissions:</strong> %.3f g CO2e<br/>", total_emissions_kg * 1000))
+  cat(sprintf("<strong>Total energy:</strong> %.6f kWh<br/>", total_energy_kwh))
+  cat(sprintf("<strong>Tracked compute time:</strong> %.2f minutes<br/>", total_hours * 60))
+  cat(sprintf("<strong>Average per module execution:</strong> %.4f g CO2e<br/><br/>", mean_module_emissions_g))
+}
+```
+
+For native dashboard UI (similiar to CodeCarbon `dashboard.png`), run:
+
+```bash
+carbonboard --filepath=logs/emissions/codecarbon_emissions.csv
+```
+
+CodeCarbon tracking during local module computations:
+
+```bash
+python3 -m pip install codecarbon
+Rscript scripts/run_modules.R --track-emissions
+```
+
+CodeCarbon dashboard (optional) upload:
+
+```bash
+CODECARBON_SAVE_TO_API=1 CODECARBON_EXPERIMENT_ID=<experiment-id> Rscript scripts/run_modules.R --track-emissions
+```
+
+## Computational Runs Timeline
+
+```{r}
+#| echo: false
+#| tbl-colwidths: [20,20,14,14,16,16]
+if (has_data) {
+  runs_ord <- runs[order(runs$start_time_utc), , drop = FALSE]
+  offsets <- cumsum(c(0, head(runs_ord$total_duration_seconds / 60, -1)))
+  names(offsets) <- runs_ord$run_id
+  events_seq <- events
+  events_seq$elapsed_minutes_global <- events_seq$elapsed_minutes_run + offsets[events_seq$run_id]
+  events_seq <- events_seq[order(events_seq$elapsed_minutes_global), , drop = FALSE]
+  events_seq$cumulative_emissions_g_global <- cumsum(events_seq$emissions_kg) * 1000
+  x_max <- max(events_seq$elapsed_minutes_global, na.rm = TRUE)
+  y_max <- max(events_seq$cumulative_emissions_g_global, na.rm = TRUE)
+  plot(
+    events_seq$elapsed_minutes_global,
+    events_seq$cumulative_emissions_g_global,
+    type = "l",
+    lwd = 2,
+    col = "#2F6B8A",
+    xlim = c(0, x_max * 1.05),
+    ylim = c(0, y_max * 1.05),
+    xlab = "Elapsed minutes across runs (sequential)",
+    ylab = "Cumulative emissions (g CO2e)",
+    main = "Cumulative emissions timeline"
+  )
+  points(
+    events_seq$elapsed_minutes_global,
+    events_seq$cumulative_emissions_g_global,
+    pch = 16,
+    cex = 0.8,
+    col = "#2F6B8A"
+  )
+  if (nrow(runs_ord) > 1) {
+    run_boundaries <- offsets[-1]
+    for (b in run_boundaries) {
+      abline(v = b, lty = 3, col = "#9AA6B2")
+    }
+  }
+} else {
+  plot.new()
+  title("No run timeline available")
+}
+```
+
+## Average Module Duration Trend
+
+```{r}
+#| echo: false
+if (has_data && nrow(events) > 0) {
+  runs_ord <- runs[order(runs$start_time_utc), , drop = FALSE]
+  offsets <- cumsum(c(0, head(runs_ord$total_duration_seconds / 60, -1)))
+  names(offsets) <- runs_ord$run_id
+
+  events_seq <- events
+  events_seq$elapsed_minutes_global <- events_seq$elapsed_minutes_run + offsets[events_seq$run_id]
+  events_seq$duration_minutes <- events_seq$duration_seconds / 60
+  events_seq <- events_seq[order(events_seq$elapsed_minutes_global), , drop = FALSE]
+  events_seq$cumulative_avg_duration_minutes <- cumsum(events_seq$duration_minutes) / seq_len(nrow(events_seq))
+
+  overall_avg_duration <- mean(events_seq$duration_minutes, na.rm = TRUE)
+  x_max <- max(events_seq$elapsed_minutes_global, na.rm = TRUE)
+  y_max <- max(c(events_seq$cumulative_avg_duration_minutes, overall_avg_duration), na.rm = TRUE)
+  upper_y <- if (is.finite(y_max) && y_max > 0) y_max * 1.10 else 1
+
+  plot(
+    events_seq$elapsed_minutes_global,
+    events_seq$cumulative_avg_duration_minutes,
+    type = "l",
+    lwd = 2,
+    col = "#2F6B8A",
+    xlim = c(0, x_max * 1.05),
+    ylim = c(0, upper_y),
+    xlab = "Elapsed minutes across runs (sequential)",
+    ylab = "Average duration (minutes)",
+    main = "Average module duration"
+  )
+  abline(h = overall_avg_duration, lty = 2, lwd = 2, col = "#9AA6B2")
+  legend(
+    "bottomright",
+    legend = c("Cumulative average duration", "Overall average duration"),
+    col = c("#2F6B8A", "#9AA6B2"),
+    lty = c(1, 2),
+    lwd = c(2, 2),
+    bty = "n"
+  )
+} else {
+  plot.new()
+  title("No average-duration profile available")
+}
+```
+
+## Run Summary
+
+```{r}
+#| echo: false
+#| tbl-colwidths: [24,24,12,12,14,14]
+if (has_data) {
+  view_runs <- runs[, c(
+    "run_id", "start_time_utc", "end_time_utc",
+    "total_duration_seconds", "total_energy_kwh", "total_emissions_kg",
+    "avg_emissions_rate_kg_per_hour"
+  )]
+  view_runs$start_time_utc <- format(view_runs$start_time_utc, "%Y-%m-%d %H:%M:%S UTC")
+  view_runs$end_time_utc <- format(view_runs$end_time_utc, "%Y-%m-%d %H:%M:%S UTC")
+  view_runs$total_duration_seconds <- round(view_runs$total_duration_seconds, 2)
+  view_runs$total_energy_kwh <- round(view_runs$total_energy_kwh, 6)
+  view_runs$total_emissions_g <- round(view_runs$total_emissions_kg * 1000, 4)
+  view_runs$avg_emissions_rate_g_per_hour <- round(view_runs$avg_emissions_rate_kg_per_hour * 1000, 4)
+  view_runs <- view_runs[, c(
+    "run_id", "start_time_utc",
+    "total_duration_seconds", "total_energy_kwh",
+    "total_emissions_g", "avg_emissions_rate_g_per_hour"
+  )]
+  names(view_runs) <- c(
+    "Run ID", "Start",
+    "s", "kWh",
+    "g CO2e", "g CO2e/hr"
+  )
+  knitr::kable(
+    view_runs,
+    format = "pipe",
+    align = rep("c", ncol(view_runs)),
+    escape = FALSE
+  )
+}
+```
+
+Notation:
+
+- `s`: total run duration in seconds.
+- `kWh`: total energy consumed in kilowatt-hours.
+- `g CO2e`: total emissions in grams of CO2-equivalent.
+- `g CO2e/hr`: avg emissions rate for run (g CO2e per hour).
+
+## Modules Summary
+
+```{r}
+#| echo: false
+#| tbl-colwidths: [20,8,8,8,8,8,8,8,8,16]
+if (has_data) {
+  view <- modules[, c(
+    "module_label", "page_href",
+    "avg_duration_seconds", "total_duration_seconds",
+    "mean_emissions_kg", "median_emissions_kg", "total_emissions_kg",
+    "avg_energy_kwh", "total_energy_kwh",
+    "emissions_share_pct", "emissions_rate_kg_per_hour"
+  )]
+  view$Module <- sprintf("<a href='%s'>%s</a>", view$page_href, view$module_label)
+  view$`m̄` <- round(view$avg_duration_seconds / 60, 2)
+  view$`Σm` <- round(view$total_duration_seconds / 60, 2)
+  view$`ḡ` <- round(view$mean_emissions_kg * 1000, 4)
+  view$`g̃` <- round(view$median_emissions_kg * 1000, 4)
+  view$`Σg` <- round(view$total_emissions_kg * 1000, 4)
+  view$`W̄h` <- round(view$avg_energy_kwh * 1000, 3)
+  view$`ΣWh` <- round(view$total_energy_kwh * 1000, 3)
+  view$`%` <- round(view$emissions_share_pct, 2)
+  view$`g CO2e/hr` <- round(view$emissions_rate_kg_per_hour * 1000, 4)
+  view_out <- view[, c(
+    "Module",
+    "m̄", "Σm",
+    "ḡ", "g̃", "Σg",
+    "W̄h", "ΣWh",
+    "%", "g CO2e/hr"
+  )]
+  knitr::kable(
+    view_out,
+    format = "pipe",
+    align = rep("c", ncol(view_out)),
+    escape = FALSE
+  )
+}
+```
+
+Notation:
+
+- `m̄`: average duration per module execution (minutes).
+- `Σm`: cumulative duration across executions (minutes).
+- `ḡ`: arithmetic mean emissions per execution (grams CO2e).
+- `g̃`: median emissions per execution (grams CO2e).
+- `Σg`: cumulative emissions across executions (grams CO2e).
+- `W̄h`: average energy per execution (watt-hours).
+- `ΣWh`: cumulative energy across executions (watt-hours).
+- `%`: module share of total tracked emissions (percentage).
+- `g CO2e/hr`: emissions intensity in grams CO2e per hour.
+
+## Reduction Recommendations
+
+```{r}
+#| echo: false
+if (has_data && nrow(recommendations) > 0) {
+  names(recommendations) <- c("Priority", "Recommendation", "Rationale")
+  knitr::kable(recommendations)
+}
+```

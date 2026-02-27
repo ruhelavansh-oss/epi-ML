@@ -20,10 +20,26 @@ Project defaults are defined in `config/runtime.yml` and can be overridden local
 
 ```bash
 Rscript scripts/run_modules.R
+Rscript scripts/run_modules.R --track-emissions
 Rscript scripts/render_site.R
+Rscript scripts/preview_site.R --port 4774
 Rscript scripts/security_scan.R
 Rscript scripts/check_connect_publish_readiness.R
 ```
+
+Install CodeCarbon once before tracked runs:
+
+```bash
+python3 -m pip install codecarbon
+```
+
+Optional online dashboard sync:
+
+```bash
+CODECARBON_SAVE_TO_API=1 CODECARBON_EXPERIMENT_ID=<experiment-id> Rscript scripts/run_modules.R --track-emissions
+```
+
+Raw tracker logs are stored in `logs/emissions/` and summarized into publishable files under `data/public/outputs/emissions/`.
 
 ## Publication Boundaries
 

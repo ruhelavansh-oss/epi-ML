@@ -55,3 +55,7 @@ process.txt
 **/*.quarto_ipynb
 
 /.quarto/
+/tools/codecarbon-upstream/
+/tools/codecarbon-upstream/
+/emissions-dashboard_cache/
+/emissions-dashboard_files/

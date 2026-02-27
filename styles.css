@@ -558,6 +558,36 @@ body.quarto-dark .module-script-pre {
   border-top-color: #334155;
 }
 
+/* Emissions dashboard tables: content-driven sizing with horizontal overflow */
+#run-summary .cell-output-display,
+#modules-summary .cell-output-display {
+  overflow-x: auto;
+}
+
+#run-summary table,
+#modules-summary table {
+  width: max-content;
+  min-width: 100%;
+  table-layout: auto;
+  border-collapse: collapse;
+}
+
+#run-summary table th,
+#run-summary table td,
+#modules-summary table th,
+#modules-summary table td {
+  white-space: nowrap;
+  vertical-align: top;
+  text-align: center;
+  border: 1px solid var(--bs-border-color, #b8bec8);
+  padding: 0.35rem 0.45rem;
+}
+
+#modules-summary table th:first-child,
+#modules-summary table td:first-child {
+  white-space: normal;
+}
+
 body.quarto-dark .module-script-code {
   color: #dbe7ff;
 }

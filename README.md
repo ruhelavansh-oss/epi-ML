@@ -30,6 +30,12 @@ Implemented methods include:
 ```text
 epi-ML/
 ├── [root configuration files]
+├── .github/
+│   └── workflows/
+│       ├── lintr.yml
+│       ├── pages.yml
+│       ├── r.yml
+│       └── security.yml
 ├── code/
 │   ├── _code_helpers.R
 │   ├── bayesian-inference.qmd
@@ -57,7 +63,7 @@ epi-ML/
 ├── config/
 │   └── runtime.yml
 ├── data/
-│   ├── private/        
+│   ├── private/
 │   └── public/
 │       ├── outputs/
 │       └── outputs_manifest.csv
@@ -69,6 +75,7 @@ epi-ML/
 │   ├── Posit-Logos-2024_horiz-full-color-white-text.svg
 │   └── Posit-Logos-2024_horiz-full-color.svg
 ├── logs/
+│   └── emissions/
 ├── packages/
 │   └── epiml/
 │       ├── DESCRIPTION
@@ -79,9 +86,10 @@ epi-ML/
 │       ├── man/
 │       └── tests/
 ├── reports/
-│   ├── drafts/        
-│   └── public/              
+│   ├── drafts/
+│   └── public/
 ├── scripts/
+│   ├── build_emissions_dashboard_data.R
 │   ├── check_connect_publish_readiness.R
 │   ├── check_output_parity.R
 │   ├── check_power_design_render.R
@@ -89,10 +97,13 @@ epi-ML/
 │   ├── generate_manifest.R
 │   ├── install_deps.R
 │   ├── install_git_hooks.sh
+│   ├── preview_site.R
 │   ├── publish_public_artifacts.R
 │   ├── render_site.R
 │   ├── run_modules.R
 │   ├── security_scan.R
+│   ├── seed_emissions_log_from_public.py
+│   ├── track_emissions.py
 │   ├── unlock_data_local.sh
 │   └── entrypoints/
 │       ├── 03_data_wrangling.R
@@ -116,32 +127,32 @@ epi-ML/
 │       ├── 08_figures.R
 │       ├── 08_tables.R
 │       └── 09_report.R
-└── surveillance/
-    ├── lib/
-    │   └── config_paths.R
-    ├── investigation/
-    │   ├── 03_data_wrangling.R
-    │   ├── 04_descriptive_stats.R
-    │   ├── 04_distributions.R
-    │   ├── 05_bayesian.R
-    │   ├── 05_frequentist.R
-    │   ├── 05_power_design.R
-    │   ├── 06_logistic.R
-    │   ├── 06_model_comparison.R
-    │   ├── 06_regression.R
-    │   ├── 07_causal_estimators.R
-    │   ├── 07_dag.R
-    │   ├── 07_meta_synthesis.R
-    │   ├── 07_propensity.R
-    │   ├── 07_treatment_effects.R
-    │   ├── 08_figures.R
-    │   ├── 08_tables.R
-    │   └── 09_report.R
-    └── ebac/
-        ├── 07_ebac.R
-        ├── 07_ebac_gender_smote_sensitivity.R
-        ├── 07_ebac_integrations.R
-        └── 07_ebac_ipw.R
+├── surveillance/
+│   ├── lib/
+│   │   └── config_paths.R
+│   ├── investigation/
+│   │   ├── 03_data_wrangling.R
+│   │   ├── 04_descriptive_stats.R
+│   │   ├── 04_distributions.R
+│   │   ├── 05_bayesian.R
+│   │   ├── 05_frequentist.R
+│   │   ├── 05_power_design.R
+│   │   ├── 06_logistic.R
+│   │   ├── 06_model_comparison.R
+│   │   ├── 06_regression.R
+│   │   ├── 07_causal_estimators.R
+│   │   ├── 07_dag.R
+│   │   ├── 07_meta_synthesis.R
+│   │   ├── 07_propensity.R
+│   │   ├── 07_treatment_effects.R
+│   │   ├── 08_figures.R
+│   │   ├── 08_tables.R
+│   │   └── 09_report.R
+│   └── ebac/
+│       ├── 07_ebac.R
+│       ├── 07_ebac_gender_smote_sensitivity.R
+│       ├── 07_ebac_integrations.R
+│       └── 07_ebac_ipw.R
 ```
 
 ## Website and Publication
@@ -164,6 +175,21 @@ Rscript scripts/run_modules.R
 
 This workflow also publishes aggregate artifacts to `data/public/outputs`.
 
+To track compute emissions with CodeCarbon during module runs:
+
+```bash
+python3 -m pip install codecarbon
+Rscript scripts/run_modules.R --track-emissions
+```
+
+Optional upload to the CodeCarbon online dashboard:
+
+```bash
+CODECARBON_SAVE_TO_API=1 CODECARBON_EXPERIMENT_ID=<experiment-id> Rscript scripts/run_modules.R --track-emissions
+```
+
+Tracked raw logs are written to `logs/emissions/` (gitignored). Sanitized dashboard datasets are published to `data/public/outputs/emissions/`.
+
 3. Render site and reports:
 
 ```bash
@@ -172,7 +198,15 @@ Rscript scripts/render_site.R
 
 This command refreshes public aggregate artifacts before rendering.
 
-4. Run publish readiness checks:
+4. Preview with a guaranteed fresh render (recommended):
+
+```bash
+Rscript scripts/preview_site.R --port 4774
+```
+
+This avoids stale website output from `quarto preview` caching behavior.
+
+5. Run publish readiness checks:
 
 ```bash
 Rscript scripts/check_connect_publish_readiness.R

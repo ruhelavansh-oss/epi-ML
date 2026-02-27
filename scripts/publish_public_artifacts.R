@@ -8,6 +8,14 @@ src_root <- paths$output_private_dir
 dst_root <- file.path(paths$public_data_dir, "outputs")
 manifest_path <- file.path(paths$public_data_dir, "outputs_manifest.csv")
 
+emissions_build_script <- file.path(paths$project_root, "scripts", "build_emissions_dashboard_data.R")
+if (file.exists(emissions_build_script)) {
+  emissions_code <- system2(file.path(R.home("bin"), "Rscript"), emissions_build_script)
+  if (!identical(emissions_code, 0L)) {
+    warning("Emissions dashboard data build failed (exit code ", emissions_code, ").")
+  }
+}
+
 publish_ext <- c("csv", "pdf", "png", "html", "txt", "md")
 ext_pattern <- paste0("\\.(", paste(publish_ext, collapse = "|"), ")$")
 

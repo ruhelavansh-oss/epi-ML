@@ -24,6 +24,11 @@ jobs:
       - name: Setup R
         uses: r-lib/actions/setup-r@v2
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
       - name: Setup Quarto (primary)
         id: setup_quarto
         continue-on-error: true
@@ -62,14 +67,106 @@ jobs:
       - name: Install R dependencies
         run: Rscript scripts/install_deps.R
 
+      - name: Install CodeCarbon
+        run: python3 -m pip install --upgrade pip codecarbon
+
       - name: Security scan
         run: Rscript scripts/security_scan.R
 
       - name: Clean Quarto freeze cache
         run: rm -rf _freeze .quarto/_freeze
 
-      - name: Render site
-        run: quarto render --cache-refresh
+      - name: Seed emissions history from previous deployment
+        run: |
+          python3 scripts/seed_emissions_log_from_public.py \
+            --source-url "https://ruhelavansh-oss.github.io/epi-ML/data/public/outputs/emissions/emissions_module_events.csv" \
+            --log-path logs/emissions/module_emissions_log.csv
+
+      - name: Resolve private data (decrypt fallback)
+        env:
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          PRIVATE_DATA_BUNDLE_URL: ${{ secrets.PRIVATE_DATA_BUNDLE_URL }}
+          PRIVATE_DATA_BUNDLE_ENC_B64: ${{ secrets.PRIVATE_DATA_BUNDLE_ENC_B64 }}
+        run: |
+          set -euo pipefail
+          echo "PRIVATE_DATA_READY=false" >> "${GITHUB_ENV}"
+          echo "DATA_DIR=data/private" >> "${GITHUB_ENV}"
+
+          if find data/private -maxdepth 1 -type f -name '*.csv' | grep -q .; then
+            echo "Private CSV data found in data/private."
+            echo "PRIVATE_DATA_READY=true" >> "${GITHUB_ENV}"
+            exit 0
+          fi
+
+          ENC_PATH="data/private/encrypted/data_bundle.tar.gz.enc"
+          if [[ ! -f "${ENC_PATH}" ]] && [[ -n "${PRIVATE_DATA_BUNDLE_URL}" ]]; then
+            mkdir -p "$(dirname "${ENC_PATH}")"
+            curl -fsSL "${PRIVATE_DATA_BUNDLE_URL}" -o "${ENC_PATH}"
+            echo "Downloaded encrypted bundle from PRIVATE_DATA_BUNDLE_URL."
+          fi
+
+          if [[ ! -f "${ENC_PATH}" ]] && [[ -n "${PRIVATE_DATA_BUNDLE_ENC_B64}" ]]; then
+            mkdir -p "$(dirname "${ENC_PATH}")"
+            printf '%s' "${PRIVATE_DATA_BUNDLE_ENC_B64}" | base64 --decode > "${ENC_PATH}"
+            echo "Wrote encrypted bundle from PRIVATE_DATA_BUNDLE_ENC_B64 secret."
+          fi
+
+          if [[ -f "${ENC_PATH}" ]] && [[ -n "${SECRET_KEY}" ]]; then
+            chmod +x scripts/unlock_data_local.sh
+            PROJECT_ROOT="${PWD}" bash scripts/unlock_data_local.sh
+            if find data/private/runtime -type f -name '*.csv' | grep -q .; then
+              echo "Private CSV data restored to data/private/runtime."
+              echo "PRIVATE_DATA_READY=true" >> "${GITHUB_ENV}"
+              echo "DATA_DIR=data/private/runtime" >> "${GITHUB_ENV}"
+            else
+              echo "Decrypt attempted but no CSV files were restored."
+            fi
+          else
+            echo "Encrypted bundle or SECRET_KEY missing; skipping decrypt fallback."
+          fi
+
+      - name: Run modules with emissions tracking (if private data resolved)
+        if: env.PRIVATE_DATA_READY == 'true'
+        env:
+          EPI_ML_EMISSIONS_RUN_ID: gh-${{ github.run_id }}-${{ github.run_attempt }}
+          DATA_DIR: ${{ env.DATA_DIR }}
+        run: |
+          Rscript scripts/run_modules.R \
+            --track-emissions \
+            --python-bin=python3 \
+            --emissions-measure-power-secs=1 \
+            --emissions-project-name=epi-ML-deploy
+
+      - name: Explain module tracking skip
+        if: env.PRIVATE_DATA_READY != 'true'
+        run: echo "Skipping module orchestration emissions in CI because private data is unavailable."
+
+      - name: Track publish artifacts emissions
+        env:
+          EPI_ML_EMISSIONS_RUN_ID: gh-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          python3 scripts/track_emissions.py \
+            --module ci_publish_public_artifacts \
+            --run-id "${EPI_ML_EMISSIONS_RUN_ID}" \
+            --log-dir logs/emissions \
+            --project-name epi-ML-deploy \
+            --measure-power-secs 1 \
+            -- Rscript scripts/publish_public_artifacts.R
+
+      - name: Track site render emissions
+        env:
+          EPI_ML_EMISSIONS_RUN_ID: gh-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          python3 scripts/track_emissions.py \
+            --module ci_quarto_render \
+            --run-id "${EPI_ML_EMISSIONS_RUN_ID}" \
+            --log-dir logs/emissions \
+            --project-name epi-ML-deploy \
+            --measure-power-secs 1 \
+            -- quarto render --cache-refresh
+
+      - name: Refresh emissions dashboard artifacts
+        run: Rscript scripts/publish_public_artifacts.R
 
       - name: Validate Power Design page
         run: Rscript scripts/check_power_design_render.R

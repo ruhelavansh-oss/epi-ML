@@ -16,7 +16,7 @@ if (file.exists(publish_script)) {
   }
 }
 
-code <- system2("quarto", c("render", "--to", "html"))
+code <- system2("quarto", c("render", "--to", "html", "--cache-refresh"))
 if (!identical(code, 0L)) {
   stop("Quarto render failed with exit code ", code)
 }

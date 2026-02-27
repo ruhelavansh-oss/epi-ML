@@ -1,0 +1,4 @@
+"priority","recommendation","rationale"
+1,"Prioritize optimization and caching for Treatment.","This module contributes 18.0% of tracked run emissions."
+2,"Run only modules with changed inputs during development.","Selective reruns reduce avoidable compute time and electricity use."
+3,"Use energy-efficient hardware for repeated experiment sweeps.","Hardware efficiency directly lowers kWh and emissions for equivalent workloads."

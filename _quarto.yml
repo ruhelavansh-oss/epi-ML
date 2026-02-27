@@ -1,10 +1,6 @@
 project:
   type: website
   output-dir: _site
-  pre-render:
-    - Rscript scripts/publish_public_artifacts.R
-  post-render:
-    - tools/algolia-add-custom-attribute.ts
   resources:
     - "/images/Posit-Logos-2024_horiz-full-color.svg"
     - "/images/Posit-Logos-2024_horiz-full-color-white-text.svg"
@@ -82,6 +78,8 @@ website:
               text: "Background"
             - href: reproducibility.qmd
               text: "Reproducibility"
+            - href: emissions-dashboard.qmd
+              text: "Emissions Dashboard"
             - href: initial-results.qmd
               text: "Initial Results"
     - id: modules
@@ -161,6 +159,8 @@ website:
             href: background.qmd
           - text: Reproducibility
             href: reproducibility.qmd
+          - text: Emissions Dashboard
+            href: emissions-dashboard.qmd
           - text: Initial Results
             href: initial-results.qmd
           - text: Author
@@ -170,7 +170,7 @@ website:
         href: https://github.com/ruhelavansh-oss/epi-ML
 format:
   html:
-    respect-user-color-scheme: true
+    respect-user-color-scheme: false
     toc: true
     css: styles.css
     theme:
