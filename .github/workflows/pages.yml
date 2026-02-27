@@ -125,6 +125,10 @@ jobs:
             echo "Encrypted bundle or SECRET_KEY missing; skipping decrypt fallback."
           fi
 
+      - name: Install full R dependencies for module orchestration
+        if: env.PRIVATE_DATA_READY == 'true'
+        run: Rscript scripts/install_deps.R --full
+
       - name: Run modules with emissions tracking (if private data resolved)
         if: env.PRIVATE_DATA_READY == 'true'
         env:
