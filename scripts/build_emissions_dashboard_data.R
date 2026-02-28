@@ -131,18 +131,36 @@ parse_run_id_time <- function(run_id) {
 }
 
 parse_event_time <- function(x, run_id) {
-  x <- as.character(x)
-  x_norm <- sub("([+-][0-9]{2}):([0-9]{2})$", "\\1\\2", x)
-  parsed <- as.POSIXct(x_norm, format = "%Y-%m-%dT%H:%M:%S%z", tz = "UTC")
-  miss <- is.na(parsed)
-  if (any(miss)) {
-    parsed[miss] <- as.POSIXct(x[miss], tz = "UTC")
+  x <- trimws(as.character(x))
+  placeholders <- toupper(x) %in% c("", "NA", "N/A", "NULL", "NONE", "NAN")
+  x[placeholders] <- NA_character_
+
+  parse_try <- function(expr) {
+    suppressWarnings(tryCatch(expr, error = function(e) as.POSIXct(NA, origin = "1970-01-01", tz = "UTC")))
   }
-  miss <- is.na(parsed)
-  if (any(miss)) {
-    parsed[miss] <- parse_run_id_time(run_id[miss])
+
+  out <- as.POSIXct(rep(NA_real_, length(x)), origin = "1970-01-01", tz = "UTC")
+
+  for (i in seq_along(x)) {
+    xi <- x[[i]]
+    if (!is.na(xi)) {
+      xi_colonless <- sub("([+-][0-9]{2}):([0-9]{2})$", "\\1\\2", xi)
+      candidates <- c(
+        parse_try(as.POSIXct(xi_colonless, format = "%Y-%m-%dT%H:%M:%S%z", tz = "UTC")),
+        parse_try(as.POSIXct(xi, tz = "UTC")),
+        parse_try(as.POSIXct(xi, format = "%Y-%m-%d %H:%M:%S", tz = "UTC"))
+      )
+      ok <- which(!is.na(candidates))
+      if (length(ok) > 0) {
+        out[[i]] <- candidates[[ok[[1]]]]
+      }
+    }
+    if (is.na(out[[i]])) {
+      out[[i]] <- parse_run_id_time(run_id[[i]])
+    }
   }
-  parsed
+
+  out
 }
 
 build_recommendations <- function(module_summary, run_summary) {
@@ -248,7 +266,29 @@ events$country_iso_code <- as.character(events$country_iso_code)
 events$region <- as.character(events$region)
 events$cloud_provider <- as.character(events$cloud_provider)
 events$run_source <- normalize_run_source(events$run_source, events$cloud_provider)
-events$timestamp_utc <- parse_event_time(events$timestamp_utc, events$run_id)
+events$timestamp_utc_raw <- as.character(events$timestamp_utc)
+events$timestamp_utc <- parse_event_time(events$timestamp_utc_raw, events$run_id)
+
+invalid_ts <- is.na(events$timestamp_utc)
+if (any(invalid_ts)) {
+  bad_samples <- unique(utils::head(sprintf(
+    "run_id=%s timestamp=%s",
+    events$run_id[invalid_ts],
+    events$timestamp_utc_raw[invalid_ts]
+  ), 5))
+  warning(
+    "Dropping ",
+    sum(invalid_ts),
+    " emissions row(s) with invalid timestamps. Samples: ",
+    paste(bad_samples, collapse = " | ")
+  )
+  events <- events[!invalid_ts, , drop = FALSE]
+}
+
+if (nrow(events) == 0) {
+  cat("No valid emissions rows remain after timestamp parsing. Skipping emissions dashboard data refresh.\n")
+  quit(status = 0)
+}
 
 num_cols <- c("duration_seconds", "emissions_kg", "energy_kwh")
 for (nm in num_cols) {

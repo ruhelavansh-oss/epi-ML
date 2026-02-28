@@ -15,6 +15,7 @@ from pathlib import Path
 FULL_FIELDS = [
     "timestamp_utc",
     "run_id",
+    "run_source",
     "module",
     "status",
     "duration_seconds",
@@ -58,6 +59,11 @@ def parse_args() -> argparse.Namespace:
         default=Path("logs/emissions/module_emissions_log.csv"),
         help="Target module emissions log path.",
     )
+    parser.add_argument(
+        "--require-data",
+        action="store_true",
+        help="Exit non-zero when the source cannot provide usable rows.",
+    )
     return parser.parse_args()
 
 
@@ -98,12 +104,18 @@ def normalize_event_row(row: dict[str, str]) -> dict[str, str]:
     out = {key: "" for key in FULL_FIELDS}
     out["timestamp_utc"] = as_text(row.get("timestamp_utc", "")).strip()
     out["run_id"] = as_text(row.get("run_id", "")).strip()
+    source = as_text(row.get("run_source", "")).strip().lower()
+    if source not in {"local", "cloud"}:
+        provider = as_text(row.get("cloud_provider", "")).strip()
+        source = "cloud" if provider else "local"
+    out["run_source"] = source
     out["module"] = as_text(row.get("module", "")).strip()
     out["status"] = as_text(row.get("status", "")).strip() or "ok"
     out["duration_seconds"] = as_text(row.get("duration_seconds", "")).strip() or "0"
     out["emissions_kg"] = as_text(row.get("emissions_kg", "")).strip() or "0"
     out["energy_kwh"] = as_text(row.get("energy_kwh", "")).strip() or "0"
     out["country_iso_code"] = as_text(row.get("country_iso_code", "")).strip()
+    out["cloud_provider"] = as_text(row.get("cloud_provider", "")).strip()
     out["region"] = as_text(row.get("region", "")).strip()
     out["tracking_mode"] = "restored"
     out["command"] = "restored-from-published-emissions-module-events"
@@ -155,7 +167,7 @@ def main() -> int:
     source_rows = fetch_source_rows(args)
     if not source_rows:
         print("[seed_emissions] no source rows available; skipping.")
-        return 0
+        return 1 if args.require_data else 0
 
     normalized_source = [normalize_event_row(row) for row in source_rows]
     normalized_source = [
@@ -163,7 +175,7 @@ def main() -> int:
     ]
     if not normalized_source:
         print("[seed_emissions] no usable rows in source; skipping.")
-        return 0
+        return 1 if args.require_data else 0
 
     existing = read_existing_rows(args.log_path)
     merged = dedupe_rows(existing + normalized_source)

@@ -9,6 +9,7 @@ import datetime as dt
 import os
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 from typing import Iterable, Mapping
@@ -121,12 +122,41 @@ def get_attr(data: object, key: str, default: object = "") -> object:
 
 def append_csv_row(path: Path, fieldnames: Iterable[str], row: Mapping[str, object]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
+    normalize_log_schema(path, fieldnames)
     exists = path.exists()
     with path.open("a", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=list(fieldnames))
         if not exists:
             writer.writeheader()
         writer.writerow(row)
+
+
+def normalize_log_schema(path: Path, fieldnames: Iterable[str]) -> None:
+    if not path.exists():
+        return
+
+    expected = list(fieldnames)
+    with path.open("r", newline="", encoding="utf-8") as handle:
+        reader = csv.DictReader(handle)
+        existing_fields = reader.fieldnames or []
+        if existing_fields == expected:
+            return
+        existing_rows = [dict(row) for row in reader]
+
+    tmp_fd, tmp_name = tempfile.mkstemp(prefix="emissions-log-", suffix=".csv")
+    os.close(tmp_fd)
+    tmp_path = Path(tmp_name)
+    try:
+        with tmp_path.open("w", newline="", encoding="utf-8") as handle:
+            writer = csv.DictWriter(handle, fieldnames=expected)
+            writer.writeheader()
+            for existing in existing_rows:
+                normalized = {k: str(existing.get(k, "")).strip() for k in expected}
+                writer.writerow(normalized)
+        tmp_path.replace(path)
+    finally:
+        if tmp_path.exists():
+            tmp_path.unlink()
 
 
 def build_tracker(args: argparse.Namespace):

@@ -117,14 +117,18 @@ jobs:
 
       - name: Seed emissions history from previous deployment
         run: |
-          if [ -f data/public/outputs/emissions/emissions_module_events.csv ]; then
+          if python3 scripts/seed_emissions_log_from_public.py \
+            --source-url "https://ruhelavansh-oss.github.io/epi-ML/data/public/outputs/emissions/emissions_module_events.csv" \
+            --require-data \
+            --log-path logs/emissions/module_emissions_log.csv; then
+            echo "Seeded from live deployed emissions history."
+          elif [ -f data/public/outputs/emissions/emissions_module_events.csv ]; then
             python3 scripts/seed_emissions_log_from_public.py \
               --source-file data/public/outputs/emissions/emissions_module_events.csv \
               --log-path logs/emissions/module_emissions_log.csv
+            echo "Seeded from repo fallback emissions history."
           else
-            python3 scripts/seed_emissions_log_from_public.py \
-              --source-url "https://ruhelavansh-oss.github.io/epi-ML/data/public/outputs/emissions/emissions_module_events.csv" \
-              --log-path logs/emissions/module_emissions_log.csv
+            echo "No emissions source available for seeding."
           fi
 
       - name: Resolve private data (decrypt fallback)
@@ -136,6 +140,7 @@ jobs:
           set -euo pipefail
           echo "PRIVATE_DATA_READY=false" >> "${GITHUB_ENV}"
           echo "DATA_DIR=data/private" >> "${GITHUB_ENV}"
+          echo "CI_MODULE_TRACKING_RAN=false" >> "${GITHUB_ENV}"
 
           if find data/private -maxdepth 1 -type f -name '*.csv' | grep -q .; then
             echo "Private CSV data found in data/private."
@@ -181,6 +186,7 @@ jobs:
             --python-bin=python3 \
             --emissions-measure-power-secs=1 \
             --emissions-project-name=epi-ML-deploy
+          echo "CI_MODULE_TRACKING_RAN=true" >> "${GITHUB_ENV}"
 
       - name: Explain module tracking skip
         if: env.PRIVATE_DATA_READY != 'true'
@@ -212,6 +218,50 @@ jobs:
 
       - name: Refresh emissions dashboard artifacts
         run: Rscript scripts/publish_public_artifacts.R
+
+      - name: Verify emissions source coverage
+        env:
+          PRIVATE_DATA_READY: ${{ env.PRIVATE_DATA_READY }}
+          CI_MODULE_TRACKING_RAN: ${{ env.CI_MODULE_TRACKING_RAN }}
+        run: |
+          python3 - <<'PY'
+          import csv
+          import os
+          import sys
+          from collections import Counter
+
+          run_path = "data/public/outputs/emissions/emissions_run_summary.csv"
+          if not os.path.exists(run_path):
+              print(f"[emissions-check] missing file: {run_path}")
+              sys.exit(0)
+
+          with open(run_path, newline="", encoding="utf-8") as handle:
+              rows = list(csv.DictReader(handle))
+
+          run_count = len(rows)
+          source_counts = Counter((r.get("run_source") or "").strip().lower() for r in rows)
+          normalized = Counter()
+          for key, val in source_counts.items():
+              if key in ("local", "cloud"):
+                  normalized[key] += val
+              else:
+                  normalized["unknown"] += val
+          latest_ids = [r.get("run_id", "") for r in rows[-5:]]
+
+          print(f"[emissions-check] run_count={run_count}")
+          print(f"[emissions-check] run_source_counts={dict(normalized)}")
+          print(f"[emissions-check] latest_run_ids={latest_ids}")
+
+          private_ready = os.getenv("PRIVATE_DATA_READY", "").lower() == "true"
+          module_tracking_ran = os.getenv("CI_MODULE_TRACKING_RAN", "").lower() == "true"
+          cloud_count = normalized.get("cloud", 0)
+
+          if private_ready and module_tracking_ran and cloud_count == 0:
+              print(
+                  "[emissions-check] ERROR: module tracking ran in CI but no cloud runs were published."
+              )
+              sys.exit(1)
+          PY
 
       - name: Validate Power Design page
         run: Rscript scripts/check_power_design_render.R
