@@ -105,6 +105,16 @@ module_fallback_label <- function(x) {
   tools::toTitleCase(out)
 }
 
+normalize_run_source <- function(run_source, cloud_provider) {
+  source <- tolower(trimws(as.character(run_source)))
+  provider <- trimws(as.character(cloud_provider))
+  provider[is.na(cloud_provider) | provider %in% c("NA", "N/A", "NULL", "null", "None")] <- ""
+  source[!(source %in% c("local", "cloud"))] <- NA_character_
+  inferred <- ifelse(nzchar(provider), "cloud", "local")
+  source[is.na(source)] <- inferred[is.na(source)]
+  source
+}
+
 attach_module_reference <- function(df) {
   idx <- match(df$module, module_ref$module)
   df$module_label <- module_ref$module_label[idx]
@@ -224,7 +234,7 @@ if (nrow(events) == 0) {
 needed_cols <- c(
   "timestamp_utc", "run_id", "module", "status",
   "duration_seconds", "emissions_kg", "energy_kwh",
-  "country_iso_code", "region"
+  "country_iso_code", "region", "run_source", "cloud_provider"
 )
 for (nm in needed_cols) {
   if (!nm %in% names(events)) events[[nm]] <- NA
@@ -236,6 +246,8 @@ events$module <- as.character(events$module)
 events$status <- as.character(events$status)
 events$country_iso_code <- as.character(events$country_iso_code)
 events$region <- as.character(events$region)
+events$cloud_provider <- as.character(events$cloud_provider)
+events$run_source <- normalize_run_source(events$run_source, events$cloud_provider)
 events$timestamp_utc <- parse_event_time(events$timestamp_utc, events$run_id)
 
 num_cols <- c("duration_seconds", "emissions_kg", "energy_kwh")
@@ -261,6 +273,7 @@ events$timestamp_utc_chr <- format(events$timestamp_utc, format = "%Y-%m-%dT%H:%
 events_public <- data.frame(
   timestamp_utc = events$timestamp_utc_chr,
   run_id = events$run_id,
+  run_source = events$run_source,
   module = events$module,
   module_label = events$module_label,
   page_href = events$page_href,
@@ -290,10 +303,19 @@ run_start <- aggregate(events$run_start_utc, by = list(run_id = events$run_id), 
 names(run_start)[2] <- "start_time_utc"
 run_end <- aggregate(events$run_end_utc, by = list(run_id = events$run_id), FUN = max)
 names(run_end)[2] <- "end_time_utc"
+run_source <- aggregate(
+  events$run_source,
+  by = list(run_id = events$run_id),
+  FUN = function(x) if (any(x == "cloud", na.rm = TRUE)) "cloud" else "local"
+)
+names(run_source)[2] <- "run_source"
 run_start$start_time_utc <- as.POSIXct(run_start$start_time_utc, origin = "1970-01-01", tz = "UTC")
 run_end$end_time_utc <- as.POSIXct(run_end$end_time_utc, origin = "1970-01-01", tz = "UTC")
 
-run_summary <- Reduce(function(x, y) merge(x, y, by = "run_id", all = TRUE), list(run_totals, run_modules, run_start, run_end))
+run_summary <- Reduce(
+  function(x, y) merge(x, y, by = "run_id", all = TRUE),
+  list(run_totals, run_modules, run_start, run_end, run_source)
+)
 names(run_summary)[names(run_summary) == "duration_seconds"] <- "total_duration_seconds"
 names(run_summary)[names(run_summary) == "emissions_kg"] <- "total_emissions_kg"
 names(run_summary)[names(run_summary) == "energy_kwh"] <- "total_energy_kwh"

@@ -59,3 +59,6 @@ process.txt
 /tools/codecarbon-upstream/
 /emissions-dashboard_cache/
 /emissions-dashboard_files/
+
+/scripts/__pycache__/
+*.pyc

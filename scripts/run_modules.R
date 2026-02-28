@@ -37,6 +37,10 @@ tracking_experiment_id <- get_arg_value(
   "--emissions-experiment-id=",
   Sys.getenv("CODECARBON_EXPERIMENT_ID", "")
 )
+tracking_run_source <- get_arg_value(
+  "--emissions-run-source=",
+  Sys.getenv("EPI_ML_EMISSIONS_SOURCE", "")
+)
 tracking_country_iso_code <- get_arg_value(
   "--emissions-country-iso-code=",
   Sys.getenv("CODECARBON_COUNTRY_ISO_CODE", "")
@@ -92,7 +96,19 @@ module_label_from_script <- function(script) {
 }
 
 run_with_tracker <- function(script, env_vars = character()) {
-  tracker_env <- c(env_vars, sprintf("EPI_ML_EMISSIONS_RUN_ID=%s", emissions_run_id))
+  source_hint <- tolower(trimws(tracking_run_source))
+  if (!nzchar(source_hint)) {
+    source_hint <- if (is_truthy(Sys.getenv("GITHUB_ACTIONS", "")) || nzchar(Sys.getenv("GITHUB_RUN_ID", ""))) {
+      "cloud"
+    } else {
+      "local"
+    }
+  }
+  tracker_env <- c(
+    env_vars,
+    sprintf("EPI_ML_EMISSIONS_RUN_ID=%s", emissions_run_id),
+    sprintf("EPI_ML_EMISSIONS_SOURCE=%s", source_hint)
+  )
   tracker_args <- c(
     emissions_tracker_script,
     "--module", module_label_from_script(script),

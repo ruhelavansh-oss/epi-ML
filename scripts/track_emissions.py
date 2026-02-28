@@ -23,6 +23,17 @@ def is_truthy(value: str | None) -> bool:
     return value.strip().lower() in TRUTHY
 
 
+def detect_run_source(explicit_source: str | None, cloud_provider: str | None) -> str:
+    source = (explicit_source or "").strip().lower()
+    if source in {"local", "cloud"}:
+        return source
+    if is_truthy(os.getenv("GITHUB_ACTIONS")) or os.getenv("GITHUB_RUN_ID"):
+        return "cloud"
+    if (cloud_provider or "").strip():
+        return "cloud"
+    return "local"
+
+
 def sanitize_module_name(module: str) -> str:
     cleaned = "".join(ch if ch.isalnum() or ch in "._-" else "_" for ch in module.strip())
     return cleaned or "module"
@@ -186,11 +197,15 @@ def main() -> int:
     emissions_kg = as_float(get_attr(final, "emissions", emissions_value), 0.0)
     duration_seconds = as_float(get_attr(final, "duration", wall_duration), wall_duration)
     energy_kwh = as_float(get_attr(final, "energy_consumed", 0.0), 0.0)
+    cloud_provider = str(get_attr(final, "cloud_provider", ""))
+    tracking_mode = str(get_attr(final, "tracking_mode", ""))
+    run_source = detect_run_source(os.getenv("EPI_ML_EMISSIONS_SOURCE"), cloud_provider)
 
     row = {
         "timestamp_utc": started_at,
         "run_id": run_id,
         "module": module,
+        "run_source": run_source,
         "status": "ok" if proc.returncode == 0 else f"exit_{proc.returncode}",
         "duration_seconds": round(duration_seconds, 6),
         "emissions_kg": round(emissions_kg, 12),
@@ -204,8 +219,8 @@ def main() -> int:
         "country_iso_code": str(get_attr(final, "country_iso_code", "")),
         "country_name": str(get_attr(final, "country_name", "")),
         "region": str(get_attr(final, "region", "")),
-        "cloud_provider": str(get_attr(final, "cloud_provider", "")),
-        "tracking_mode": str(get_attr(final, "tracking_mode", "")),
+        "cloud_provider": cloud_provider,
+        "tracking_mode": tracking_mode,
         "command": command_str,
     }
 
