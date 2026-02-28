@@ -5,7 +5,26 @@ freeze: false
 
 ## Purpose
 
-This page summarizes tracked cloud compute emissions for epi-ML runs and modules.
+This page summarizes tracked compute emissions for epi-ML runs and modules.
+
+```{=html}
+<style>
+#run-summary table,
+#modules-summary table,
+#reduction-recommendations table {
+  font-size: 0.82rem;
+}
+
+#run-summary table th,
+#run-summary table td,
+#modules-summary table th,
+#modules-summary table td,
+#reduction-recommendations table th,
+#reduction-recommendations table td {
+  padding: 0.2rem 0.35rem;
+}
+</style>
+```
 
 ```{r}
 #| echo: false
@@ -25,29 +44,6 @@ normalize_source <- function(x) {
   src <- tolower(trimws(as.character(x)))
   src[!(src %in% c("local", "cloud"))] <- NA_character_
   src
-}
-
-build_source_sequence <- function(events_df) {
-  if (nrow(events_df) == 0) return(data.frame())
-  seq_list <- list()
-  for (src in c("local", "cloud")) {
-    e_src <- events_df[events_df$run_source == src, , drop = FALSE]
-    if (nrow(e_src) == 0) next
-    run_start <- tapply(e_src$timestamp_utc, e_src$run_id, min, na.rm = TRUE)
-    run_order <- names(sort(run_start))
-    run_duration_minutes <- tapply(e_src$duration_seconds, e_src$run_id, sum, na.rm = TRUE) / 60
-    run_duration_minutes <- as.numeric(run_duration_minutes[run_order])
-    offsets <- cumsum(c(0, head(run_duration_minutes, -1)))
-    names(offsets) <- run_order
-    e_src$elapsed_minutes_source <- e_src$elapsed_minutes_run + offsets[e_src$run_id]
-    e_src <- e_src[order(e_src$elapsed_minutes_source, e_src$timestamp_utc), , drop = FALSE]
-    e_src$run_source <- src
-    seq_list[[src]] <- e_src
-  }
-  if (length(seq_list) == 0) return(data.frame())
-  out <- do.call(rbind, seq_list)
-  rownames(out) <- NULL
-  out
 }
 
 build_module_summary_from_events <- function(events_df) {
@@ -119,7 +115,7 @@ build_module_summary_from_events <- function(events_df) {
   modules_df[order(modules_df$total_emissions_kg, decreasing = TRUE), , drop = FALSE]
 }
 
-build_recommendations_from_cloud <- function(modules_df, runs_df) {
+build_recommendations <- function(modules_df, runs_df) {
   if (nrow(modules_df) == 0 || nrow(runs_df) == 0) return(data.frame())
 
   out <- data.frame(
@@ -137,7 +133,7 @@ build_recommendations_from_cloud <- function(modules_df, runs_df) {
     data.frame(
       priority = 1L,
       recommendation = paste0("Prioritize optimization and caching for ", top_module_name, "."),
-      rationale = sprintf("This module contributes %.1f%% of tracked cloud-run emissions.", top_module$emissions_share_pct[[1]]),
+      rationale = sprintf("This module contributes %.1f%% of tracked emissions.", top_module$emissions_share_pct[[1]]),
       stringsAsFactors = FALSE
     )
   )
@@ -213,9 +209,6 @@ if (has_data) {
   }
   runs$run_source[is.na(runs$run_source)] <- "local"
 
-  events <- events[events$run_source == "cloud", , drop = FALSE]
-  runs <- runs[runs$run_source == "cloud", , drop = FALSE]
-
   if (nrow(events) > 0) {
     num_cols <- c("duration_seconds", "elapsed_minutes_run", "emissions_kg", "energy_kwh")
     for (nm in intersect(num_cols, names(events))) {
@@ -227,7 +220,7 @@ if (has_data) {
     runs$avg_emissions_rate_kg_per_hour <- suppressWarnings(as.numeric(runs$avg_emissions_rate_kg_per_hour))
     events <- events[order(events$run_id, events$elapsed_minutes_run), , drop = FALSE]
     modules <- build_module_summary_from_events(events)
-    recommendations <- build_recommendations_from_cloud(modules, runs)
+    recommendations <- build_recommendations(modules, runs)
   }
 
   has_data <- nrow(events) > 0 && nrow(modules) > 0 && nrow(runs) > 0
@@ -239,8 +232,8 @@ if (has_data) {
 #| results: asis
 if (!has_data) {
   cat(
-    "No cloud emissions data is available yet.\n\n",
-    "Run the GitHub Actions deploy workflow with emissions tracking, then refresh this page.",
+    "No emissions data is available yet.\n\n",
+    "Run local module tracking or the GitHub Actions deploy workflow with emissions tracking, then refresh this page.",
     sep = ""
   )
 } else {
@@ -281,119 +274,10 @@ CodeCarbon dashboard (optional) upload:
 CODECARBON_SAVE_TO_API=1 CODECARBON_EXPERIMENT_ID=<experiment-id> Rscript scripts/run_modules.R --track-emissions
 ```
 
-## Computational Runs Timeline
-
-```{r}
-#| echo: false
-#| tbl-colwidths: [20,20,14,14,16,16]
-if (has_data) {
-  events_seq <- build_source_sequence(events)
-  if (nrow(events_seq) > 0) {
-    colors <- c(local = "#C0392B", cloud = "#2F6B8A")
-    events_seq$cumulative_emissions_g_source <- ave(
-      events_seq$emissions_kg * 1000,
-      events_seq$run_source,
-      FUN = cumsum
-    )
-    x_max <- max(events_seq$elapsed_minutes_source, na.rm = TRUE)
-    y_max <- max(events_seq$cumulative_emissions_g_source, na.rm = TRUE)
-    upper_x <- if (is.finite(x_max) && x_max > 0) x_max * 1.05 else 1
-    upper_y <- if (is.finite(y_max) && y_max > 0) y_max * 1.05 else 1
-    plot(
-      NA,
-      xlim = c(0, upper_x),
-      ylim = c(0, upper_y),
-      xlab = "Elapsed minutes across runs (sequential within source)",
-      ylab = "Cumulative emissions (g CO2e)",
-      main = "Cumulative emissions timeline"
-    )
-    for (src in c("local", "cloud")) {
-      src_df <- events_seq[events_seq$run_source == src, , drop = FALSE]
-      if (nrow(src_df) == 0) next
-      lines(src_df$elapsed_minutes_source, src_df$cumulative_emissions_g_source, lwd = 2, col = colors[[src]])
-    }
-    available <- c("local", "cloud")[c("local", "cloud") %in% unique(events_seq$run_source)]
-    legend(
-      "topleft",
-      legend = ifelse(available == "local", "Cumulative emissions (local)", "Cumulative emissions (cloud)"),
-      col = unname(colors[available]),
-      lty = 1,
-      lwd = 2,
-      bty = "n"
-    )
-  } else {
-    plot.new()
-    title("No run timeline available")
-  }
-} else {
-  plot.new()
-  title("No run timeline available")
-}
-```
-
-## Average Module Duration Trend
-
-```{r}
-#| echo: false
-if (has_data && nrow(events) > 0) {
-  events_seq <- build_source_sequence(events)
-  if (nrow(events_seq) > 0) {
-    colors <- c(local = "#C0392B", cloud = "#2F6B8A")
-  events_seq$duration_minutes <- events_seq$duration_seconds / 60
-    events_seq$cumulative_avg_duration_minutes <- ave(
-      events_seq$duration_minutes,
-      events_seq$run_source,
-      FUN = function(x) cumsum(x) / seq_along(x)
-    )
-  overall_avg_duration <- mean(events_seq$duration_minutes, na.rm = TRUE)
-  x_max <- max(events_seq$elapsed_minutes_source, na.rm = TRUE)
-  y_max <- max(c(events_seq$cumulative_avg_duration_minutes, overall_avg_duration), na.rm = TRUE)
-  upper_y <- if (is.finite(y_max) && y_max > 0) y_max * 1.10 else 1
-    upper_x <- if (is.finite(x_max) && x_max > 0) x_max * 1.05 else 1
-
-  plot(
-      NA,
-      xlim = c(0, upper_x),
-    ylim = c(0, upper_y),
-      xlab = "Elapsed minutes across runs (sequential within source)",
-    ylab = "Average duration (minutes)",
-    main = "Average module duration"
-  )
-    for (src in c("local", "cloud")) {
-      src_df <- events_seq[events_seq$run_source == src, , drop = FALSE]
-      if (nrow(src_df) == 0) next
-      lines(src_df$elapsed_minutes_source, src_df$cumulative_avg_duration_minutes, lwd = 2, col = colors[[src]])
-    }
-  abline(h = overall_avg_duration, lty = 2, lwd = 2, col = "#9AA6B2")
-    available <- c("local", "cloud")[c("local", "cloud") %in% unique(events_seq$run_source)]
-    labels <- ifelse(
-      available == "local",
-      "Cumulative average duration (local)",
-      "Cumulative average duration (cloud)"
-    )
-  legend(
-    "bottomright",
-      legend = c(labels, "Overall average duration"),
-      col = c(unname(colors[available]), "#9AA6B2"),
-      lty = c(rep(1, length(available)), 2),
-      lwd = c(rep(2, length(available)), 2),
-    bty = "n"
-  )
-  } else {
-    plot.new()
-    title("No average-duration profile available")
-  }
-} else {
-  plot.new()
-  title("No average-duration profile available")
-}
-```
-
 ## Run Summary
 
 ```{r}
 #| echo: false
-#| tbl-colwidths: [24,24,12,12,14,14]
 if (has_data) {
   view_runs <- runs[, c(
     "run_id", "start_time_utc", "end_time_utc",
@@ -420,6 +304,7 @@ if (has_data) {
     view_runs,
     format = "pipe",
     align = rep("c", ncol(view_runs)),
+    row.names = FALSE,
     escape = FALSE
   )
 }
@@ -436,7 +321,6 @@ Notation:
 
 ```{r}
 #| echo: false
-#| tbl-colwidths: [20,8,8,8,8,8,8,8,8,16]
 if (has_data) {
   view <- modules[, c(
     "module_label", "page_href",
@@ -466,6 +350,7 @@ if (has_data) {
     view_out,
     format = "pipe",
     align = rep("c", ncol(view_out)),
+    row.names = FALSE,
     escape = FALSE
   )
 }
@@ -489,6 +374,6 @@ Notation:
 #| echo: false
 if (has_data && nrow(recommendations) > 0) {
   names(recommendations) <- c("Priority", "Recommendation", "Rationale")
-  knitr::kable(recommendations)
+  knitr::kable(recommendations, row.names = FALSE)
 }
 ```
