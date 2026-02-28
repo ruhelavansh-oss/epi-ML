@@ -12,7 +12,14 @@
 # =============================================================================
 
 suppressPackageStartupMessages({
-  library(tidyverse)
+  library(dplyr)
+  library(readr)
+  library(tidyr)
+  library(ggplot2)
+  library(tibble)
+  library(stringr)
+  library(forcats)
+  library(purrr)
   library(survey)
   library(pwr)
 })

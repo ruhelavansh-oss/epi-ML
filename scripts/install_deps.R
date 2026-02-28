@@ -13,27 +13,40 @@ core_required <- c(
 connect_required <- c("rsconnect")
 
 analysis_required <- c(
-  "tidyverse",
-  "survey",
-  "janitor",
-  "MASS",
+  "AIPW",
   "BayesFactor",
-  "pwr",
-  "MatchIt",
+  "broom",
+  "car",
   "cobalt",
   "dagitty",
-  "ggdag",
-  "car",
-  "gtsummary",
-  "gt",
-  "meta",
-  "smotefamily",
   "DoubleML",
+  "dplyr",
+  "effectsize",
+  "forcats",
+  "ggdag",
+  "ggplot2",
+  "gt",
+  "gtsummary",
+  "janitor",
+  "MASS",
+  "MatchIt",
+  "meta",
   "mlr3",
   "mlr3learners",
-  "AIPW",
+  "purrr",
+  "pwr",
+  "readr",
+  "smotefamily",
+  "stringr",
   "SuperLearner",
-  "broom"
+  "survey",
+  "tibble",
+  "tidyr",
+  "tidyverse",
+  "yaml",
+  "ranger",
+  "knitr",
+  "rmarkdown"
 )
 
 # Optional package referenced in code paths with internal fallbacks.
@@ -47,9 +60,12 @@ required <- unique(c(
 missing <- required[!vapply(required, requireNamespace, logical(1), quietly = TRUE)]
 
 if (length(missing) > 0) {
+  ncpus <- max(1L, as.integer(Sys.getenv("NCPUS", "2")))
+  repos <- Sys.getenv("RSPM", "https://cloud.r-project.org")
   cat("Installing missing packages:\n")
   cat("  ", paste(missing, collapse = ", "), "\n", sep = "")
-  install.packages(missing, repos = "https://cloud.r-project.org")
+  cat("Using CRAN mirror: ", repos, "\n", sep = "")
+  install.packages(missing, repos = repos, Ncpus = ncpus)
 }
 
 still_missing <- required[!vapply(required, requireNamespace, logical(1), quietly = TRUE)]
