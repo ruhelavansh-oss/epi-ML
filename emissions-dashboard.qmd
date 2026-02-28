@@ -5,13 +5,20 @@ freeze: false
 
 ## Purpose
 
-This page summarizes tracked compute emissions for epi-ML runs and modules.
+This page summarizes tracked cloud compute emissions for epi-ML runs and modules.
 
 ```{r}
 #| echo: false
 read_csv_safe <- function(path) {
   if (!file.exists(path)) return(data.frame())
   tryCatch(read.csv(path, stringsAsFactors = FALSE), error = function(e) data.frame())
+}
+
+first_non_empty <- function(x, fallback = "") {
+  y <- as.character(x)
+  y <- y[!is.na(y) & nzchar(trimws(y))]
+  if (length(y) == 0) return(fallback)
+  y[[1]]
 }
 
 normalize_source <- function(x) {
@@ -43,17 +50,146 @@ build_source_sequence <- function(events_df) {
   out
 }
 
+build_module_summary_from_events <- function(events_df) {
+  if (nrow(events_df) == 0) return(data.frame())
+
+  module_totals <- aggregate(
+    events_df[, c("duration_seconds", "emissions_kg", "energy_kwh"), drop = FALSE],
+    by = list(module = events_df$module),
+    FUN = sum
+  )
+  module_exec <- aggregate(events_df$run_id, by = list(module = events_df$module), FUN = length)
+  names(module_exec)[2] <- "executions"
+  module_runs <- aggregate(events_df$run_id, by = list(module = events_df$module), FUN = function(x) length(unique(x)))
+  names(module_runs)[2] <- "run_count"
+  module_failed <- aggregate(
+    events_df$status,
+    by = list(module = events_df$module),
+    FUN = function(x) sum(!is.na(x) & x != "ok")
+  )
+  names(module_failed)[2] <- "failed_executions"
+  module_mean <- aggregate(events_df$emissions_kg, by = list(module = events_df$module), FUN = mean)
+  names(module_mean)[2] <- "mean_emissions_kg"
+  module_median <- aggregate(events_df$emissions_kg, by = list(module = events_df$module), FUN = median)
+  names(module_median)[2] <- "median_emissions_kg"
+  module_label <- aggregate(
+    events_df$module_label,
+    by = list(module = events_df$module),
+    FUN = function(x) first_non_empty(x, "Unknown")
+  )
+  names(module_label)[2] <- "module_label"
+  module_href <- aggregate(
+    events_df$page_href,
+    by = list(module = events_df$module),
+    FUN = function(x) first_non_empty(x, "code/index.html")
+  )
+  names(module_href)[2] <- "page_href"
+
+  modules_df <- Reduce(
+    function(x, y) merge(x, y, by = "module", all = TRUE),
+    list(module_totals, module_exec, module_runs, module_failed, module_mean, module_median, module_label, module_href)
+  )
+
+  names(modules_df)[names(modules_df) == "duration_seconds"] <- "total_duration_seconds"
+  names(modules_df)[names(modules_df) == "emissions_kg"] <- "total_emissions_kg"
+  names(modules_df)[names(modules_df) == "energy_kwh"] <- "total_energy_kwh"
+
+  modules_df$total_emissions_kg[is.na(modules_df$total_emissions_kg)] <- 0
+  total_emissions <- sum(modules_df$total_emissions_kg, na.rm = TRUE)
+  modules_df$emissions_share_pct <- if (total_emissions > 0) {
+    100 * modules_df$total_emissions_kg / total_emissions
+  } else {
+    0
+  }
+  modules_df$emissions_rate_kg_per_hour <- ifelse(
+    modules_df$total_duration_seconds > 0,
+    modules_df$total_emissions_kg / (modules_df$total_duration_seconds / 3600),
+    0
+  )
+  modules_df$avg_duration_seconds <- ifelse(
+    modules_df$executions > 0,
+    modules_df$total_duration_seconds / modules_df$executions,
+    0
+  )
+  modules_df$avg_energy_kwh <- ifelse(
+    modules_df$executions > 0,
+    modules_df$total_energy_kwh / modules_df$executions,
+    0
+  )
+  modules_df[order(modules_df$total_emissions_kg, decreasing = TRUE), , drop = FALSE]
+}
+
+build_recommendations_from_cloud <- function(modules_df, runs_df) {
+  if (nrow(modules_df) == 0 || nrow(runs_df) == 0) return(data.frame())
+
+  out <- data.frame(
+    priority = integer(),
+    recommendation = character(),
+    rationale = character(),
+    stringsAsFactors = FALSE
+  )
+
+  top_idx <- which.max(modules_df$total_emissions_kg)
+  top_module <- modules_df[top_idx, , drop = FALSE]
+  top_module_name <- top_module$module_label[[1]]
+  out <- rbind(
+    out,
+    data.frame(
+      priority = 1L,
+      recommendation = paste0("Prioritize optimization and caching for ", top_module_name, "."),
+      rationale = sprintf("This module contributes %.1f%% of tracked cloud-run emissions.", top_module$emissions_share_pct[[1]]),
+      stringsAsFactors = FALSE
+    )
+  )
+
+  out <- rbind(
+    out,
+    data.frame(
+      priority = 2L,
+      recommendation = "Run only modules with changed inputs during development.",
+      rationale = "Selective reruns reduce avoidable compute time and electricity use.",
+      stringsAsFactors = FALSE
+    )
+  )
+
+  longest <- runs_df[which.max(runs_df$total_duration_seconds), , drop = FALSE]
+  if (is.finite(longest$total_duration_seconds[[1]]) && longest$total_duration_seconds[[1]] > 1800) {
+    out <- rbind(
+      out,
+      data.frame(
+        priority = 3L,
+        recommendation = "Schedule long runs during lower-carbon grid periods when possible.",
+        rationale = sprintf(
+          "Longest cloud run duration was %.1f minutes; moving heavy jobs can lower emissions intensity.",
+          longest$total_duration_seconds[[1]] / 60
+        ),
+        stringsAsFactors = FALSE
+      )
+    )
+  } else {
+    out <- rbind(
+      out,
+      data.frame(
+        priority = 3L,
+        recommendation = "Use energy-efficient hardware for repeated experiment sweeps.",
+        rationale = "Hardware efficiency directly lowers kWh and emissions for equivalent workloads.",
+        stringsAsFactors = FALSE
+      )
+    )
+  }
+
+  out[order(out$priority), , drop = FALSE]
+}
+
 events_path <- file.path("data", "public", "outputs", "emissions", "emissions_module_events.csv")
 runs_path <- file.path("data", "public", "outputs", "emissions", "emissions_run_summary.csv")
-modules_path <- file.path("data", "public", "outputs", "emissions", "emissions_module_summary.csv")
-reco_path <- file.path("data", "public", "outputs", "emissions", "emissions_recommendations.csv")
 
 events <- read_csv_safe(events_path)
 runs <- read_csv_safe(runs_path)
-modules <- read_csv_safe(modules_path)
-recommendations <- read_csv_safe(reco_path)
+modules <- data.frame()
+recommendations <- data.frame()
 
-has_data <- nrow(events) > 0 && nrow(modules) > 0 && nrow(runs) > 0
+has_data <- nrow(events) > 0 && nrow(runs) > 0
 if (has_data) {
   events$timestamp_utc <- as.POSIXct(events$timestamp_utc, format = "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
   runs$start_time_utc <- as.POSIXct(runs$start_time_utc, format = "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
@@ -76,8 +212,25 @@ if (has_data) {
     runs$run_source[missing_idx] <- mapped[missing_idx]
   }
   runs$run_source[is.na(runs$run_source)] <- "local"
-  events <- events[order(events$run_source, events$run_id, events$elapsed_minutes_run), , drop = FALSE]
-  modules <- modules[order(modules$total_emissions_kg, decreasing = TRUE), , drop = FALSE]
+
+  events <- events[events$run_source == "cloud", , drop = FALSE]
+  runs <- runs[runs$run_source == "cloud", , drop = FALSE]
+
+  if (nrow(events) > 0) {
+    num_cols <- c("duration_seconds", "elapsed_minutes_run", "emissions_kg", "energy_kwh")
+    for (nm in intersect(num_cols, names(events))) {
+      events[[nm]] <- suppressWarnings(as.numeric(events[[nm]]))
+    }
+    runs$total_duration_seconds <- suppressWarnings(as.numeric(runs$total_duration_seconds))
+    runs$total_energy_kwh <- suppressWarnings(as.numeric(runs$total_energy_kwh))
+    runs$total_emissions_kg <- suppressWarnings(as.numeric(runs$total_emissions_kg))
+    runs$avg_emissions_rate_kg_per_hour <- suppressWarnings(as.numeric(runs$avg_emissions_rate_kg_per_hour))
+    events <- events[order(events$run_id, events$elapsed_minutes_run), , drop = FALSE]
+    modules <- build_module_summary_from_events(events)
+    recommendations <- build_recommendations_from_cloud(modules, runs)
+  }
+
+  has_data <- nrow(events) > 0 && nrow(modules) > 0 && nrow(runs) > 0
 }
 ```
 
@@ -86,8 +239,8 @@ if (has_data) {
 #| results: asis
 if (!has_data) {
   cat(
-    "No emissions data is available yet.\n\n",
-    "Run `Rscript scripts/run_modules.R --track-emissions` locally, then render the site again.",
+    "No cloud emissions data is available yet.\n\n",
+    "Run the GitHub Actions deploy workflow with emissions tracking, then refresh this page.",
     sep = ""
   )
 } else {
