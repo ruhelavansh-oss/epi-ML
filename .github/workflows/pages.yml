@@ -64,6 +64,23 @@ jobs:
           echo "Failed to install Quarto via fallback after retries."
           exit 1
 
+      - name: Install system libraries for R packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            libcurl4-openssl-dev \
+            libssl-dev \
+            libxml2-dev \
+            libfontconfig1-dev \
+            libfreetype6-dev \
+            libharfbuzz-dev \
+            libfribidi-dev \
+            libpng-dev \
+            libjpeg-dev \
+            libtiff5-dev \
+            libcairo2-dev
+
       - name: Install R dependencies
         run: Rscript scripts/install_deps.R
 
