@@ -7,6 +7,8 @@ args <- commandArgs(trailingOnly = TRUE)
 include_rendered <- "--include-rendered" %in% args
 
 collect_files <- function(include_rendered = FALSE) {
+  ignored_dir_pattern <- "/(data/private|data/public|\\.git|data/private/Rlibs|\\.github/R-lib)/"
+
   if (dir.exists(file.path(paths$project_root, ".git")) && nzchar(Sys.which("git"))) {
     git_files <- tryCatch(
       system2("git", c("ls-files", "--cached", "--others", "--exclude-standard"), stdout = TRUE, stderr = FALSE),
@@ -17,9 +19,13 @@ collect_files <- function(include_rendered = FALSE) {
     files <- character()
   }
 
+  if (length(files) > 0) {
+    files <- files[!grepl(ignored_dir_pattern, files)]
+  }
+
   if (length(files) == 0) {
     candidates <- list.files(paths$project_root, recursive = TRUE, full.names = TRUE, include.dirs = FALSE)
-    keep <- !grepl("/(data/private|data/public|\\.git|data/private/Rlibs)/", candidates)
+    keep <- !grepl(ignored_dir_pattern, candidates)
     if (!include_rendered) {
       keep <- keep & !grepl("/(_site|reports/public)/", candidates)
     }
@@ -57,7 +63,10 @@ files <- files[is_text_target(files) & file.exists(files)]
 
 hits <- list()
 for (f in files) {
-  txt <- tryCatch(readLines(f, warn = FALSE, encoding = "UTF-8"), error = function(e) character())
+  txt <- tryCatch(
+    suppressWarnings(readLines(f, warn = FALSE, encoding = "UTF-8")),
+    error = function(e) character()
+  )
   if (length(txt) == 0) next
   for (name in names(patterns)) {
     if (basename(f) == "security_scan.R" && name == "absolute_path") {
