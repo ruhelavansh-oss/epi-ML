@@ -117,9 +117,15 @@ jobs:
 
       - name: Seed emissions history from previous deployment
         run: |
-          python3 scripts/seed_emissions_log_from_public.py \
-            --source-url "https://ruhelavansh-oss.github.io/epi-ML/data/public/outputs/emissions/emissions_module_events.csv" \
-            --log-path logs/emissions/module_emissions_log.csv
+          if [ -f data/public/outputs/emissions/emissions_module_events.csv ]; then
+            python3 scripts/seed_emissions_log_from_public.py \
+              --source-file data/public/outputs/emissions/emissions_module_events.csv \
+              --log-path logs/emissions/module_emissions_log.csv
+          else
+            python3 scripts/seed_emissions_log_from_public.py \
+              --source-url "https://ruhelavansh-oss.github.io/epi-ML/data/public/outputs/emissions/emissions_module_events.csv" \
+              --log-path logs/emissions/module_emissions_log.csv
+          fi
 
       - name: Resolve private data (decrypt fallback)
         env:
