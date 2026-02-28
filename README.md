@@ -127,32 +127,32 @@ epi-ML/
 │       ├── 08_figures.R
 │       ├── 08_tables.R
 │       └── 09_report.R
-├── surveillance/
-│   ├── lib/
-│   │   └── config_paths.R
-│   ├── investigation/
-│   │   ├── 03_data_wrangling.R
-│   │   ├── 04_descriptive_stats.R
-│   │   ├── 04_distributions.R
-│   │   ├── 05_bayesian.R
-│   │   ├── 05_frequentist.R
-│   │   ├── 05_power_design.R
-│   │   ├── 06_logistic.R
-│   │   ├── 06_model_comparison.R
-│   │   ├── 06_regression.R
-│   │   ├── 07_causal_estimators.R
-│   │   ├── 07_dag.R
-│   │   ├── 07_meta_synthesis.R
-│   │   ├── 07_propensity.R
-│   │   ├── 07_treatment_effects.R
-│   │   ├── 08_figures.R
-│   │   ├── 08_tables.R
-│   │   └── 09_report.R
-│   └── ebac/
-│       ├── 07_ebac.R
-│       ├── 07_ebac_gender_smote_sensitivity.R
-│       ├── 07_ebac_integrations.R
-│       └── 07_ebac_ipw.R
+└── surveillance/
+    ├── lib/
+    │   └── config_paths.R
+    ├── investigation/
+    │   ├── 03_data_wrangling.R
+    │   ├── 04_descriptive_stats.R
+    │   ├── 04_distributions.R
+    │   ├── 05_bayesian.R
+    │   ├── 05_frequentist.R
+    │   ├── 05_power_design.R
+    │   ├── 06_logistic.R
+    │   ├── 06_model_comparison.R
+    │   ├── 06_regression.R
+    │   ├── 07_causal_estimators.R
+    │   ├── 07_dag.R
+    │   ├── 07_meta_synthesis.R
+    │   ├── 07_propensity.R
+    │   ├── 07_treatment_effects.R
+    │   ├── 08_figures.R
+    │   ├── 08_tables.R
+    │   └── 09_report.R
+    └── ebac/
+        ├── 07_ebac.R
+        ├── 07_ebac_gender_smote_sensitivity.R
+        ├── 07_ebac_integrations.R
+        └── 07_ebac_ipw.R
 ```
 
 ## Website and Publication
