@@ -42,11 +42,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.R_LIBS_USER }}
-          key: ${{ runner.os }}-r-${{ env.R_VERSION }}-deps-${{ hashFiles('scripts/install_deps.R') }}
-          restore-keys: |
-            ${{ runner.os }}-r-${{ env.R_VERSION }}-deps-
-            ${{ runner.os }}-r-${{ env.R_VERSION }}-
-            ${{ runner.os }}-r-
+          key: ${{ runner.os }}-r-${{ env.R_VERSION }}-deps-v2-${{ hashFiles('scripts/install_deps.R') }}
 
       - name: Setup Quarto (primary)
         id: setup_quarto
@@ -102,8 +98,11 @@ jobs:
 
       - name: Install R dependencies
         run: |
-          export RSPM="https://packagemanager.posit.co/cran/__linux__/jammy/latest"
+          CODENAME="$(. /etc/os-release && echo "${VERSION_CODENAME}")"
+          if [ -z "${CODENAME}" ]; then CODENAME="jammy"; fi
+          export RSPM="https://packagemanager.posit.co/cran/__linux__/${CODENAME}/latest"
           export NCPUS=4
+          echo "Using RSPM=${RSPM}"
           Rscript scripts/install_deps.R --full
 
       - name: Install CodeCarbon

@@ -21,9 +21,7 @@ analysis_required <- c(
   "dagitty",
   "DoubleML",
   "dplyr",
-  "effectsize",
   "forcats",
-  "ggdag",
   "ggplot2",
   "gt",
   "gtsummary",
@@ -49,31 +47,68 @@ analysis_required <- c(
   "rmarkdown"
 )
 
-# Optional package referenced in code paths with internal fallbacks.
-optional_pkgs <- c("sl3")
+optional_pkgs <- c("sl3", "ggdag", "effectsize")
 
 required <- unique(c(
   core_required,
   if (install_full) analysis_required,
   if (install_connect) connect_required
 ))
-missing <- required[!vapply(required, requireNamespace, logical(1), quietly = TRUE)]
+repos <- Sys.getenv("RSPM", "https://cloud.r-project.org")
+ncpus <- max(1L, as.integer(Sys.getenv("NCPUS", "2")))
+namespace_ok <- function(pkg) {
+  isTRUE(suppressWarnings(requireNamespace(pkg, quietly = TRUE)))
+}
+
+missing <- required[!vapply(required, namespace_ok, logical(1))]
 
 if (length(missing) > 0) {
-  ncpus <- max(1L, as.integer(Sys.getenv("NCPUS", "2")))
-  repos <- Sys.getenv("RSPM", "https://cloud.r-project.org")
   cat("Installing missing packages:\n")
   cat("  ", paste(missing, collapse = ", "), "\n", sep = "")
   cat("Using CRAN mirror: ", repos, "\n", sep = "")
   install.packages(missing, repos = repos, Ncpus = ncpus)
 }
 
-still_missing <- required[!vapply(required, requireNamespace, logical(1), quietly = TRUE)]
+still_missing <- required[!vapply(required, namespace_ok, logical(1))]
 if (length(still_missing) > 0) {
+  cat("Retrying required packages serially:\n")
+  cat("  ", paste(still_missing, collapse = ", "), "\n", sep = "")
+  install.packages(still_missing, repos = repos, Ncpus = 1)
+}
+
+still_missing <- required[!vapply(required, namespace_ok, logical(1))]
+if (length(still_missing) > 0) {
+  cat("Retrying required packages from source:\n")
+  cat("  ", paste(still_missing, collapse = ", "), "\n", sep = "")
+  for (pkg in still_missing) {
+    install.packages(pkg, repos = repos, type = "source", dependencies = TRUE, Ncpus = 1)
+  }
+}
+
+still_missing <- required[!vapply(required, namespace_ok, logical(1))]
+if (length(still_missing) > 0) {
+  diagnostics <- vapply(still_missing, function(pkg) {
+    ip <- rownames(installed.packages())
+    installed <- pkg %in% ip
+    err <- tryCatch({
+      loadNamespace(pkg)
+      ""
+    }, error = function(e) conditionMessage(e))
+    paste0(pkg, " | installed=", installed, " | load_error=", ifelse(nzchar(err), err, "unknown"))
+  }, character(1))
+  cat("Package diagnostics:\n")
+  cat("  ", paste(diagnostics, collapse = "\n  "), "\n", sep = "")
   stop("Failed to install required packages: ", paste(still_missing, collapse = ", "))
 }
 
-missing_optional <- optional_pkgs[!vapply(optional_pkgs, requireNamespace, logical(1), quietly = TRUE)]
+missing_optional <- optional_pkgs[!vapply(optional_pkgs, namespace_ok, logical(1))]
+if (length(missing_optional) > 0) {
+  cat("Installing optional packages:\n")
+  cat("  ", paste(missing_optional, collapse = ", "), "\n", sep = "")
+  try(install.packages(missing_optional, repos = repos, Ncpus = 1), silent = TRUE)
+}
+
+missing_optional <- optional_pkgs[!vapply(optional_pkgs, namespace_ok, logical(1))]
 
 mode <- if (install_full) "full pipeline" else "core (render/deploy)"
 if (install_connect) {
